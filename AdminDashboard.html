@@ -28,12 +28,7 @@
         .modal-preview-container { width: 100%; max-height: 350px; border: 2px dashed var(--border-color); border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--bg-input); margin: 15px 0; }
         .modal-preview-container img { width: 100%; height: auto; max-height: 345px; object-fit: contain; display: block; }
         
-        /* Side-by-side flex action buttons setup */
         .actions-cell-inline-wrapper { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; }
-
-        /* Inline editable cell focus ring styling */
-        .admin-inline-editable { padding: 4px; border-radius: 4px; outline: none; transition: background-color 0.2s; }
-        .admin-inline-editable[contenteditable="true"] { background-color: var(--bg-input); border: 1px dashed var(--brand-cyan); }
     </style>
 </head>
 <body class="page-body-layout">
@@ -212,14 +207,8 @@
                                 <small style="color:var(--brand-cyan)">${sheetData.metaInterval || ''}</small>
                             </td>
                             <td>${rowItem.hour}:${rowItem.minute} ${rowItem.ampm}</td>
-                            <td>
-                                <div contenteditable="false" class="admin-inline-editable edit-title-${sheetId}-${rowIndex}"><strong>${rowItem.title || 'Untitled'}</strong></div>
-                                <small>Deck: ${rowItem.lr || 'L'}</small>
-                            </td>
-                            <td>
-                                <div contenteditable="false" class="admin-inline-editable edit-producer-${sheetId}-${rowIndex}">${rowItem.producer || '--'}</div>
-                                <small>Netia: <span class="edit-netia-${sheetId}-${rowIndex}">${rowItem.netia || '--'}</span></small>
-                            </td>
+                            <td><strong>${rowItem.title || 'Untitled'}</strong><br><small>Deck: ${rowItem.lr || 'L'}</small></td>
+                            <td>${rowItem.producer || '--'}<br><small>Netia: ${rowItem.netia || '--'}</small></td>
                             <td>
                                 <input type="text" class="response-input text-remark-field" 
                                     id="cell-remark-${sheetId}-${rowIndex}" 
@@ -232,23 +221,15 @@
                                         style="background-color: #28a745; color: white;"
                                         data-sheetid="${sheetId}" 
                                         data-rowidx="${rowIndex}">Update Remark</button>
-                                    <button type="button" class="row-btn btn-edit-row" 
-                                        style="background-color: #ffc107; color: #12121c;"
-                                        data-sheetid="${sheetId}"
-                                        data-rowidx="${rowIndex}">Edit</button>
                                 </div>
                             </td>
                         `;
 
-                        // Update single row modifications logic
+                        // Sync updated remark cell logic
                         tr.querySelector('.btn-sync-remark').addEventListener('click', async (e) => {
                             const sId = e.target.dataset.sheetid;
                             const rIdx = parseInt(e.target.dataset.rowidx);
-                            
                             const remarkVal = document.getElementById(`cell-remark-${sId}-${rIdx}`).value;
-                            const titleVal = tr.querySelector(`.edit-title-${sId}-${rIdx}`).textContent.trim();
-                            const producerVal = tr.querySelector(`.edit-producer-${sId}-${rIdx}`).textContent.trim();
-                            const netiaVal = tr.querySelector(`.edit-netia-${sId}-${rIdx}`).textContent.trim();
 
                             try {
                                 const docRef = doc(db, "beats_conti_sheets", sId);
@@ -256,47 +237,16 @@
                                 if(currentSnap.exists()) {
                                     const payload = currentSnap.data();
                                     if(payload.rows && payload.rows[rIdx]) {
-                                        // Save all changes made by admin back to the database array cells
                                         payload.rows[rIdx].remarks = remarkVal;
-                                        payload.rows[rIdx].title = titleVal;
-                                        payload.rows[rIdx].producer = producerVal;
-                                        payload.rows[rIdx].netia = netiaVal;
 
                                         await setDoc(docRef, payload);
-                                        alert("Row modifications successfully synchronized to user sheet!");
+                                        alert("Remark text cell successfully pushed to user sheet!");
                                         renderContiSheetsRows();
                                     }
                                 }
                             } catch(err) {
                                 console.error(err);
-                                alert("Failed to modify sheet data values.");
-                            }
-                        });
-
-                        // NEW: Toggle inline field edit capabilities inside table columns
-                        tr.querySelector('.btn-edit-row').addEventListener('click', (e) => {
-                            const sId = e.target.dataset.sheetid;
-                            const rIdx = parseInt(e.target.dataset.rowidx);
-                            
-                            const titleContainer = tr.querySelector(`.edit-title-${sId}-${rIdx}`);
-                            const producerContainer = tr.querySelector(`.edit-producer-${sId}-${rIdx}`);
-                            const netiaContainer = tr.querySelector(`.edit-netia-${sId}-${rIdx}`);
-                            
-                            const isEditable = titleContainer.getAttribute('contenteditable') === 'true';
-                            
-                            if (!isEditable) {
-                                titleContainer.setAttribute('contenteditable', 'true');
-                                producerContainer.setAttribute('contenteditable', 'true');
-                                netiaContainer.setAttribute('contenteditable', 'true');
-                                titleContainer.focus();
-                                e.target.textContent = "Lock";
-                                e.target.style.backgroundColor = "#b4b4c3";
-                            } else {
-                                titleContainer.setAttribute('contenteditable', 'false');
-                                producerContainer.setAttribute('contenteditable', 'false');
-                                netiaContainer.setAttribute('contenteditable', 'false');
-                                e.target.textContent = "Edit";
-                                e.target.style.backgroundColor = "#ffc107";
+                                alert("Failed to modify remark value.");
                             }
                         });
 
