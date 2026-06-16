@@ -1,6 +1,6 @@
 /*
 ==========================================
-   RESET & SYSTEM VARIABLE DECLARATIONS
+    RESET & SYSTEM VARIABLE DECLARATIONS
  ==========================================
 */
 * {
@@ -59,7 +59,7 @@ body {
  
 /*
 ==========================================
-   HAMBURGER NAVIGATION DRAWER (NAVBAR)
+    HAMBURGER NAVIGATION DRAWER (NAVBAR)
  ==========================================
 */
 .menu-header-bar {
@@ -180,7 +180,7 @@ body {
  
 /*
 ==========================================
-   WELCOME PAGE (INTRO SPLASH ANIMATIONS)
+    WELCOME PAGE (INTRO SPLASH ANIMATIONS)
  ==========================================
 */
 .welcome-container {
@@ -263,7 +263,7 @@ body {
  
 /*
 ==========================================
-   APP BOX LAYOUT (SIGN IN / SIGN UP / FORPASS)
+    APP BOX LAYOUT (SIGN IN / SIGN UP / FORPASS)
  ==========================================
 */
 .app-container {
@@ -401,7 +401,7 @@ footer p {
  
 /*
 ==========================================
-   DASHBOARD PAGE SPECIFIC COMPONENTS
+    DASHBOARD PAGE SPECIFIC COMPONENTS
 ==========================================
 */
 .dashboard-view-wrapper {
@@ -492,7 +492,7 @@ footer p {
  
 /*
 ==========================================
-   CONTI LOG DATA TABLES GRID ARCHITECTURE
+    CONTI LOG DATA TABLES GRID ARCHITECTURE
  ==========================================
 */
 .conti-big-box {
@@ -693,7 +693,7 @@ footer p {
  
 /*
 ==========================================
-   ABOUT ME PAGE LAYOUT
+    ABOUT ME PAGE LAYOUT
  ==========================================
 */
 .about-view-wrapper {
@@ -766,7 +766,7 @@ footer p {
  
 /*
 ==========================================
-   CONTI BOOKING SYSTEM SPECIFIC EXTENSIONS
+    CONTI BOOKING SYSTEM SPECIFIC EXTENSIONS
  ==========================================
 */
 .booking-scheduler-layout {
@@ -996,10 +996,18 @@ footer p {
     border-color: var(--brand-cyan);
     background-color: var(--bg-container);
 }
+
+/* Side-by-side table layout controls styling wrapper */
+.actions-cell-inline-wrapper {
+    display: flex !important;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: nowrap;
+}
  
 /*
 ==========================================
-   ANIMATION KEYFRAMES
+    ANIMATION KEYFRAMES
  ==========================================
 */
 @keyframes dropIn {
@@ -1027,7 +1035,7 @@ footer p {
  
 /*
 ======================================================
-   UPDATED PRINT MEDIA CONFIGURATION
+    UPDATED PRINT MEDIA CONFIGURATION
  ====================================================== */
 @media print {
     body {
@@ -1080,9 +1088,22 @@ footer p {
  
 /*
 ==========================================
-   RESPONSIVE MEDIA QUERIES
+    RESPONSIVE MEDIA QUERIES
  ==========================================
 */
+@media (max-width: 600px) {
+    /* Safe layout breakdown override for standard portable sizes */
+    .actions-cell-inline-wrapper {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+    }
+    .actions-cell-inline-wrapper button {
+        width: 100%;
+        text-align: center;
+    }
+}
+
 @media (max-width: 480px) {
     .delay-1 { font-size: 3.2rem; }
     .delay-2 { font-size: 2.2rem; }
