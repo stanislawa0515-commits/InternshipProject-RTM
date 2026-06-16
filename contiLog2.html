@@ -41,11 +41,6 @@
             <div>Date : <span id="lblDate" class="meta-highlight">--</span></div>
             <div>Shift Interval : <span id="lblInterval" class="meta-highlight">--</span></div>
         </div>
-
-        <div id="adminRemarksContainer" style="display: none; background: rgba(220, 43, 92, 0.1); border: 2px solid var(--brand-magenta); border-radius: 12px; padding: 15px; margin-bottom: 20px; font-weight: bold;">
-            <span style="color: var(--brand-magenta); text-transform: uppercase; font-family: 'Kanit'; font-style: italic;">⚠️ Admin Evaluation Remarks:</span>
-            <p id="lblAdminRemarks" style="margin-top: 5px; font-weight: normal; font-size: 0.95rem; color: var(--text-primary); line-height: 1.4; word-break: break-word;"></p>
-        </div>
  
         <div class="table-responsive-container">
             <table class="conti-table" id="logTable">
@@ -56,7 +51,7 @@
                         <th style="width: 10%;">L/R</th>
                         <th style="width: 20%;">Broadcaster</th>
                         <th style="width: 10%;">Netia / CD</th>
-                        <th style="width: 10%;">Remarks</th>
+                        <th style="width: 15%;">Remarks</th>
                         <th style="width: 15%;">Action</th>
                     </tr>
                 </thead>
@@ -116,7 +111,6 @@
         document.getElementById('lblDate').textContent = activeDate;
         document.getElementById('lblInterval').textContent = activeInterval;
  
-        // Unique document identifier path configuration
         const storageKeyPointer = `${activePerson}_${activeDate}_${activeInterval.replace(/\s+/g, '')}`;
         const tableBody = document.getElementById('tableLogBody');
  
@@ -168,7 +162,7 @@
                 </td>
                 <td><div contenteditable="true" class="table-text-editable row-producer" data-placeholder="Enter producer">${producerVal}</div></td>
                 <td><div contenteditable="true" class="table-text-editable row-netia" data-placeholder="">${netiaVal}</div></td>
-                <td><div contenteditable="true" class="table-text-editable row-remarks" data-placeholder="">${remarksVal}</div></td>
+                <td><div contenteditable="false" class="table-text-editable row-remarks" style="border-color:transparent; background-color:transparent;" data-placeholder="">${remarksVal}</div></td>
                 <td>
                     <div class="actions-cell-wrapper">
                         <button type="button" class="row-btn row-btn-save">Save</button>
@@ -189,7 +183,7 @@
  
         function toggleRowInputState(trRow, enabled) {
             const selectElements = trRow.querySelectorAll('select');
-            const editableDivs = trRow.querySelectorAll('.table-text-editable');
+            const editableDivs = trRow.querySelectorAll('.table-text-editable:not(.row-remarks)');
             
             selectElements.forEach(el => el.disabled = !enabled);
             editableDivs.forEach(el => el.setAttribute('contenteditable', enabled ? 'true' : 'false'));
@@ -221,11 +215,51 @@
             toggleRowInputState(tr, true);
         }
  
-        function deleteIndividualRow(buttonElement) {
+        // AUTOMATED REMOVAL BACKEND TRIGGER
+        async function deleteIndividualRow(buttonElement) {
             const tr = buttonElement.closest('tr');
-            tr.remove();
-            if (tableBody.children.length === 0) {
-                createLogTableRow({}, false);
+            
+            if(confirm("Permanently erase this row entry from database logs?")) {
+                tr.remove();
+                
+                // Read what rows are left remaining inside the active layout body
+                const remainingRows = tableBody.querySelectorAll('tr');
+                const updatedPayload = [];
+                
+                remainingRows.forEach(row => {
+                    // Collect remaining table properties to maintain array order structure
+                    const titleText = row.querySelector('.row-title').textContent.trim();
+                    if(titleText) { 
+                        updatedPayload.push({
+                            hour: row.querySelector('.row-hour').value,
+                            minute: row.querySelector('.row-minute').value,
+                            ampm: row.querySelector('.row-ampm').value,
+                            title: titleText,
+                            lr: row.querySelector('.row-lr').value,
+                            producer: row.querySelector('.row-producer').textContent,
+                            netia: row.querySelector('.row-netia').textContent,
+                            remarks: row.querySelector('.row-remarks').textContent
+                        });
+                    }
+                });
+
+                try {
+                    // Update database array instantly so Admin Panel drops it on reload
+                    await setDoc(doc(db, "beats_conti_sheets", storageKeyPointer), {
+                        metaPerson: activePerson,
+                        metaDate: activeDate,
+                        metaInterval: activeInterval,
+                        rows: updatedPayload,
+                        updatedAt: Date.now()
+                    });
+                    alert("System sync update successful!");
+                } catch(err) {
+                    console.error("Auto delete tracking fail:", err);
+                }
+
+                if (tableBody.children.length === 0) {
+                    createLogTableRow({}, false);
+                }
             }
         }
  
@@ -235,20 +269,9 @@
                 const snapshot = await getDoc(docRef);
 
                 if (snapshot.exists()) {
-                    const serverPayload = snapshot.data();
-                    
-                    // Render/Sync live Admin Remarks box values if they exist
-                    const remarksContainer = document.getElementById('adminRemarksContainer');
-                    const remarksLabel = document.getElementById('lblAdminRemarks');
-                    if (serverPayload.adminRemarks && serverPayload.adminRemarks.trim() !== '') {
-                        remarksLabel.textContent = serverPayload.adminRemarks;
-                        remarksContainer.style.display = 'block';
-                    } else {
-                        remarksContainer.style.display = 'none';
-                    }
-
-                    const datasetsParsed = serverPayload.rows || [];
+                    const datasetsParsed = snapshot.data().rows || [];
                     if (datasetsParsed.length > 0) {
+                        tableBody.innerHTML = '';
                         datasetsParsed.forEach(item => {
                             createLogTableRow(item, true);
                         });
@@ -292,20 +315,11 @@
             }
  
             try {
-                // Read current document state first to avoid erasing old adminRemarks on save
-                const docRef = doc(db, "beats_conti_sheets", storageKeyPointer);
-                const snapshot = await getDoc(docRef);
-                let currentRemarks = "";
-                if (snapshot.exists()) {
-                    currentRemarks = snapshot.data().adminRemarks || "";
-                }
-
-                await setDoc(docRef, {
+                await setDoc(doc(db, "beats_conti_sheets", storageKeyPointer), {
                     metaPerson: activePerson,
                     metaDate: activeDate,
                     metaInterval: activeInterval,
                     rows: savedDatasetPayload,
-                    adminRemarks: currentRemarks, // Preserves the existing remarks
                     updatedAt: Date.now()
                 });
                 alert('Conti Sheet logs records saved successfully to cloud repository!');
