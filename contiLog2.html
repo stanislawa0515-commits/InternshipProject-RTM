@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEATS - Conti Log Timetable Worksheet</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:ital,wght@1,900&family=Kanit:ital,wght@1,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="page-body-layout">
+ 
+    <div class="menu-header-bar">
+        <div class="left-nav-group">
+            <button class="hamburger-btn" id="openMenuToggle">☰</button>
+            <div class="user-greeting">Hi, <span id="displayUsername">User</span></div>
+        </div>
+        <div style="font-family: 'Kanit', sans-serif; font-weight: 900; color: #dc2b5c; font-size: 1.5rem; font-style: italic;">BEATS</div>
+    </div>
+ 
+    <div class="overlay-screen" id="menuOverlay"></div>
+    <div class="nav-sidebar" id="sidebarDrawer">
+        <button class="close-menu-btn" id="closeMenuToggle">✕</button>
+        <div class="sidebar-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="AboutMe.html">About me</a>
+            <a href="SignIn.html" id="logoutActionLink" style="color: #ff4d4d; margin-top: 20px;">Logout</a>
+        </div>
+        <div class="theme-toggle-row">
+            <span>Theme Mode</span>
+            <button class="theme-switch-btn" id="themeSwitchTrigger">☀️ / 🌙</button>
+        </div>
+    </div>
+ 
+    <div class="conti-big-box">
+        <div class="conti-title">Conti Logs</div>
+ 
+        <div class="metadata-summary-bar">
+            <div>Person on Duty : <span id="lblPerson" class="meta-highlight">--</span></div>
+            <div>Date : <span id="lblDate" class="meta-highlight">--</span></div>
+            <div>Shift Interval : <span id="lblInterval" class="meta-highlight">--</span></div>
+        </div>
+ 
+        <div class="table-responsive-container">
+            <table class="conti-table" id="logTable">
+                <thead>
+                    <tr>
+                        <th style="width: 18%;">Time</th>
+                        <th style="width: 22%;">Program / Segment Title</th>
+                        <th style="width: 10%;">L/R</th>
+                        <th style="width: 20%;">Broadcaster</th>
+                        <th style="width: 10%;">Netia / CD</th>
+                        <th style="width: 10%;">Remarks</th>
+                        <th style="width: 15%;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="tableLogBody"></tbody>
+            </table>
+        </div>
+ 
+        <div class="bottom-buttons-grid">
+            <button class="action-btn-pill btn-cyan-pill" id="btnAddRow">Add New Row</button>
+            <div style="display: flex; gap: 12px;">
+                <button class="action-btn-pill btn-magenta-pill" id="btnSaveChanges">Save Changes</button>
+                <button class="action-btn-pill btn-dark-pill" id="btnPrintLog">Print</button>
+            </div>
+        </div>
+    </div>
+ 
+    <footer>
+        <p>© 2026 Stanislawa Stephen. All rights reserved.</p>
+    </footer>
+ 
+    <script type="module">
+        import { db, doc, getDoc, setDoc } from "./firebase-config.js";
+
+        const openMenuToggle = document.getElementById('openMenuToggle');
+        const closeMenuToggle = document.getElementById('closeMenuToggle');
+        const sidebarDrawer = document.getElementById('sidebarDrawer');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const themeSwitchTrigger = document.getElementById('themeSwitchTrigger');
+        const displayUsername = document.getElementById('displayUsername');
+ 
+        displayUsername.textContent = localStorage.getItem('currentUser') || 'Guest';
+        if(localStorage.getItem('theme') === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); }
+ 
+        function toggleSidebar(open) {
+            if(open) { sidebarDrawer.classList.add('open'); menuOverlay.classList.add('show'); }
+            else { sidebarDrawer.classList.remove('open'); menuOverlay.classList.remove('show'); }
+        }
+        openMenuToggle.addEventListener('click', () => toggleSidebar(true));
+        closeMenuToggle.addEventListener('click', () => toggleSidebar(false));
+        menuOverlay.addEventListener('click', () => toggleSidebar(false));
+ 
+        themeSwitchTrigger.addEventListener('click', () => {
+            if(document.documentElement.hasAttribute('data-theme')) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+ 
+        const activePerson = localStorage.getItem('activeConti_Person') || 'Unknown DJ';
+        const activeDate = localStorage.getItem('activeConti_Date') || '2026-01-01';
+        const activeInterval = localStorage.getItem('activeConti_Interval') || '09:00am - 12:00pm';
+ 
+        document.getElementById('lblPerson').textContent = activePerson;
+        document.getElementById('lblDate').textContent = activeDate;
+        document.getElementById('lblInterval').textContent = activeInterval;
+ 
+        // Unique document identifier path configuration
+        const storageKeyPointer = `${activePerson}_${activeDate}_${activeInterval.replace(/\s+/g, '')}`;
+        const tableBody = document.getElementById('tableLogBody');
+ 
+        function generateTimeDropdowns(savedHour='', savedMin='', savedAmpm='') {
+            let hHTML = '<select class="row-hour">';
+            for(let i=1; i<=12; i++) {
+                let val = i < 10 ? '0'+i : i;
+                let selected = val == savedHour ? 'selected' : '';
+                hHTML += `<option value="${val}" ${selected}>${val}</option>`;
+            }
+            hHTML += '</select>';
+ 
+            let mHTML = '<select class="row-minute">';
+            for(let i=0; i<=59; i++) {
+                let val = i < 10 ? '0'+i : i;
+                let selected = val == savedMin ? 'selected' : '';
+                mHTML += `<option value="${val}" ${selected}>${val}</option>`;
+            }
+            mHTML += '</select>';
+ 
+            let apHTML = '<select class="row-ampm">';
+            apHTML += `<option value="AM" ${savedAmpm==='AM'?'selected':''}>AM</option>`;
+            apHTML += `<option value="PM" ${savedAmpm==='PM'?'selected':''}>PM</option>`;
+            apHTML += '</select>';
+ 
+            return `<div class="row-time-select-container">${hHTML}<span>:</span>${mHTML}${apHTML}</div>`;
+        }
+ 
+        function createLogTableRow(dataObj = {}, isSaved = false) {
+            const tr = document.createElement('tr');
+            
+            const hourVal = dataObj.hour || '09';
+            const minVal = dataObj.minute || '00';
+            const ampmVal = dataObj.ampm || 'AM';
+            const titleVal = dataObj.title || '';
+            const lrVal = dataObj.lr || 'L';
+            const producerVal = dataObj.producer || '';
+            const netiaVal = dataObj.netia || '';
+            const remarksVal = dataObj.remarks || '';
+ 
+            tr.innerHTML = `
+                <td>${generateTimeDropdowns(hourVal, minVal, ampmVal)}</td>
+                <td><div contenteditable="true" class="table-text-editable row-title" data-placeholder="Enter title">${titleVal}</div></td>
+                <td>
+                    <select class="table-dropdown row-lr">
+                        <option value="L" ${lrVal==='L'?'selected':''}>L</option>
+                        <option value="R" ${lrVal==='R'?'selected':''}>R</option>
+                    </select>
+                </td>
+                <td><div contenteditable="true" class="table-text-editable row-producer" data-placeholder="Enter producer">${producerVal}</div></td>
+                <td><div contenteditable="true" class="table-text-editable row-netia" data-placeholder="">${netiaVal}</div></td>
+                <td><div contenteditable="true" class="table-text-editable row-remarks" data-placeholder="">${remarksVal}</div></td>
+                <td>
+                    <div class="actions-cell-wrapper">
+                        <button type="button" class="row-btn row-btn-save">Save</button>
+                        <button type="button" class="row-btn row-btn-edit" ${!isSaved ? 'disabled' : ''}>Edit</button>
+                        <button type="button" class="row-btn row-btn-delete">Delete</button>
+                    </div>
+                </td>
+            `;
+ 
+            if (isSaved) { toggleRowInputState(tr, false); }
+            
+            // Explicit Event Mapping Configurations inside Module blocks
+            tr.querySelector('.row-btn-save').addEventListener('click', (e) => saveIndividualRow(e.target));
+            tr.querySelector('.row-btn-edit').addEventListener('click', (e) => editIndividualRow(e.target));
+            tr.querySelector('.row-btn-delete').addEventListener('click', (e) => deleteIndividualRow(e.target));
+
+            tableBody.appendChild(tr);
+        }
+ 
+        function toggleRowInputState(trRow, enabled) {
+            const selectElements = trRow.querySelectorAll('select');
+            const editableDivs = trRow.querySelectorAll('.table-text-editable');
+            
+            selectElements.forEach(el => el.disabled = !enabled);
+            editableDivs.forEach(el => el.setAttribute('contenteditable', enabled ? 'true' : 'false'));
+            
+            const btnSave = trRow.querySelector('.row-btn-save');
+            const btnEdit = trRow.querySelector('.row-btn-edit');
+            
+            if (enabled) {
+                btnSave.disabled = false;
+                btnEdit.disabled = true;
+            } else {
+                btnSave.disabled = true;
+                btnEdit.disabled = false;
+            }
+        }
+ 
+        function saveIndividualRow(buttonElement) {
+            const tr = buttonElement.closest('tr');
+            const title = tr.querySelector('.row-title').textContent.trim();
+            if(!title) {
+                alert('Please fill in the Program / Segment Title before saving this row entry.');
+                return;
+            }
+            toggleRowInputState(tr, false);
+        }
+ 
+        function editIndividualRow(buttonElement) {
+            const tr = buttonElement.closest('tr');
+            toggleRowInputState(tr, true);
+        }
+ 
+        function deleteIndividualRow(buttonElement) {
+            const tr = buttonElement.closest('tr');
+            tr.remove();
+            if (tableBody.children.length === 0) {
+                createLogTableRow({}, false);
+            }
+        }
+ 
+        async function initialWorkspaceLoader() {
+            try {
+                const docRef = doc(db, "beats_conti_sheets", storageKeyPointer);
+                const snapshot = await getDoc(docRef);
+
+                if (snapshot.exists()) {
+                    const datasetsParsed = snapshot.data().rows || [];
+                    if (datasetsParsed.length > 0) {
+                        datasetsParsed.forEach(item => {
+                            createLogTableRow(item, true);
+                        });
+                        return;
+                    }
+                }
+            } catch (err) {
+                console.error("Firebase fetch tracking failure:", err);
+            }
+            createLogTableRow({}, false);
+        }
+ 
+        document.getElementById('btnAddRow').addEventListener('click', () => {
+            createLogTableRow({}, false);
+        });
+ 
+        document.getElementById('btnSaveChanges').addEventListener('click', async () => {
+            const completeRows = tableBody.querySelectorAll('tr');
+            const savedDatasetPayload = [];
+            let verificationAlertStatus = true;
+ 
+            completeRows.forEach(row => {
+                const btnSave = row.querySelector('.row-btn-save');
+                if (!btnSave.disabled) { verificationAlertStatus = false; }
+ 
+                savedDatasetPayload.push({
+                    hour: row.querySelector('.row-hour').value,
+                    minute: row.querySelector('.row-minute').value,
+                    ampm: row.querySelector('.row-ampm').value,
+                    title: row.querySelector('.row-title').textContent,
+                    lr: row.querySelector('.row-lr').value,
+                    producer: row.querySelector('.row-producer').textContent,
+                    netia: row.querySelector('.row-netia').textContent,
+                    remarks: row.querySelector('.row-remarks').textContent
+                });
+            });
+ 
+            if(!verificationAlertStatus) {
+                const confirmChoice = confirm("Some modifications are unsaved. Would you like to commit all structural table data cells into persistent records storage logs?");
+                if(!confirmChoice) return;
+            }
+ 
+            try {
+                await setDoc(doc(db, "beats_conti_sheets", storageKeyPointer), {
+                    metaPerson: activePerson,
+                    metaDate: activeDate,
+                    metaInterval: activeInterval,
+                    rows: savedDatasetPayload,
+                    updatedAt: Date.now()
+                });
+                alert('Conti Sheet logs records saved successfully to cloud repository!');
+                tableBody.innerHTML = '';
+                initialWorkspaceLoader();
+            } catch (err) {
+                console.error("Firebase collection save failure:", err);
+                alert("Cloud system sync operation failed.");
+            }
+        });
+ 
+        document.getElementById('btnPrintLog').addEventListener('click', () => { window.print(); });
+        window.addEventListener('DOMContentLoaded', initialWorkspaceLoader);
+    </script>
+</body>
+</html>

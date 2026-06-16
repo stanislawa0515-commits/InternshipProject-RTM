@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEATS - Sign Up</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:ital,wght@1,900&family=Kanit:ital,wght@1,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+ 
+    <div class="app-container">
+        <h1 class="brand-header pulse-word">BEATS</h1>
+ 
+        <div class="form-box">
+            <h2>Sign Up</h2>
+            <form id="signUpForm">
+                <div class="input-group">
+                    <label for="name">Name :</label>
+                    <input type="text" id="name" placeholder="John Doe" required>
+                </div>
+ 
+                <div class="input-group">
+                    <label for="username">Username :</label>
+                    <input type="text" id="username" placeholder="johndoe123" required>
+                </div>
+ 
+                <div class="input-group">
+                    <label for="email">Email :</label>
+                    <input type="type" id="email" placeholder="example@email.com" required>
+                </div>
+ 
+                <div class="input-group">
+                    <label for="password">Password :</label>
+                    <input type="password" id="password" placeholder="Create a strong password" required>
+                </div>
+ 
+                <div class="input-group">
+                    <label for="confirmPassword">Confirm Password :</label>
+                    <input type="password" id="confirmPassword" placeholder="Repeat your password" required>
+                </div>
+ 
+                <button type="submit" class="btn">Sign Up</button>
+            </form>
+            
+            <div class="form-links">
+                <a href="SignIn.html" class="link-gray">Already have an account? Sign In</a>
+            </div>
+        </div>
+ 
+        <footer>
+            <p>© 2026 Stanislawa Stephen. All rights reserved.</p>
+        </footer>
+    </div>
+ 
+    <script type="module">
+        import { db, getDoc, doc, setDoc } from "./firebase-config.js";
+
+        if (localStorage.getItem('beats-theme') === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+ 
+        document.getElementById('signUpForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value.trim();
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim().toLowerCase();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+ 
+            if (password !== confirmPassword) {
+                alert('Passwords do not match! Please check your input.');
+                return;
+            }
+ 
+            if (email === 'admin@beats.com' || email === 'test@example.com') {
+                alert('This email profile registration is reserved by system architectures.');
+                return;
+            }
+
+            try {
+                // Verify if profile already documented in Firebase collections
+                const userDocRef = doc(db, "beats_users", email);
+                const userSnapshot = await getDoc(userDocRef);
+
+                if (userSnapshot.exists()) {
+                    alert('This email is already registered to an account.');
+                    return;
+                }
+
+                // Create account inside Firebase Firestore
+                await setDoc(userDocRef, {
+                    name: name,
+                    username: username,
+                    email: email,
+                    password: password,
+                    createdAt: Date.now()
+                });
+
+                alert('Registration complete! You can now Sign In.');
+                window.location.href = 'SignIn.html';
+
+            } catch (error) {
+                console.error("Database registration issue:", error);
+                alert("Error writing records to cloud servers. Try again.");
+            }
+        });
+    </script>
+</body>
+</html>

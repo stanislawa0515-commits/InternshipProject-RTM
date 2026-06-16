@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEATS - Admin Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:ital,wght@1,900&family=Kanit:ital,wght@1,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .admin-section { margin-bottom: 40px; width: 100%; }
+        .admin-table { width: 100%; border-collapse: collapse; background: var(--bg-container); border-radius: 12px; overflow: hidden; border: 2px solid var(--stroke-dark); margin-top: 15px; }
+        .admin-table th, .admin-table td { padding: 12px; border: 1px solid var(--border-color); text-align: left; font-size: 0.9rem; }
+        .admin-table th { background: var(--stroke-dark); color: white; font-family: 'Kanit'; font-style: italic; }
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
+        .status-pending { background: #ffc107; color: #000; }
+        .status-replied { background: #28a745; color: #fff; }
+        .response-box { display: flex; gap: 8px; margin-top: 5px; align-items: center; }
+        .response-input { flex: 1; padding: 8px; border-radius: 6px; border: 2px solid var(--border-color); background-color: var(--bg-input); color: var(--text-primary); outline: none; }
+        .response-input:focus { border-color: var(--brand-cyan); }
+        .attachment-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background-color: var(--brand-cyan); color: #fff; border: 1px solid var(--stroke-dark); border-radius: 6px; font-size: 0.75rem; cursor: pointer; text-decoration: none; font-weight: bold; }
+        .no-attachment { font-size: 0.8rem; color: var(--text-secondary); font-style: italic; }
+        .modal-mask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 200; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+        .modal-mask.active { opacity: 1; pointer-events: auto; }
+        .modal-window { background: var(--bg-container); border: 3px solid var(--stroke-dark); border-radius: 16px; width: 90%; max-width: 480px; padding: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); transform: scale(0.8); transition: transform 0.2s ease; }
+        .modal-mask.active .modal-window { transform: scale(1); }
+        .modal-preview-container { width: 100%; max-height: 350px; border: 2px dashed var(--border-color); border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--bg-input); margin: 15px 0; }
+        .modal-preview-container img { width: 100%; height: auto; max-height: 345px; object-fit: contain; display: block; }
+    </style>
+</head>
+<body class="page-body-layout">
+ 
+    <div class="menu-header-bar">
+        <div class="left-nav-group">
+            <button class="hamburger-btn" id="openMenuToggle">☰</button>
+            <div class="user-greeting">Admin: <span id="displayUsername">Master</span></div>
+        </div>
+        <div style="font-family: 'Kanit', sans-serif; font-weight: 900; color: #dc2b5c; font-size: 1.5rem; font-style: italic;">BEATS ADMIN</div>
+    </div>
+ 
+    <div class="overlay-screen" id="menuOverlay"></div>
+    <div class="nav-sidebar" id="sidebarDrawer">
+        <button class="close-menu-btn" id="closeMenuToggle">✕</button>
+        <div class="sidebar-links">
+            <a href="AdminDashboard.html">Admin Home</a>
+            <a href="dashboard.html">User View</a>
+            <a href="SignIn.html" id="logoutActionLink" style="color: #ff4d4d; margin-top: 20px;">Logout</a>
+        </div>
+        <div class="theme-toggle-row">
+            <span>Theme Mode</span>
+            <button class="theme-switch-btn" id="themeSwitchTrigger">☀️ / 🌙</button>
+        </div>
+    </div>
+ 
+    <div class="dashboard-view-wrapper">
+        <h1 class="brand-header">Management</h1>
+ 
+        <section class="admin-section">
+            <h2 class="core-functions-headline">Master Conti Bookings</h2>
+            <div class="table-responsive-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Date/Time</th>
+                            <th>DJ / User</th>
+                            <th>Type</th>
+                            <th>Remarks</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminBookingBody"></tbody>
+                </table>
+            </div>
+        </section>
+ 
+        <section class="admin-section">
+            <h2 class="core-functions-headline">Equipment Reports</h2>
+            <div class="table-responsive-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID / Date</th>
+                            <th>Reporter</th>
+                            <th>Equipment</th>
+                            <th>Issue</th>
+                            <th>Photo</th>
+                            <th>Status</th>
+                            <th>Response / Control</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminReportBody"></tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+ 
+    <div class="modal-mask" id="photoModalMask">
+        <div class="modal-window">
+            <h3 style="font-family: 'Kanit'; font-style: italic; color: var(--brand-cyan); text-transform: uppercase;">Evidence Attachment</h3>
+            <div class="modal-preview-container" id="modalImageHolder"></div>
+            <button type="button" class="btn" id="closeModalBtn">Close Window</button>
+        </div>
+    </div>
+ 
+    <script type="module">
+        import { db, collection, doc, getDocs, updateDoc, deleteDoc, query, orderBy } from "./firebase-config.js";
+
+        const currentActiveUser = localStorage.getItem('currentUser');
+        if (currentActiveUser !== 'Admin' && currentActiveUser !== 'admin@beats.com') {
+            alert("Unauthorized access.");
+            window.location.href = 'dashboard.html';
+        }
+ 
+        if(localStorage.getItem('theme') === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); }
+ 
+        let cachedReportsLocalArray = [];
+
+        async function loadAdminData() {
+            await renderBookings();
+            await renderReports();
+        }
+ 
+        async function renderBookings() {
+            const container = document.getElementById('adminBookingBody');
+            container.innerHTML = '';
+            try {
+                const snapshot = await getDocs(collection(db, "beats_bookings"));
+                snapshot.forEach(docSnapshot => {
+                    const item = docSnapshot.data();
+                    const id = docSnapshot.id;
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${item.date}<br><small>${item.timeSlot}</small></td>
+                        <td><strong>${item.dj}</strong><br><small>by: ${item.bookedBy}</small></td>
+                        <td><span class="deck-badge">${item.type}</span></td>
+                        <td>${item.remarks}</td>
+                        <td><button type="button" class="row-delete-btn">Delete</button></td>
+                    `;
+                    tr.querySelector('.row-delete-btn').addEventListener('click', () => deleteBooking(id));
+                    container.appendChild(tr);
+                });
+            } catch (err) { console.error(err); }
+        }
+ 
+        async function deleteBooking(id) {
+            if(confirm("Admin Override: Delete this booking?")) {
+                await deleteDoc(doc(db, "beats_bookings", id));
+                renderBookings();
+            }
+        }
+ 
+        async function renderReports() {
+            const container = document.getElementById('adminReportBody');
+            container.innerHTML = '';
+            cachedReportsLocalArray = [];
+            
+            try {
+                const snapshot = await getDocs(collection(db, "beats_reports"));
+                let trackingIdx = 0;
+                
+                snapshot.forEach(docSnapshot => {
+                    const item = docSnapshot.data();
+                    const id = docSnapshot.id;
+                    cachedReportsLocalArray.push({ docId: id, ...item });
+
+                    const tr = document.createElement('tr');
+                    const statusClass = item.adminResponse ? 'status-replied' : 'status-pending';
+                    const statusText = item.adminResponse ? 'Replied' : 'Pending';
+                    
+                    let attachmentHTML = item.imageAttachment ? `<button type="button" class="attachment-badge btn-view-photo" data-idx="${trackingIdx}">📎 View File</button>` : `<span class="no-attachment">None</span>`;
+                    
+                    tr.innerHTML = `
+                        <td>${item.id}<br><small>${item.date}</small></td>
+                        <td>${item.reporter}<br><small>${item.department}</small></td>
+                        <td>${item.eqModel}</td>
+                        <td><strong>${item.issueType}</strong>: ${item.description}</td>
+                        <td>${attachmentHTML}</td>
+                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        <td>
+                            <div class="response-box">
+                                <input type="text" id="resp-${id}" class="response-input" placeholder="Type reply..." value="${item.adminResponse || ''}">
+                                <button type="button" class="row-btn row-btn-save btn-send-resp" data-id="${id}">Send</button>
+                                <button type="button" class="row-delete-btn btn-del-report" data-id="${id}">Delete</button>
+                            </div>
+                        </td>
+                    `;
+
+                    tr.querySelector('.btn-view-photo')?.addEventListener('click', (e) => openPhotoViewerModal(e.target.dataset.idx));
+                    tr.querySelector('.btn-send-resp').addEventListener('click', (e) => sendResponse(e.target.dataset.id));
+                    tr.querySelector('.btn-del-report').addEventListener('click', (e) => deleteEquipmentReport(e.target.dataset.id));
+
+                    container.appendChild(tr);
+                    trackingIdx++;
+                });
+            } catch(err) { console.error(err); }
+        }
+ 
+        async function sendResponse(id) {
+            const responseText = document.getElementById(`resp-${id}`).value;
+            try {
+                await updateDoc(doc(db, "beats_reports", id), { adminResponse: responseText });
+                alert("Response sent to reporter!");
+                renderReports();
+            } catch(err) { alert("Send operation failed."); }
+        }
+ 
+        async function deleteEquipmentReport(id) {
+            if(confirm("Admin Master Override: Permanent data erase warning?")) {
+                await deleteDoc(doc(db, "beats_reports", id));
+                alert("Equipment report deleted.");
+                renderReports(); 
+            }
+        }
+ 
+        const photoModalMask = document.getElementById('photoModalMask');
+        const modalImageHolder = document.getElementById('modalImageHolder');
+ 
+        function openPhotoViewerModal(index) {
+            const targetedItem = cachedReportsLocalArray[index];
+            if(targetedItem && targetedItem.imageAttachment) {
+                modalImageHolder.innerHTML = `<img src="${targetedItem.imageAttachment}" alt="Evidence View Summary">`;
+                photoModalMask.classList.add('active');
+            }
+        }
+ 
+        function closePhotoViewerModal() {
+            photoModalMask.classList.remove('active');
+            modalImageHolder.innerHTML = ''; 
+        }
+        
+        document.getElementById('closeModalBtn').addEventListener('click', closePhotoViewerModal);
+        photoModalMask.addEventListener('click', closePhotoViewerModal);
+        modalImageHolder.parentNode.addEventListener('click', (e) => e.stopPropagation());
+ 
+        const sidebarDrawer = document.getElementById('sidebarDrawer');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const themeSwitchTrigger = document.getElementById('themeSwitchTrigger');
+        const logoutActionLink = document.getElementById('logoutActionLink');
+ 
+        function toggleSidebar(open) {
+            if(open) { sidebarDrawer.classList.add('open'); menuOverlay.classList.add('show'); }
+            else { sidebarDrawer.classList.remove('open'); menuOverlay.classList.remove('show'); }
+        }
+ 
+        document.getElementById('openMenuToggle').addEventListener('click', () => toggleSidebar(true));
+        document.getElementById('closeMenuToggle').addEventListener('click', () => toggleSidebar(false));
+        menuOverlay.addEventListener('click', () => toggleSidebar(false));
+ 
+        themeSwitchTrigger.addEventListener('click', () => {
+            if(document.documentElement.hasAttribute('data-theme')) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+ 
+        logoutActionLink.addEventListener('click', () => { localStorage.removeItem('currentUser'); });
+        window.addEventListener('DOMContentLoaded', loadAdminData);
+    </script>
+</body>
+</html>

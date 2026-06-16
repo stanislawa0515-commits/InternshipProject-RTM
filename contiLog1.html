@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEATS - Conti Logs Initial Setup</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:ital,wght@1,900&family=Kanit:ital,wght@1,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="page-body-layout">
+ 
+    <div class="menu-header-bar">
+        <div class="left-nav-group">
+            <button class="hamburger-btn" id="openMenuToggle">☰</button>
+            <div class="user-greeting">Hi, <span id="displayUsername">User</span></div>
+        </div>
+        <div style="font-family: 'Kanit', sans-serif; font-weight: 900; color: #dc2b5c; font-size: 1.5rem; font-style: italic;">BEATS</div>
+    </div>
+ 
+    <div class="overlay-screen" id="menuOverlay"></div>
+    <div class="nav-sidebar" id="sidebarDrawer">
+        <button class="close-menu-btn" id="closeMenuToggle">✕</button>
+        <div class="sidebar-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="AboutMe.html">About me</a>
+            <a href="SignIn.html" id="logoutActionLink" style="color: #ff4d4d; margin-top: 20px;">Logout</a>
+        </div>
+        <div class="theme-toggle-row">
+            <span>Theme Mode</span>
+            <button class="theme-switch-btn" id="themeSwitchTrigger">☀️ / 🌙</button>
+        </div>
+    </div>
+ 
+    <div class="app-container" style="max-width: 500px; margin-top: 40px;">
+        <div class="form-box">
+            <h2>Conti Logs</h2>
+            <form id="metaLogForm">
+                <div class="input-group">
+                    <label for="personOnDuty">Person on Duty :</label>
+                    <select id="personOnDuty" required>
+                        <option value="" disabled selected>Choose your name</option>
+                        <option value="DJ A">DJ A</option>
+                        <option value="DJ B">DJ B</option>
+                        <option value="DJ C">DJ C</option>
+                        <option value="DJ D">DJ D</option>
+                        <option value="DJ E">DJ E</option>
+                    </select>
+                </div>
+ 
+                <div class="input-group">
+                    <label for="shiftDate">Date :</label>
+                    <input type="date" id="shiftDate" required>
+                </div>
+ 
+                <div class="input-group">
+                    <label>From :</label>
+                    <select id="timeFrom" required></select>
+                </div>
+ 
+                <div class="input-group">
+                    <label>To :</label>
+                    <select id="timeTo" required></select>
+                </div>
+ 
+                <button type="submit" class="btn">Next</button>
+            </form>
+        </div>
+ 
+        <footer>
+            <p>© 2026 Stanislawa Stephen. All rights reserved.</p>
+        </footer>
+    </div>
+ 
+    <script>
+        const openMenuToggle = document.getElementById('openMenuToggle');
+        const closeMenuToggle = document.getElementById('closeMenuToggle');
+        const sidebarDrawer = document.getElementById('sidebarDrawer');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const themeSwitchTrigger = document.getElementById('themeSwitchTrigger');
+        const displayUsername = document.getElementById('displayUsername');
+        const logoutActionLink = document.getElementById('logoutActionLink');
+ 
+        displayUsername.textContent = localStorage.getItem('currentUser') || 'Guest';
+ 
+        if(localStorage.getItem('theme') === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+ 
+        function toggleSidebar(open) {
+            if(open) {
+                sidebarDrawer.classList.add('open');
+                menuOverlay.classList.add('show');
+            } else {
+                sidebarDrawer.classList.remove('open');
+                menuOverlay.classList.remove('show');
+            }
+        }
+        openMenuToggle.addEventListener('click', () => toggleSidebar(true));
+        closeMenuToggle.addEventListener('click', () => toggleSidebar(false));
+        menuOverlay.addEventListener('click', () => toggleSidebar(false));
+ 
+        themeSwitchTrigger.addEventListener('click', () => {
+            if(document.documentElement.hasAttribute('data-theme')) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+ 
+        function populateShiftClocks() {
+            const selectFrom = document.getElementById('timeFrom');
+            const selectTo = document.getElementById('timeTo');
+            const periods = ['am', 'pm'];
+            
+            let optionsHTML = '<option value="" disabled selected>Select hour block</option>';
+            
+            for (let p = 0; p < 2; p++) {
+                for (let h = 1; h <= 12; h++) {
+                    let hourString = h < 10 ? '0' + h : h;
+                    let displayValue = `${hourString}:00${periods[p]}`;
+                    optionsHTML += `<option value="${displayValue}">${displayValue}</option>`;
+                }
+            }
+            selectFrom.innerHTML = optionsHTML;
+            selectTo.innerHTML = optionsHTML;
+        }
+        populateShiftClocks();
+ 
+        document.getElementById('metaLogForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const person = document.getElementById('personOnDuty').value;
+            const date = document.getElementById('shiftDate').value;
+            const fromTime = document.getElementById('timeFrom').value;
+            const toTime = document.getElementById('timeTo').value;
+ 
+            localStorage.setItem('activeConti_Person', person);
+            localStorage.setItem('activeConti_Date', date);
+            localStorage.setItem('activeConti_Interval', `${fromTime} - ${toTime}`);
+ 
+            window.location.href = 'contiLog2.html';
+        });
+ 
+        logoutActionLink.addEventListener('click', () => localStorage.removeItem('currentUser'));
+    </script>
+</body>
+</html>

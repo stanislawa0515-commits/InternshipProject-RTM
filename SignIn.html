@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEATS - Sign In</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:ital,wght@1,900&family=Kanit:ital,wght@1,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+ 
+    <div class="app-container">
+        <h1 class="brand-header pulse-word">BEATS</h1>
+ 
+        <div class="form-box">
+            <h2>Sign In</h2>
+            <form id="signInForm">
+                <div class="input-group">
+                    <label for="email">Email :</label>
+                    <input type="email" id="email" placeholder="example@email.com" required>
+                </div>
+ 
+                <div class="input-group">
+                    <label for="password">Password :</label>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                </div>
+ 
+                <button type="submit" class="btn">Sign In</button>
+            </form>
+ 
+            <div class="form-links">
+                <a href="SignUp.html" class="link-highlight">Sign Up for new account</a>
+                <a href="forPass.html" class="link-gray">Forgot password?</a>
+            </div>
+        </div>
+ 
+        <footer>
+            <p>© 2026 Stanislawa Stephen. All rights reserved.</p>
+        </footer>
+    </div>
+ 
+    <script type="module">
+        import { db, getDoc, doc } from "./firebase-config.js";
+
+        if(localStorage.getItem('theme') === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+ 
+        document.getElementById('signInForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim().toLowerCase();
+            const password = document.getElementById('password').value;
+ 
+            let authenticatedUsername = "";
+            let isAdmin = false;
+ 
+            // 1. Check for Enforced Master Admin Access Rules Matrix
+            if (email === 'admin@beats.com') {
+                if (password === 'admin123') {
+                    authenticatedUsername = 'Admin';
+                    isAdmin = true;
+                } else {
+                    alert('Incorrect Admin password. Please try again.');
+                    return;
+                }
+            } 
+            // 2. Fetch data records from Firebase Firestore matching input email doc parameter
+            else {
+                try {
+                    const userDocRef = doc(db, "beats_users", email);
+                    const userSnapshot = await getDoc(userDocRef);
+
+                    if (userSnapshot.exists()) {
+                        const userData = userSnapshot.data();
+                        if (userData.password === password) {
+                            authenticatedUsername = userData.username;
+                        } else {
+                            alert('Incorrect password. Please try again.');
+                            return;
+                        }
+                    } else if (email === 'test@example.com' && password === 'password123') {
+                        // Optional fallback validation testing
+                        authenticatedUsername = 'testuser';
+                    } else {
+                        alert('No registered account found with this email. Please sign up first.');
+                        return;
+                    }
+                } catch (error) {
+                    console.error("Database lookup error:", error);
+                    alert("System connectivity fault. Please check settings.");
+                    return;
+                }
+            }
+ 
+            localStorage.setItem('currentUser', authenticatedUsername);
+            alert('Welcome back! Logging into: ' + authenticatedUsername);
+ 
+            if (isAdmin) {
+                window.location.href = 'AdminDashboard.html';
+            } else {
+                window.location.href = 'dashboard.html';
+            }
+        });
+    </script>
+</body>
+</html>

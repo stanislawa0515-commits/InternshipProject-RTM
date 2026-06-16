@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEATS - About Me</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:ital,wght@1,900&family=Kanit:ital,wght@1,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+ 
+    <div class="menu-header-bar">
+        <div class="left-nav-group">
+            <button class="hamburger-btn" id="openMenuToggle">☰</button>
+            <div class="user-greeting">Hi, <span id="displayUsername">User</span></div>
+        </div>
+        <div style="font-family: 'Kanit', sans-serif; font-weight: 900; color: #dc2b5c; font-size: 1.5rem; font-style: italic;">BEATS</div>
+    </div>
+ 
+    <div class="overlay-screen" id="menuOverlay"></div>
+    <div class="nav-sidebar" id="sidebarDrawer">
+        <button class="close-menu-btn" id="closeMenuToggle">✕</button>
+        <div class="sidebar-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="AboutMe.html">About me</a>
+            <a href="SignIn.html" id="logoutActionLink" style="color: #ff4d4d; margin-top: 20px;">Logout</a>
+        </div>
+        
+        <div class="theme-toggle-row">
+            <span>Theme Mode</span>
+            <button class="theme-switch-btn" id="themeSwitchTrigger">☀️ / 🌙</button>
+        </div>
+    </div>
+ 
+    <div class="about-view-wrapper">
+        <div class="about-logo-pulsing">BEATS</div>
+ 
+        <div class="acronym-row">
+            <div class="acronym-block"><span>B</span>ooking</div>
+            <div class="acronym-block"><span>E</span>quipment</div>
+            <div class="acronym-block"><span>A</span>nd</div>
+            <div class="acronym-block"><span>T</span>ask</div>
+            <div class="acronym-block"><span>S</span>ystem</div>
+        </div>
+ 
+        <div class="concept-description-box">
+            <h3>How this idea came to life</h3>
+            <p>
+                This system was designed to eliminate traditional logbooks and optimize studio management. 
+                Previously, staff manually tracked duties in paper books, which were frequently misplaced or lost. 
+                By replacing physical books with BEATS, offices save valuable workspace and can seamlessly track tasks by date.
+            </p>
+            <br>
+            <p>
+                Additionally, there was no centralized booking or reporting mechanism for the Conti studio. Staff entered and exited without coordination. 
+                With BEATS, staff can check studio availability and secure bookings anytime, anywhere even outside of standard office hours. 
+                The system also introduces a digital portal to file broken or missing equipment reports instantly.
+            </p>
+        </div>
+ 
+        <footer>
+            <p>© 2026 Stanislawa Stephen. All rights reserved.</p>
+        </footer>
+    </div>
+ 
+    <script>
+        const openMenuToggle = document.getElementById('openMenuToggle');
+        const closeMenuToggle = document.getElementById('closeMenuToggle');
+        const sidebarDrawer = document.getElementById('sidebarDrawer');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const themeSwitchTrigger = document.getElementById('themeSwitchTrigger');
+        const displayUsername = document.getElementById('displayUsername');
+        const logoutActionLink = document.getElementById('logoutActionLink');
+ 
+        const activeUser = localStorage.getItem('currentUser') || 'Guest';
+        displayUsername.textContent = activeUser;
+ 
+        if(localStorage.getItem('theme') === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+ 
+        function toggleSidebar(open) {
+            if(open) {
+                sidebarDrawer.classList.add('open');
+                menuOverlay.classList.add('show');
+            } else {
+                sidebarDrawer.classList.remove('open');
+                menuOverlay.classList.remove('show');
+            }
+        }
+ 
+        openMenuToggle.addEventListener('click', () => toggleSidebar(true));
+        closeMenuToggle.addEventListener('click', () => toggleSidebar(false));
+        menuOverlay.addEventListener('click', () => toggleSidebar(false));
+ 
+        themeSwitchTrigger.addEventListener('click', () => {
+            if(document.documentElement.hasAttribute('data-theme')) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+ 
+        logoutActionLink.addEventListener('click', () => {
+            localStorage.removeItem('currentUser');
+        });
+    </script>
+</body>
+</html>

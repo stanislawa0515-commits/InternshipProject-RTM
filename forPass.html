@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEATS - Forgot Password</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:ital,wght@1,900&family=Kanit:ital,wght@1,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+ 
+    <div class="app-container">
+        <h1 class="brand-header pulse-word">BEATS</h1>
+ 
+        <div class="form-box">
+            <h2>Reset Password</h2>
+            <form id="forgotForm">
+                <div class="input-group">
+                    <label for="email">Email :</label>
+                    <input type="email" id="email" placeholder="registered-email@example.com" required>
+                </div>
+ 
+                <div class="input-group">
+                    <label for="newPassword">New Password :</label>
+                    <input type="password" id="newPassword" placeholder="Enter new password" required>
+                </div>
+ 
+                <div class="input-group">
+                    <label for="confirmNewPassword">Confirm New Password :</label>
+                    <input type="password" id="confirmNewPassword" placeholder="Repeat new password" required>
+                </div>
+ 
+                <button type="submit" class="btn">Reset Password</button>
+            </form>
+ 
+            <div class="form-links">
+                <a href="SignIn.html" class="link-gray">Back to Sign In</a>
+            </div>
+        </div>
+ 
+        <footer>
+            <p>© 2026 Stanislawa Stephen. All rights reserved.</p>
+        </footer>
+    </div>
+ 
+    <script type="module">
+        import { db, doc, getDoc, updateDoc } from "./firebase-config.js";
+
+        if(localStorage.getItem('theme') === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+ 
+        document.getElementById('forgotForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+ 
+            const email = document.getElementById('email').value.trim().toLowerCase();
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+ 
+            if (newPassword !== confirmNewPassword) {
+                alert('New passwords do not match!');
+                return;
+            }
+ 
+            try {
+                const userDocRef = doc(db, "beats_users", email);
+                const userSnapshot = await getDoc(userDocRef);
+
+                if (userSnapshot.exists()) {
+                    await updateDoc(userDocRef, {
+                        password: newPassword
+                    });
+                    alert('Your password has been successfully reset!');
+                    window.location.href = 'SignIn.html';
+                } else {
+                    alert("This email account doesn't exist inside registration clusters.");
+                }
+            } catch (error) {
+                console.error("Mutation resetting fault:", error);
+                alert("Database update failure occurred.");
+            }
+        });
+    </script>
+</body>
+</html>

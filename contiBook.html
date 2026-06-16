@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEATS - Conti Booking Worksheet</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:ital,wght@1,900&family=Kanit:ital,wght@1,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="page-body-layout">
+ 
+    <div class="menu-header-bar">
+        <div class="left-nav-group">
+            <button class="hamburger-btn" id="openMenuToggle">☰</button>
+            <div class="user-greeting">Hi, <span id="displayUsername">User</span></div>
+        </div>
+        <div style="font-family: 'Kanit', sans-serif; font-weight: 900; color: #dc2b5c; font-size: 1.5rem; font-style: italic;">BEATS</div>
+    </div>
+ 
+    <div class="overlay-screen" id="menuOverlay"></div>
+    <div class="nav-sidebar" id="sidebarDrawer">
+        <button class="close-menu-btn" id="closeMenuToggle">✕</button>
+        <div class="sidebar-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="AboutMe.html">About me</a>
+            <a href="SignIn.html" id="logoutActionLink" style="color: #ff4d4d; margin-top: 20px;">Logout</a>
+        </div>
+        <div class="theme-toggle-row">
+            <span>Theme Mode</span>
+            <button class="theme-switch-btn" id="themeSwitchTrigger">☀️ / 🌙</button>
+        </div>
+    </div>
+ 
+    <div class="form-box" style="max-width: 680px; margin-top: 20px; border: 3px solid var(--stroke-dark);">
+        <h2>Conti Booking</h2>
+        
+        <form id="bookingControlForm">
+            <div class="input-group">
+                <label for="djSelector">Name :</label>
+                <select id="djSelector" required>
+                    <option value="" disabled selected>Choose your name</option>
+                    <option value="DJ A">DJ A</option>
+                    <option value="DJ B">DJ B</option>
+                    <option value="DJ C">DJ C</option>
+                    <option value="DJ D">DJ D</option>
+                    <option value="DJ E">DJ E</option>
+                </select>
+            </div>
+ 
+            <div class="input-group">
+                <label for="bookingType">Type of Booking :</label>
+                <select id="bookingType" required>
+                    <option value="" disabled selected>Select session architecture</option>
+                    <option value="Recording Session">Recording Session</option>
+                    <option value="Guest Interview">Guest Interview</option>
+                </select>
+            </div>
+ 
+            <label style="font-weight: bold; font-size: 0.95rem; color: var(--text-primary);">Date & Time Selection</label>
+            
+            <div class="booking-scheduler-layout">
+                <div class="calendar-widget-card">
+                    <div class="widget-title">📅 Target Date</div>
+                    <div class="native-datepicker-container">
+                        <input type="date" id="calendarRealtimeInput" class="native-calendar-input" required>
+                    </div>
+                </div>
+ 
+                <div class="slots-widget-card">
+                    <div class="widget-title">⏰ Available Slots</div>
+                    <div class="slots-time-grid" id="slotsGridElement"></div>
+                </div>
+            </div>
+ 
+            <div class="input-group" style="margin-top: 20px;">
+                <label for="remarksArea">Remarks :</label>
+                <textarea id="remarksArea" rows="3" placeholder='e.g., "Info Sihat"' required></textarea>
+            </div>
+ 
+            <div style="display: flex; gap: 15px; margin-top: 15px;">
+                <button type="button" class="btn" id="btnEditSession" style="background-color: #ffc107; color: #12121c; display:none;">Cancel Edit</button>
+                <button type="submit" class="btn" id="btnSaveSession">Save Entry</button>
+            </div>
+        </form>
+ 
+        <div class="booked-deck-container">
+            <div class="widget-title" style="color: var(--brand-cyan);">Saved Live Records Tracker</div>
+            <div id="savedRecordsDeck"></div>
+        </div>
+    </div>
+ 
+    <footer>
+        <p>© 2026 Stanislawa Stephen. All rights reserved.</p>
+    </footer>
+ 
+    <script type="module">
+        import { db, collection, doc, setDoc, getDocs, deleteDoc, query, orderBy } from "./firebase-config.js";
+
+        const openMenuToggle = document.getElementById('openMenuToggle');
+        const closeMenuToggle = document.getElementById('closeMenuToggle');
+        const sidebarDrawer = document.getElementById('sidebarDrawer');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const themeSwitchTrigger = document.getElementById('themeSwitchTrigger');
+        const displayUsername = document.getElementById('displayUsername');
+        const logoutActionLink = document.getElementById('logoutActionLink');
+ 
+        const calendarInput = document.getElementById('calendarRealtimeInput');
+        const slotsGridElement = document.getElementById('slotsGridElement');
+        const bookingControlForm = document.getElementById('bookingControlForm');
+        const remarksArea = document.getElementById('remarksArea');
+        const djSelector = document.getElementById('djSelector');
+        const bookingType = document.getElementById('bookingType');
+        const savedRecordsDeck = document.getElementById('savedRecordsDeck');
+        const btnEditSession = document.getElementById('btnEditSession');
+        const btnSaveSession = document.getElementById('btnSaveSession');
+ 
+        const currentActiveUser = localStorage.getItem('currentUser') || 'Guest';
+        let activeSelectedTimeSlot = null; 
+        let editStateKeyId = null;
+        let globalCachedRegistry = []; // Holds cloud array datasets internally
+
+        const TIME_BLOCK_SCHEDULING_DATA = [
+            "8:00am", "9:00am", "10:00am", "11:00am", "12:00pm",
+            "1:00pm", "2:00pm", "3:00pm", "4:00pm", "5:00pm"
+        ];
+ 
+        displayUsername.textContent = currentActiveUser;
+        if(localStorage.getItem('theme') === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); }
+ 
+        function autoSelectActiveDJDropdown() {
+            const normalizedUser = currentActiveUser.toUpperCase().replace(/\s+/g, '');
+            for(let option of djSelector.options) {
+                const normalizedOption = option.value.toUpperCase().replace(/\s+/g, '');
+                if(normalizedOption === normalizedUser) {
+                    djSelector.value = option.value;
+                    break;
+                }
+            }
+        }
+ 
+        function toggleSidebar(open) {
+            if(open) { sidebarDrawer.classList.add('open'); menuOverlay.classList.add('show'); }
+            else { sidebarDrawer.classList.remove('open'); menuOverlay.classList.remove('show'); }
+        }
+        openMenuToggle.addEventListener('click', () => toggleSidebar(true));
+        closeMenuToggle.addEventListener('click', () => toggleSidebar(false));
+        menuOverlay.addEventListener('click', () => toggleSidebar(false));
+ 
+        themeSwitchTrigger.addEventListener('click', () => {
+            if(document.documentElement.hasAttribute('data-theme')) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+ 
+        const todayDateInstance = new Date();
+        const ISOStringFormatted = todayDateInstance.toISOString().split('T')[0];
+        calendarInput.setAttribute('min', ISOStringFormatted);
+        calendarInput.value = ISOStringFormatted;
+ 
+        // 24 Hour cloud filtering routine hook
+        async function fetchGlobalBookingRegistryFromCloud() {
+            try {
+                const q = query(collection(db, "beats_bookings"), orderBy("createdAt", "asc"));
+                const querySnapshot = await getDocs(q);
+                const records = [];
+                const currentTime = Date.now();
+                const twentyFourHoursInMs = 24 * 60 * 60 * 1000;
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    // Auto purge document from view grid if expired
+                    if (!data.createdAt || (currentTime - data.createdAt) < twentyFourHoursInMs) {
+                        records.push({ id: doc.id, ...data });
+                    }
+                });
+                globalCachedRegistry = records;
+            } catch (err) {
+                console.error("Cloud syncing operation issue:", err);
+            }
+        }
+ 
+        function updateTimeSlotsGridDisplay() {
+            slotsGridElement.innerHTML = '';
+            const targetedSelectedDate = calendarInput.value;
+            if (!targetedSelectedDate) return;
+ 
+            TIME_BLOCK_SCHEDULING_DATA.forEach(timeSlotString => {
+                const button = document.createElement('button');
+                button.type = "button";
+                button.className = "time-slot-btn";
+                button.textContent = timeSlotString;
+ 
+                const matchedRecord = globalCachedRegistry.find(record => 
+                    record.date === targetedSelectedDate && 
+                    record.timeSlot === timeSlotString &&
+                    record.id !== editStateKeyId
+                );
+ 
+                if (matchedRecord) { button.disabled = true; }
+                if (activeSelectedTimeSlot === timeSlotString) { button.classList.add('selected'); }
+ 
+                button.addEventListener('click', () => {
+                    if (matchedRecord) {
+                        alert("oops ! This slot is unavailable. Please select another date or Time.");
+                        return;
+                    }
+                    document.querySelectorAll('.time-slot-btn').forEach(btn => btn.classList.remove('selected'));
+                    button.classList.add('selected');
+                    activeSelectedTimeSlot = timeSlotString;
+                });
+ 
+                slotsGridElement.appendChild(button);
+            });
+        }
+ 
+        function refreshSavedRecordsDeckDisplay() {
+            savedRecordsDeck.innerHTML = '';
+ 
+            if (globalCachedRegistry.length === 0) {
+                savedRecordsDeck.innerHTML = `<p style="font-size:0.85rem; color:var(--text-secondary); text-align:center; padding:10px;">No slots booked yet.</p>`;
+                return;
+            }
+ 
+            globalCachedRegistry.forEach(item => {
+                const row = document.createElement('div');
+                row.className = "deck-item-row";
+                const matchesIdentityOwner = (item.bookedBy === currentActiveUser);
+ 
+                row.innerHTML = `
+                    <div class="deck-info-details">
+                        <strong>${item.dj}</strong> <small style="color:var(--text-secondary); font-style:italic;">(Saved by: ${item.bookedBy})</small> - <span class="deck-badge">${item.type}</span><br>
+                        <small>📅 ${item.date} | ⏰ ${item.timeSlot}</small><br>
+                        <small style="color:var(--brand-cyan)">Remarks: ${item.remarks}</small>
+                    </div>
+                    <div style="${!matchesIdentityOwner ? 'display: none;' : ''}">
+                        <button type="button" class="row-delete-btn">Delete</button>
+                    </div>
+                `;
+                
+                row.querySelector('.row-delete-btn')?.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteBookingRecordRow(item.id, item.bookedBy);
+                });
+ 
+                if (matchesIdentityOwner) {
+                    row.style.cursor = 'pointer';
+                    row.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('row-delete-btn')) return;
+                        initiateRecordEditSequence(item);
+                    });
+                } else {
+                    row.style.cursor = 'not-allowed';
+                    row.title = "View Only: This slot was secured by another account.";
+                    row.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('row-delete-btn')) return;
+                        alert(`Access Denied: This slot was explicitly locked by ${item.bookedBy}. You do not have permissions to modify this item.`);
+                    });
+                }
+ 
+                savedRecordsDeck.appendChild(row);
+            });
+        }
+ 
+        function initiateRecordEditSequence(item) {
+            editStateKeyId = item.id;
+            djSelector.value = item.dj;
+            bookingType.value = item.type;
+            calendarInput.value = item.date;
+            remarksArea.value = item.remarks;
+            activeSelectedTimeSlot = item.timeSlot;
+ 
+            btnEditSession.style.display = "inline-block";
+            btnSaveSession.textContent = "Update & Save";
+            
+            updateTimeSlotsGridDisplay();
+            window.scrollTo({ top: bookingControlForm.offsetTop - 80, behavior: 'smooth' });
+        }
+ 
+        btnEditSession.addEventListener('click', () => { resetBookingFormStates(); });
+ 
+        function resetBookingFormStates() {
+            editStateKeyId = null;
+            activeSelectedTimeSlot = null;
+            bookingControlForm.reset();
+            calendarInput.value = ISOStringFormatted;
+            btnSaveSession.textContent = "Save Entry";
+            btnEditSession.style.display = "none";
+            autoSelectActiveDJDropdown();
+            updateTimeSlotsGridDisplay();
+        }
+ 
+        async function deleteBookingRecordRow(recordId, itemOwnerString) {
+            if (itemOwnerString !== currentActiveUser) {
+                alert(`Access Denied: Cannot erase this asset entry.`);
+                return;
+            }
+ 
+            if (confirm("Are you sure you want to cancel and remove this booking slot record entry?")) {
+                try {
+                    await deleteDoc(doc(db, "beats_bookings", recordId));
+                    if (editStateKeyId === recordId) { resetBookingFormStates(); }
+                    await runtimeInitializationSequenceLoop();
+                } catch (err) {
+                    alert("Delete failed.");
+                }
+            }
+        }
+ 
+        calendarInput.addEventListener('change', () => { updateTimeSlotsGridDisplay(); });
+ 
+        bookingType.addEventListener('change', () => {
+            if(bookingType.value === "Guest Interview") {
+                remarksArea.placeholder = 'e.g., "Info Sihat" (Topic/Guest specifications required)';
+            } else {
+                remarksArea.placeholder = 'e.g., "Vocal track tracking, standard mixing schedule alignment"';
+            }
+        });
+ 
+        bookingControlForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+ 
+            if (!activeSelectedTimeSlot) {
+                alert("Validation Failure: Please pick an operational time slot button.");
+                return;
+            }
+ 
+            const conflictExists = globalCachedRegistry.some(record => 
+                record.date === calendarInput.value && 
+                record.timeSlot === activeSelectedTimeSlot &&
+                record.id !== editStateKeyId
+            );
+ 
+            if (conflictExists) {
+                alert("oops ! This slot is unavailable. Please select another date or Time.");
+                return;
+            }
+ 
+            const targetDocId = editStateKeyId || 'REC_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+            
+            try {
+                await setDoc(doc(db, "beats_bookings", targetDocId), {
+                    dj: djSelector.value,
+                    type: bookingType.value,
+                    date: calendarInput.value,
+                    timeSlot: activeSelectedTimeSlot,
+                    remarks: remarksArea.value.trim(),
+                    bookedBy: currentActiveUser,
+                    createdAt: editStateKeyId ? (globalCachedRegistry.find(r=>r.id===editStateKeyId)?.createdAt || Date.now()) : Date.now()
+                });
+
+                alert(editStateKeyId ? "Record structural parameters updated!" : "Conti Studio allocation slot committed successfully!");
+                resetBookingFormStates();
+                await runtimeInitializationSequenceLoop();
+            } catch (err) {
+                alert("Cloud registration submission error.");
+            }
+        });
+ 
+        async function runtimeInitializationSequenceLoop() {
+            await fetchGlobalBookingRegistryFromCloud();
+            updateTimeSlotsGridDisplay();
+            refreshSavedRecordsDeckDisplay();
+        }
+
+        autoSelectActiveDJDropdown();
+        runtimeInitializationSequenceLoop();
+ 
+        logoutActionLink.addEventListener('click', () => localStorage.removeItem('currentUser'));
+    </script>
+</body>
+</html>

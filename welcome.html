@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to BEATS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:ital,wght@1,900&family=Kanit:ital,wght@1,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+ 
+    <div class="welcome-container">
+        <h1 class="welcome-text">
+            <span class="word delay-1">Welcome</span>
+            <span class="word delay-2">to</span>
+            <span class="word delay-3 pulse-word">BEATS</span>
+        </h1>
+        <div class="loader"></div>
+    </div>
+ 
+    <script>
+        document.documentElement.removeAttribute('data-theme');
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                window.location.href = 'SignIn.html';
+            }, 4500); 
+        });
+    </script>
+</body>
+</html>
