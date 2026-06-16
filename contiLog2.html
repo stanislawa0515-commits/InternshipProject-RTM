@@ -73,7 +73,7 @@
     </footer>
  
     <script type="module">
-        import { db, doc, getDoc, setDoc, deleteDoc } from "./firebase-config.js";
+        import { db, doc, getDoc, setDoc } from "./firebase-config.js";
 
         const openMenuToggle = document.getElementById('openMenuToggle');
         const closeMenuToggle = document.getElementById('closeMenuToggle');
@@ -215,11 +215,11 @@
             toggleRowInputState(tr, true);
         }
  
-        // INSTANT AUTOMATIC DELETION LOOP
+        // INSTANT SYNCHRONIZATION (Saves data array permanently without deleting document)
         async function deleteIndividualRow(buttonElement) {
             const tr = buttonElement.closest('tr');
             
-            if(confirm("Permanently remove this row log item?")) {
+            if(confirm("Permanently remove this row entry from current view log?")) {
                 tr.remove();
                 
                 const remainingRows = tableBody.querySelectorAll('tr');
@@ -243,22 +243,15 @@
 
                 try {
                     const docRef = doc(db, "beats_conti_sheets", storageKeyPointer);
-                    
-                    if (updatedPayload.length === 0) {
-                        // If NO rows are left, delete the document entirely so the Admin Dashboard is empty
-                        await deleteDoc(docRef);
-                        alert("Sheet emptied and removed from Admin Dashboard!");
-                    } else {
-                        // If rows are still left, update Firestore with the shorter list
-                        await setDoc(docRef, {
-                            metaPerson: activePerson,
-                            metaDate: activeDate,
-                            metaInterval: activeInterval,
-                            rows: updatedPayload,
-                            updatedAt: Date.now()
-                        });
-                        alert("Row updated instantly!");
-                    }
+                    // We write the updated rows list to the document. If it is empty, the list is [] (permanent history remains intact)
+                    await setDoc(docRef, {
+                        metaPerson: activePerson,
+                        metaDate: activeDate,
+                        metaInterval: activeInterval,
+                        rows: updatedPayload,
+                        updatedAt: Date.now()
+                    });
+                    alert("System sync update successful!");
                 } catch(err) {
                     console.error("Auto delete sync failure:", err);
                 }
