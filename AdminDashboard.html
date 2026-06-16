@@ -27,6 +27,9 @@
         .modal-mask.active .modal-window { transform: scale(1); }
         .modal-preview-container { width: 100%; max-height: 350px; border: 2px dashed var(--border-color); border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--bg-input); margin: 15px 0; }
         .modal-preview-container img { width: 100%; height: auto; max-height: 345px; object-fit: contain; display: block; }
+        
+        /* Flex box configuration for clean side-by-side control buttons styling */
+        .actions-cell-inline-wrapper { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; }
     </style>
 </head>
 <body class="page-body-layout">
@@ -75,7 +78,7 @@
             </div>
         </section>
 
-        <!-- Section 2: Conti Log Live Sheets Row Updates Manager -->
+        <!-- Section 2: User Conti Log Sheets Table -->
         <section class="admin-section">
             <h2 class="core-functions-headline">User Conti Sheets Rows & Remarks</h2>
             <div class="table-responsive-container">
@@ -87,7 +90,7 @@
                             <th>Program / Segment Title</th>
                             <th>Broadcaster Crew</th>
                             <th>Table Remarks Cell Value</th>
-                            <th>Sync Action</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody id="adminContiSheetsBody"></tbody>
@@ -179,7 +182,7 @@
             try {
                 const snapshot = await getDocs(collection(db, "beats_conti_sheets"));
                 if(snapshot.empty) {
-                    container.innerHTML = `<tr><td colspan="6" style="text-align:center; font-style:italic;">No active dynamic sheet rows to manage.</td></tr>`;
+                    container.innerHTML = `<tr><td colspan="6" style="text-align:center; font-style:italic;">No active sheet logs found.</td></tr>`;
                     return;
                 }
 
@@ -206,12 +209,18 @@
                                     placeholder="Write table remark reply...">
                             </td>
                             <td>
-                                <button type="button" class="row-btn row-btn-save btn-sync-remark" 
-                                    data-sheetid="${sheetId}" 
-                                    data-rowidx="${rowIndex}">Update Remark</button>
+                                <div class="actions-cell-inline-wrapper">
+                                    <button type="button" class="row-btn row-btn-save btn-sync-remark" 
+                                        style="background-color: #28a745; color: white;"
+                                        data-sheetid="${sheetId}" 
+                                        data-rowidx="${rowIndex}">Update Remark</button>
+                                    <button type="button" class="row-delete-btn btn-delete-sheet" 
+                                        data-sheetid="${sheetId}">Delete</button>
+                                </div>
                             </td>
                         `;
 
+                        // Update single row remark callback logic
                         tr.querySelector('.btn-sync-remark').addEventListener('click', async (e) => {
                             const sId = e.target.dataset.sheetid;
                             const rIdx = parseInt(e.target.dataset.rowidx);
@@ -223,15 +232,30 @@
                                 if(currentSnap.exists()) {
                                     const payload = currentSnap.data();
                                     if(payload.rows && payload.rows[rIdx]) {
-                                        payload.rows[rIdx].remarks = textVal; // Directly targets row structural data cell
+                                        payload.rows[rIdx].remarks = textVal;
                                         await setDoc(docRef, payload);
-                                        alert("Remark response injected cleanly into user's data table row item!");
+                                        alert("Remark text cell successfully pushed to user sheet!");
                                         renderContiSheetsRows();
                                     }
                                 }
                             } catch(err) {
                                 console.error(err);
-                                alert("Failed to commit remark adjustment.");
+                                alert("Failed to modify remark value.");
+                            }
+                        });
+
+                        // Delete whole sheet documentation callback logic
+                        tr.querySelector('.btn-delete-sheet').addEventListener('click', async (e) => {
+                            const sId = e.target.dataset.sheetid;
+                            if(confirm(`Admin Master Override!\nAre you sure you want to permanently delete this entire Conti Sheet document?\nDocument reference path key: "${sId}"`)) {
+                                try {
+                                    await deleteDoc(doc(db, "beats_conti_sheets", sId));
+                                    alert("Conti sheet document successfully dropped from database storage layer.");
+                                    renderContiSheetsRows();
+                                } catch(err) {
+                                    console.error(err);
+                                    alert("Could not complete requested deletion.");
+                                }
                             }
                         });
 
