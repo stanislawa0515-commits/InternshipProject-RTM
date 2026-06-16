@@ -11,14 +11,14 @@
     <style>
         .admin-section { margin-bottom: 40px; width: 100%; }
         .admin-table { width: 100%; border-collapse: collapse; background: var(--bg-container); border-radius: 12px; overflow: hidden; border: 2px solid var(--stroke-dark); margin-top: 15px; }
-        .admin-table th, .admin-table td { padding: 12px; border: 1px solid var(--border-color); text-align: left; font-size: 0.9rem; }
-        .admin-table th { background: var(--stroke-dark); color: white; font-family: 'Kanit'; font-style: italic; }
-        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
+        .admin-table th, .admin-table td { padding: 12px; border: 1px solid var(--border-color); text-align: left; font-size: 0.9rem; vertical-align: middle; }
+        .admin-table th { background: #2b0b18; color: white; font-family: 'Kanit'; font-style: italic; text-transform: uppercase; }
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; border: 1px solid var(--stroke-dark); }
         .status-pending { background: #ffc107; color: #000; }
         .status-replied { background: #28a745; color: #fff; }
-        .response-box { display: flex; gap: 8px; margin-top: 5px; align-items: center; }
+        .response-box { display: flex; gap: 8px; margin-top: 5px; align-items: center; width: 100%; }
         .response-input { flex: 1; padding: 8px; border-radius: 6px; border: 2px solid var(--border-color); background-color: var(--bg-input); color: var(--text-primary); outline: none; }
-        .response-input:focus { border-color: var(--brand-cyan); }
+        .response-input:focus { border-color: var(--brand-cyan); background-color: var(--bg-container); }
         .attachment-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background-color: var(--brand-cyan); color: #fff; border: 1px solid var(--stroke-dark); border-radius: 6px; font-size: 0.75rem; cursor: pointer; text-decoration: none; font-weight: bold; }
         .no-attachment { font-size: 0.8rem; color: var(--text-secondary); font-style: italic; }
         .modal-mask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 200; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
@@ -27,6 +27,11 @@
         .modal-mask.active .modal-window { transform: scale(1); }
         .modal-preview-container { width: 100%; max-height: 350px; border: 2px dashed var(--border-color); border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--bg-input); margin: 15px 0; }
         .modal-preview-container img { width: 100%; height: auto; max-height: 345px; object-fit: contain; display: block; }
+        
+        /* Nesting internal layout structure for preview tracking entries */
+        .nested-preview-list { text-align: left; background: var(--bg-input); padding: 10px; border-radius: 8px; font-size: 0.8rem; max-height: 120px; overflow-y: auto; border: 1px solid var(--border-color); margin-top: 5px; }
+        .nested-preview-item { border-bottom: 1px dashed var(--border-color); padding: 4px 0; }
+        .nested-preview-item:last-child { border-bottom: none; }
     </style>
 </head>
 <body class="page-body-layout">
@@ -57,7 +62,25 @@
         <h1 class="brand-header">Management</h1>
  
         <section class="admin-section">
-            <h2 class="core-functions-headline">Master Conti Bookings</h2>
+            <h2 class="core-functions-headline">Review User Conti Logs</h2>
+            <div class="table-responsive-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">Log Details</th>
+                            <th style="width: 35%;">Worksheet Segments Summary</th>
+                            <th style="width: 40%;">Admin Remarks / Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminContiSheetsBody">
+                        <tr><td colspan="3" style="text-align:center; color:var(--text-secondary);">Loading logs workspace collection database...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="admin-section">
+            <h2 class="core-functions-headline">Master Bookings</h2>
             <div class="table-responsive-container">
                 <table class="admin-table">
                     <thead>
@@ -104,7 +127,7 @@
     </div>
  
     <script type="module">
-        import { db, collection, doc, getDocs, updateDoc, deleteDoc, query, orderBy } from "./firebase-config.js";
+        import { db, collection, doc, getDocs, updateDoc, deleteDoc } from "./firebase-config.js";
 
         const currentActiveUser = localStorage.getItem('currentUser');
         if (currentActiveUser !== 'Admin' && currentActiveUser !== 'admin@beats.com') {
@@ -117,8 +140,96 @@
         let cachedReportsLocalArray = [];
 
         async function loadAdminData() {
+            await renderContiSheets();
             await renderBookings();
             await renderReports();
+        }
+
+        // Fetch and render Conti Sheets logs entries
+        async function renderContiSheets() {
+            const container = document.getElementById('adminContiSheetsBody');
+            container.innerHTML = '';
+            try {
+                const snapshot = await getDocs(collection(db, "beats_conti_sheets"));
+                if(snapshot.empty) {
+                    container.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-secondary);">No submitted Conti Logs sheets found.</td></tr>`;
+                    return;
+                }
+
+                snapshot.forEach(docSnapshot => {
+                    const id = docSnapshot.id;
+                    const data = docSnapshot.data();
+                    
+                    const metaPerson = data.metaPerson || 'Unknown';
+                    const metaDate = data.metaDate || 'N/A';
+                    const metaInterval = data.metaInterval || 'N/A';
+                    const adminRemarks = data.adminRemarks || '';
+                    const rowsArray = data.rows || [];
+
+                    // Create structured micro-views summarizing user spreadsheet structures
+                    let structuralSummaryHTML = `<div class="nested-preview-list">`;
+                    if (rowsArray.length === 0) {
+                        structuralSummaryHTML += `<div style="font-style:italic; color:var(--text-secondary)">Empty sheet log data</div>`;
+                    } else {
+                        rowsArray.forEach(row => {
+                            structuralSummaryHTML += `
+                                <div class="nested-preview-item">
+                                    <strong>${row.hour}:${row.minute} ${row.ampm}</strong> - ${row.title || 'Untitled'} (${row.lr}) 
+                                    <span style="color:var(--brand-cyan); font-size:0.75rem;">${row.producer ? 'by '+row.producer : ''}</span>
+                                </div>`;
+                        });
+                    }
+                    structuralSummaryHTML += `</div>`;
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>
+                            <strong>DJ:</strong> ${metaPerson}<br>
+                            <small><strong>Date:</strong> ${metaDate}</small><br>
+                            <small><strong>Shift:</strong> ${metaInterval}</small>
+                        </td>
+                        <td>${structuralSummaryHTML}</td>
+                        <td>
+                            <div class="response-box">
+                                <input type="text" id="conti-remark-${id}" class="response-input" placeholder="Add Admin Remarks for DJ..." value="${adminRemarks}">
+                                <button type="button" class="row-btn row-btn-save btn-save-conti-remark" data-id="${id}">Save</button>
+                                <button type="button" class="row-delete-btn btn-del-conti-sheet" data-id="${id}">Clear</button>
+                            </div>
+                        </td>
+                    `;
+
+                    tr.querySelector('.btn-save-conti-remark').addEventListener('click', (e) => saveContiRemark(e.target.dataset.id));
+                    tr.querySelector('.btn-del-conti-sheet').addEventListener('click', (e) => deleteContiSheet(e.target.dataset.id));
+                    
+                    container.appendChild(tr);
+                });
+            } catch (err) {
+                console.error("Failure tracking sheets mapping loop records:", err);
+                container.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#dc3545;">Failed to load logs dataset.</td></tr>`;
+            }
+        }
+
+        async function saveContiRemark(id) {
+            const remarkText = document.getElementById(`conti-remark-${id}`).value.trim();
+            try {
+                await updateDoc(doc(db, "beats_conti_sheets", id), {
+                    adminRemarks: remarkText,
+                    remarksUpdatedAt: Date.now()
+                });
+                alert("Remarks saved successfully! The on-duty DJ will see this update live.");
+                renderContiSheets();
+            } catch(err) {
+                console.error(err);
+                alert("Failed to save admin remarks data.");
+            }
+        }
+
+        async function deleteContiSheet(id) {
+            if(confirm("Are you sure you want to completely erase this Conti Sheet record tracking node from database records storage?")) {
+                await deleteDoc(doc(db, "beats_conti_sheets", id));
+                alert("Conti sheet tracking node cleared.");
+                renderContiSheets();
+            }
         }
  
         async function renderBookings() {
@@ -134,7 +245,7 @@
                         <td>${item.date}<br><small>${item.timeSlot}</small></td>
                         <td><strong>${item.dj}</strong><br><small>by: ${item.bookedBy}</small></td>
                         <td><span class="deck-badge">${item.type}</span></td>
-                        <td>${item.remarks}</td>
+                        <td>${item.remarks || ''}</td>
                         <td><button type="button" class="row-delete-btn">Delete</button></td>
                     `;
                     tr.querySelector('.row-delete-btn').addEventListener('click', () => deleteBooking(id));
@@ -171,10 +282,10 @@
                     let attachmentHTML = item.imageAttachment ? `<button type="button" class="attachment-badge btn-view-photo" data-idx="${trackingIdx}">📎 View File</button>` : `<span class="no-attachment">None</span>`;
                     
                     tr.innerHTML = `
-                        <td>${item.id}<br><small>${item.date}</small></td>
-                        <td>${item.reporter}<br><small>${item.department}</small></td>
-                        <td>${item.eqModel}</td>
-                        <td><strong>${item.issueType}</strong>: ${item.description}</td>
+                        <td>${item.id || ''}<br><small>${item.date || ''}</small></td>
+                        <td>${item.reporter || ''}<br><small>${item.department || ''}</small></td>
+                        <td>${item.eqModel || ''}</td>
+                        <td><strong>${item.issueType || ''}</strong>: ${item.description || ''}</td>
                         <td>${attachmentHTML}</td>
                         <td><span class="status-badge ${statusClass}">${statusText}</span></td>
                         <td>
