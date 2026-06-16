@@ -73,7 +73,7 @@
     </footer>
  
     <script type="module">
-        import { db, doc, getDoc, setDoc } from "./firebase-config.js";
+        import { db, doc, getDoc, setDoc, deleteDoc } from "./firebase-config.js";
 
         const openMenuToggle = document.getElementById('openMenuToggle');
         const closeMenuToggle = document.getElementById('closeMenuToggle');
@@ -160,7 +160,7 @@
                         <option value="R" ${lrVal==='R'?'selected':''}>R</option>
                     </select>
                 </td>
-                <td><div contenteditable="true" class="table-text-editable row-producer" data-placeholder="Enter producer">${producerVal}</div></td>
+                <td><div contenteditable="true" class="table-text-editable row-producer" data-placeholder="Enter broadcaster">${producerVal}</div></td>
                 <td><div contenteditable="true" class="table-text-editable row-netia" data-placeholder="">${netiaVal}</div></td>
                 <td><div contenteditable="false" class="table-text-editable row-remarks" style="border-color:transparent; background-color:transparent;" data-placeholder="">${remarksVal}</div></td>
                 <td>
@@ -215,19 +215,17 @@
             toggleRowInputState(tr, true);
         }
  
-        // AUTOMATED REMOVAL BACKEND TRIGGER
+        // INSTANT AUTOMATIC DELETION LOOP
         async function deleteIndividualRow(buttonElement) {
             const tr = buttonElement.closest('tr');
             
-            if(confirm("Permanently erase this row entry from database logs?")) {
+            if(confirm("Permanently remove this row log item?")) {
                 tr.remove();
                 
-                // Read what rows are left remaining inside the active layout body
                 const remainingRows = tableBody.querySelectorAll('tr');
                 const updatedPayload = [];
                 
                 remainingRows.forEach(row => {
-                    // Collect remaining table properties to maintain array order structure
                     const titleText = row.querySelector('.row-title').textContent.trim();
                     if(titleText) { 
                         updatedPayload.push({
@@ -236,25 +234,33 @@
                             ampm: row.querySelector('.row-ampm').value,
                             title: titleText,
                             lr: row.querySelector('.row-lr').value,
-                            producer: row.querySelector('.row-producer').textContent,
-                            netia: row.querySelector('.row-netia').textContent,
-                            remarks: row.querySelector('.row-remarks').textContent
+                            producer: row.querySelector('.row-producer').textContent.trim(),
+                            netia: row.querySelector('.row-netia').textContent.trim(),
+                            remarks: row.querySelector('.row-remarks').textContent.trim()
                         });
                     }
                 });
 
                 try {
-                    // Update database array instantly so Admin Panel drops it on reload
-                    await setDoc(doc(db, "beats_conti_sheets", storageKeyPointer), {
-                        metaPerson: activePerson,
-                        metaDate: activeDate,
-                        metaInterval: activeInterval,
-                        rows: updatedPayload,
-                        updatedAt: Date.now()
-                    });
-                    alert("System sync update successful!");
+                    const docRef = doc(db, "beats_conti_sheets", storageKeyPointer);
+                    
+                    if (updatedPayload.length === 0) {
+                        // If NO rows are left, delete the document entirely so the Admin Dashboard is empty
+                        await deleteDoc(docRef);
+                        alert("Sheet emptied and removed from Admin Dashboard!");
+                    } else {
+                        // If rows are still left, update Firestore with the shorter list
+                        await setDoc(docRef, {
+                            metaPerson: activePerson,
+                            metaDate: activeDate,
+                            metaInterval: activeInterval,
+                            rows: updatedPayload,
+                            updatedAt: Date.now()
+                        });
+                        alert("Row updated instantly!");
+                    }
                 } catch(err) {
-                    console.error("Auto delete tracking fail:", err);
+                    console.error("Auto delete sync failure:", err);
                 }
 
                 if (tableBody.children.length === 0) {
@@ -279,8 +285,9 @@
                     }
                 }
             } catch (err) {
-                console.error("Firebase fetch tracking failure:", err);
+                console.error("Firebase fetch failure:", err);
             }
+            tableBody.innerHTML = '';
             createLogTableRow({}, false);
         }
  
@@ -301,11 +308,11 @@
                     hour: row.querySelector('.row-hour').value,
                     minute: row.querySelector('.row-minute').value,
                     ampm: row.querySelector('.row-ampm').value,
-                    title: row.querySelector('.row-title').textContent,
+                    title: row.querySelector('.row-title').textContent.trim(),
                     lr: row.querySelector('.row-lr').value,
-                    producer: row.querySelector('.row-producer').textContent,
-                    netia: row.querySelector('.row-netia').textContent,
-                    remarks: row.querySelector('.row-remarks').textContent
+                    producer: row.querySelector('.row-producer').textContent.trim(),
+                    netia: row.querySelector('.row-netia').textContent.trim(),
+                    remarks: row.querySelector('.row-remarks').textContent.trim()
                 });
             });
  
