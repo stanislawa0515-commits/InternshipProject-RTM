@@ -225,7 +225,7 @@
                             </td>
                         `;
 
-                        // Sync updated remark cell logic
+                        // Sync updated remark cell back to Firestore array index location
                         tr.querySelector('.btn-sync-remark').addEventListener('click', async (e) => {
                             const sId = e.target.dataset.sheetid;
                             const rIdx = parseInt(e.target.dataset.rowidx);
