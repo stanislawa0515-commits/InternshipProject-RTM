@@ -41,6 +41,11 @@
             <div>Date : <span id="lblDate" class="meta-highlight">--</span></div>
             <div>Shift Interval : <span id="lblInterval" class="meta-highlight">--</span></div>
         </div>
+
+        <div id="adminRemarksContainer" style="display: none; background: rgba(220, 43, 92, 0.1); border: 2px solid var(--brand-magenta); border-radius: 12px; padding: 15px; margin-bottom: 20px; font-weight: bold;">
+            <span style="color: var(--brand-magenta); text-transform: uppercase; font-family: 'Kanit'; font-style: italic;">⚠️ Admin Evaluation Remarks:</span>
+            <p id="lblAdminRemarks" style="margin-top: 5px; font-weight: normal; font-size: 0.95rem; color: var(--text-primary); line-height: 1.4; word-break: break-word;"></p>
+        </div>
  
         <div class="table-responsive-container">
             <table class="conti-table" id="logTable">
@@ -175,7 +180,6 @@
  
             if (isSaved) { toggleRowInputState(tr, false); }
             
-            // Explicit Event Mapping Configurations inside Module blocks
             tr.querySelector('.row-btn-save').addEventListener('click', (e) => saveIndividualRow(e.target));
             tr.querySelector('.row-btn-edit').addEventListener('click', (e) => editIndividualRow(e.target));
             tr.querySelector('.row-btn-delete').addEventListener('click', (e) => deleteIndividualRow(e.target));
@@ -231,7 +235,19 @@
                 const snapshot = await getDoc(docRef);
 
                 if (snapshot.exists()) {
-                    const datasetsParsed = snapshot.data().rows || [];
+                    const serverPayload = snapshot.data();
+                    
+                    // Render/Sync live Admin Remarks box values if they exist
+                    const remarksContainer = document.getElementById('adminRemarksContainer');
+                    const remarksLabel = document.getElementById('lblAdminRemarks');
+                    if (serverPayload.adminRemarks && serverPayload.adminRemarks.trim() !== '') {
+                        remarksLabel.textContent = serverPayload.adminRemarks;
+                        remarksContainer.style.display = 'block';
+                    } else {
+                        remarksContainer.style.display = 'none';
+                    }
+
+                    const datasetsParsed = serverPayload.rows || [];
                     if (datasetsParsed.length > 0) {
                         datasetsParsed.forEach(item => {
                             createLogTableRow(item, true);
@@ -276,11 +292,20 @@
             }
  
             try {
-                await setDoc(doc(db, "beats_conti_sheets", storageKeyPointer), {
+                // Read current document state first to avoid erasing old adminRemarks on save
+                const docRef = doc(db, "beats_conti_sheets", storageKeyPointer);
+                const snapshot = await getDoc(docRef);
+                let currentRemarks = "";
+                if (snapshot.exists()) {
+                    currentRemarks = snapshot.data().adminRemarks || "";
+                }
+
+                await setDoc(docRef, {
                     metaPerson: activePerson,
                     metaDate: activeDate,
                     metaInterval: activeInterval,
                     rows: savedDatasetPayload,
+                    adminRemarks: currentRemarks, // Preserves the existing remarks
                     updatedAt: Date.now()
                 });
                 alert('Conti Sheet logs records saved successfully to cloud repository!');
