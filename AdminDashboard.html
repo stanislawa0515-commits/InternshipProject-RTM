@@ -30,6 +30,10 @@
         
         /* Side-by-side flex action buttons setup */
         .actions-cell-inline-wrapper { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; }
+
+        /* Inline editable cell focus ring styling */
+        .admin-inline-editable { padding: 4px; border-radius: 4px; outline: none; transition: background-color 0.2s; }
+        .admin-inline-editable[contenteditable="true"] { background-color: var(--bg-input); border: 1px dashed var(--brand-cyan); }
     </style>
 </head>
 <body class="page-body-layout">
@@ -59,6 +63,7 @@
     <div class="dashboard-view-wrapper">
         <h1 class="brand-header">Management</h1>
  
+        <!-- Section 1: Bookings -->
         <section class="admin-section">
             <h2 class="core-functions-headline">Master Conti Bookings</h2>
             <div class="table-responsive-container">
@@ -77,6 +82,7 @@
             </div>
         </section>
 
+        <!-- Section 2: User Conti Log Sheets Table -->
         <section class="admin-section">
             <h2 class="core-functions-headline">User Conti Sheets Rows & Remarks</h2>
             <div class="table-responsive-container">
@@ -96,6 +102,7 @@
             </div>
         </section>
  
+        <!-- Section 3: Equipment Reports -->
         <section class="admin-section">
             <h2 class="core-functions-headline">Equipment Reports</h2>
             <div class="table-responsive-container">
@@ -205,8 +212,14 @@
                                 <small style="color:var(--brand-cyan)">${sheetData.metaInterval || ''}</small>
                             </td>
                             <td>${rowItem.hour}:${rowItem.minute} ${rowItem.ampm}</td>
-                            <td><strong>${rowItem.title || 'Untitled'}</strong><br><small>Deck: ${rowItem.lr || 'L'}</small></td>
-                            <td>${rowItem.producer || '--'}<br><small>Netia: ${rowItem.netia || '--'}</small></td>
+                            <td>
+                                <div contenteditable="false" class="admin-inline-editable edit-title-${sheetId}-${rowIndex}"><strong>${rowItem.title || 'Untitled'}</strong></div>
+                                <small>Deck: ${rowItem.lr || 'L'}</small>
+                            </td>
+                            <td>
+                                <div contenteditable="false" class="admin-inline-editable edit-producer-${sheetId}-${rowIndex}">${rowItem.producer || '--'}</div>
+                                <small>Netia: <span class="edit-netia-${sheetId}-${rowIndex}">${rowItem.netia || '--'}</span></small>
+                            </td>
                             <td>
                                 <input type="text" class="response-input text-remark-field" 
                                     id="cell-remark-${sheetId}-${rowIndex}" 
@@ -219,18 +232,23 @@
                                         style="background-color: #28a745; color: white;"
                                         data-sheetid="${sheetId}" 
                                         data-rowidx="${rowIndex}">Update Remark</button>
-                                    <button type="button" class="row-delete-btn btn-clear-remark" 
+                                    <button type="button" class="row-btn btn-edit-row" 
+                                        style="background-color: #ffc107; color: #12121c;"
                                         data-sheetid="${sheetId}"
-                                        data-rowidx="${rowIndex}">Clear Remark</button>
+                                        data-rowidx="${rowIndex}">Edit</button>
                                 </div>
                             </td>
                         `;
 
-                        // Update single row remark text content logic
+                        // Update single row modifications logic
                         tr.querySelector('.btn-sync-remark').addEventListener('click', async (e) => {
                             const sId = e.target.dataset.sheetid;
                             const rIdx = parseInt(e.target.dataset.rowidx);
-                            const textVal = document.getElementById(`cell-remark-${sId}-${rIdx}`).value;
+                            
+                            const remarkVal = document.getElementById(`cell-remark-${sId}-${rIdx}`).value;
+                            const titleVal = tr.querySelector(`.edit-title-${sId}-${rIdx}`).textContent.trim();
+                            const producerVal = tr.querySelector(`.edit-producer-${sId}-${rIdx}`).textContent.trim();
+                            const netiaVal = tr.querySelector(`.edit-netia-${sId}-${rIdx}`).textContent.trim();
 
                             try {
                                 const docRef = doc(db, "beats_conti_sheets", sId);
@@ -238,42 +256,47 @@
                                 if(currentSnap.exists()) {
                                     const payload = currentSnap.data();
                                     if(payload.rows && payload.rows[rIdx]) {
-                                        payload.rows[rIdx].remarks = textVal;
+                                        // Save all changes made by admin back to the database array cells
+                                        payload.rows[rIdx].remarks = remarkVal;
+                                        payload.rows[rIdx].title = titleVal;
+                                        payload.rows[rIdx].producer = producerVal;
+                                        payload.rows[rIdx].netia = netiaVal;
+
                                         await setDoc(docRef, payload);
-                                        alert("Remark text cell successfully pushed to user sheet!");
+                                        alert("Row modifications successfully synchronized to user sheet!");
                                         renderContiSheetsRows();
                                     }
                                 }
                             } catch(err) {
                                 console.error(err);
-                                alert("Failed to modify remark value.");
+                                alert("Failed to modify sheet data values.");
                             }
                         });
 
-                        // NEW! Wipes out the text string inside the row's 'remarks' field safely without removing the whole table layout structure
-                        tr.querySelector('.btn-clear-remark').addEventListener('click', async (e) => {
+                        // NEW: Toggle inline field edit capabilities inside table columns
+                        tr.querySelector('.btn-edit-row').addEventListener('click', (e) => {
                             const sId = e.target.dataset.sheetid;
                             const rIdx = parseInt(e.target.dataset.rowidx);
                             
-                            if(confirm("Clear out the remark text for this specific segment?")) {
-                                try {
-                                    const docRef = doc(db, "beats_conti_sheets", sId);
-                                    const currentSnap = await getDoc(docRef);
-                                    
-                                    if(currentSnap.exists()) {
-                                        const payload = currentSnap.data();
-                                        if(payload.rows && payload.rows[rIdx]) {
-                                            payload.rows[rIdx].remarks = ""; // Resets the cell text only
-                                            
-                                            await setDoc(docRef, payload);
-                                            alert("Remark text cleared successfully!");
-                                            renderContiSheetsRows();
-                                        }
-                                    }
-                                } catch(err) {
-                                    console.error(err);
-                                    alert("Could not erase remark text.");
-                                }
+                            const titleContainer = tr.querySelector(`.edit-title-${sId}-${rIdx}`);
+                            const producerContainer = tr.querySelector(`.edit-producer-${sId}-${rIdx}`);
+                            const netiaContainer = tr.querySelector(`.edit-netia-${sId}-${rIdx}`);
+                            
+                            const isEditable = titleContainer.getAttribute('contenteditable') === 'true';
+                            
+                            if (!isEditable) {
+                                titleContainer.setAttribute('contenteditable', 'true');
+                                producerContainer.setAttribute('contenteditable', 'true');
+                                netiaContainer.setAttribute('contenteditable', 'true');
+                                titleContainer.focus();
+                                e.target.textContent = "Lock";
+                                e.target.style.backgroundColor = "#b4b4c3";
+                            } else {
+                                titleContainer.setAttribute('contenteditable', 'false');
+                                producerContainer.setAttribute('contenteditable', 'false');
+                                netiaContainer.setAttribute('contenteditable', 'false');
+                                e.target.textContent = "Edit";
+                                e.target.style.backgroundColor = "#ffc107";
                             }
                         });
 
