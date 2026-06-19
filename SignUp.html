@@ -29,7 +29,7 @@
  
                 <div class="input-group">
                     <label for="email">Email :</label>
-                    <input type="type" id="email" placeholder="example@email.com" required>
+                    <input type="email" id="email" placeholder="example@email.com" required>
                 </div>
  
                 <div class="input-group">
@@ -71,6 +71,14 @@
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
  
+            // Enforce Password Security Matrix: Min 12 chars, mixed case, numbers, & symbols
+            const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':",.<>\/?\\|`~]).{12,}$/;
+
+            if (!strongPasswordRegex.test(password)) {
+                alert('Password must be at least 12 characters long and include a mix of uppercase letters, lowercase letters, numbers, and symbols.');
+                return;
+            }
+
             if (password !== confirmPassword) {
                 alert('Passwords do not match! Please check your input.');
                 return;
