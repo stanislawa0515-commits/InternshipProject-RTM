@@ -9,26 +9,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:ital,wght@1,900&family=Kanit:ital,wght@1,900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
-        .admin-section { margin-bottom: 40px; width: 100%; }
-        .admin-table { width: 100%; border-collapse: collapse; background: var(--bg-container); border-radius: 12px; overflow: hidden; border: 2px solid var(--stroke-dark); margin-top: 15px; }
-        .admin-table th, .admin-table td { padding: 12px; border: 1px solid var(--border-color); text-align: left; font-size: 0.9rem; vertical-align: middle; }
-        .admin-table th { background: var(--stroke-dark); color: white; font-family: 'Kanit'; font-style: italic; }
-        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
-        .status-pending { background: #ffc107; color: #000; }
-        .status-replied { background: #28a745; color: #fff; }
-        .response-box { display: flex; gap: 8px; margin-top: 5px; align-items: center; }
-        .response-input { flex: 1; padding: 8px; border-radius: 6px; border: 2px solid var(--border-color); background-color: var(--bg-input); color: var(--text-primary); outline: none; }
-        .response-input:focus { border-color: var(--brand-cyan); }
-        .attachment-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background-color: var(--brand-cyan); color: #fff; border: 1px solid var(--stroke-dark); border-radius: 6px; font-size: 0.75rem; cursor: pointer; text-decoration: none; font-weight: bold; }
-        .no-attachment { font-size: 0.8rem; color: var(--text-secondary); font-style: italic; }
+        /* Embedded Local Styles Overrides for Dashboard Layout Architecture */
         .modal-mask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 200; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
         .modal-mask.active { opacity: 1; pointer-events: auto; }
         .modal-window { background: var(--bg-container); border: 3px solid var(--stroke-dark); border-radius: 16px; width: 90%; max-width: 480px; padding: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); transform: scale(0.8); transition: transform 0.2s ease; }
         .modal-mask.active .modal-window { transform: scale(1); }
         .modal-preview-container { width: 100%; max-height: 350px; border: 2px dashed var(--border-color); border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--bg-input); margin: 15px 0; }
         .modal-preview-container img { width: 100%; height: auto; max-height: 345px; object-fit: contain; display: block; }
-        
-        .actions-cell-inline-wrapper { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; }
     </style>
 </head>
 <body class="page-body-layout">
@@ -57,63 +44,102 @@
  
     <div class="dashboard-view-wrapper">
         <h1 class="brand-header">Management</h1>
- 
-        <section class="admin-section">
-            <h2 class="core-functions-headline">Conti Bookings</h2>
-            <div class="table-responsive-container">
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>Date/Time</th>
-                            <th>DJ / User</th>
-                            <th>Type</th>
-                            <th>Remarks</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="adminBookingBody"></tbody>
-                </table>
-            </div>
-        </section>
 
-        <section class="admin-section">
-            <h2 class="core-functions-headline">Conti Logs</h2>
-            <div class="table-responsive-container">
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>Conti Sheet Sheet-Key</th>
-                            <th>Time Slot</th>
-                            <th>Program / Segment Title</th>
-                            <th>Broadcaster Crew</th>
-                            <th>Remarks</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="adminContiSheetsBody"></tbody>
-                </table>
+        <div class="dashboard-stats-grid">
+            <div class="stat-card" data-target-slide="0">
+                <span class="stat-icon">📅</span>
+                <div class="stat-info">
+                    <h4>Bookings</h4>
+                    <p class="stat-desc">Conti Schedules</p>
+                </div>
             </div>
-        </section>
+            <div class="stat-card" data-target-slide="1">
+                <span class="stat-icon">📊</span>
+                <div class="stat-info">
+                    <h4>Live Logs</h4>
+                    <p class="stat-desc">24 Hour Feed</p>
+                </div>
+            </div>
+            <div class="stat-card" data-target-slide="2">
+                <span class="stat-icon">🛠️</span>
+                <div class="stat-info">
+                    <h4>Reports</h4>
+                    <p class="stat-desc">Equipment Issues</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-slide-controls">
+            <button type="button" class="slide-nav-tab active" data-slide-index="0">Conti Bookings</button>
+            <button type="button" class="slide-nav-tab" data-slide-index="1">Conti Logs</button>
+            <button type="button" class="slide-nav-tab" data-slide-index="2">Equipment Reports</button>
+        </div>
  
-        <section class="admin-section">
-            <h2 class="core-functions-headline">Equipment Reports</h2>
-            <div class="table-responsive-container">
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>ID / Date</th>
-                            <th>Reporter</th>
-                            <th>Equipment</th>
-                            <th>Issue</th>
-                            <th>Photo</th>
-                            <th>Status</th>
-                            <th>Response / Control</th>
-                        </tr>
-                    </thead>
-                    <tbody id="adminReportBody"></tbody>
-                </table>
-            </div>
-        </section>
+        <div class="dashboard-slides-container">
+            
+            <section class="admin-slide-view active" id="slide-section-0">
+                <div class="card-header-row">
+                    <h2 class="core-functions-headline">Conti Bookings</h2>
+                </div>
+                <div class="table-responsive-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Date/Time</th>
+                                <th>DJ / User</th>
+                                <th>Type</th>
+                                <th>Remarks</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminBookingBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="admin-slide-view" id="slide-section-1">
+                <div class="card-header-row">
+                    <h2 class="core-functions-headline">Conti Logs</h2>
+                </div>
+                <div class="table-responsive-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Conti Sheet Sheet-Key</th>
+                                <th>Time Slot</th>
+                                <th>Program / Segment Title</th>
+                                <th>Broadcaster Crew</th>
+                                <th>Remarks</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminContiSheetsBody"></tbody>
+                    </table>
+                </div>
+            </section>
+ 
+            <section class="admin-slide-view" id="slide-section-2">
+                <div class="card-header-row">
+                    <h2 class="core-functions-headline">Equipment Reports</h2>
+                </div>
+                <div class="table-responsive-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID / Date</th>
+                                <th>Reporter</th>
+                                <th>Equipment</th>
+                                <th>Issue</th>
+                                <th>Photo</th>
+                                <th>Status</th>
+                                <th>Response / Control</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminReportBody"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
     </div>
  
     <div class="modal-mask" id="photoModalMask">
@@ -152,6 +178,7 @@
                     const item = docSnapshot.data();
                     const id = docSnapshot.id;
                     const tr = document.createElement('tr');
+                    tr.className = "fade-in-row";
                     tr.innerHTML = `
                         <td>${item.date}<br><small>${item.timeSlot}</small></td>
                         <td><strong>${item.dj}</strong><br><small>by: ${item.bookedBy}</small></td>
@@ -188,13 +215,11 @@
                     const sheetData = docSnapshot.data();
                     const rowsArray = sheetData.rows || [];
                     
-                    // 1. Time Filter check
                     const lastUpdated = sheetData.updatedAt || 0;
                     if (now - lastUpdated > twentyFourHours) {
                         return; 
                     }
 
-                    // 2. Row Check filter: If user cleared all rows out, hide it from admin view layout automatically
                     if (rowsArray.length === 0) {
                         return;
                     }
@@ -202,6 +227,7 @@
                     rowsArray.forEach((rowItem, rowIndex) => {
                         displayedRowsCount++;
                         const tr = document.createElement('tr');
+                        tr.className = "fade-in-row";
                         tr.innerHTML = `
                             <td>
                                 <strong>${sheetData.metaPerson || 'DJ'}</strong><br>
@@ -275,6 +301,7 @@
                     cachedReportsLocalArray.push({ docId: id, ...item });
 
                     const tr = document.createElement('tr');
+                    tr.className = "fade-in-row";
                     const statusClass = item.adminResponse ? 'status-replied' : 'status-pending';
                     const statusText = item.adminResponse ? 'Replied' : 'Pending';
                     
@@ -368,6 +395,36 @@
         });
  
         logoutActionLink.addEventListener('click', () => { localStorage.removeItem('currentUser'); });
+
+        // Logic Controls for Responsive Slide Content Navigation Management
+        const tabs = document.querySelectorAll('.slide-nav-tab');
+        const sections = document.querySelectorAll('.admin-slide-view');
+        const statCards = document.querySelectorAll('.stat-card');
+
+        function switchSlideIndex(targetIdx) {
+            tabs.forEach(t => t.classList.remove('active'));
+            sections.forEach(s => s.classList.remove('active'));
+            
+            const targetTab = document.querySelector(`.slide-nav-tab[data-slide-index="${targetIdx}"]`);
+            const targetSection = document.getElementById(`slide-section-${targetIdx}`);
+            
+            if(targetTab) targetTab.classList.add('active');
+            if(targetSection) targetSection.classList.add('active');
+        }
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                switchSlideIndex(tab.dataset.slideIndex);
+            });
+        });
+
+        statCards.forEach(card => {
+            card.addEventListener('click', () => {
+                switchSlideIndex(card.dataset.targetSlide);
+                document.querySelector('.dashboard-slide-controls').scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+
         window.addEventListener('DOMContentLoaded', loadAdminData);
     </script>
 </body>
