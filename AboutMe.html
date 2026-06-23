@@ -34,30 +34,45 @@
         </div>
     </div>
  
-    <div class="about-view-wrapper">
-        <div class="about-logo-pulsing">BEATS</div>
+    <div class="about-view-wrapper creative-glass-panel">
+        <div class="about-logo-pulsing neon-glow-text">BEATS</div>
  
-        <div class="acronym-row">
-            <div class="acronym-block"><span>B</span>ooking</div>
-            <div class="acronym-block"><span>E</span>quipment</div>
-            <div class="acronym-block"><span>A</span>nd</div>
-            <div class="acronym-block"><span>T</span>ask</div>
-            <div class="acronym-block"><span>S</span>ystem</div>
+        <div class="acronym-row soundboard-grid">
+            <div class="acronym-block pad-b" onclick="triggerPadLight(this)"><span>B</span>ooking</div>
+            <div class="acronym-block pad-e" onclick="triggerPadLight(this)"><span>E</span>quipment</div>
+            <div class="acronym-block pad-a" onclick="triggerPadLight(this)"><span>A</span>nd</div>
+            <div class="acronym-block pad-t" onclick="triggerPadLight(this)"><span>T</span>ask</div>
+            <div class="acronym-block pad-s" onclick="triggerPadLight(this)"><span>S</span>ystem</div>
         </div>
  
         <div class="concept-description-box">
-            <h3>How this idea came to life</h3>
-            <p>
-                This system was designed to eliminate traditional logbooks and optimize studio management. 
-                Previously, staff manually tracked duties in paper books, which were frequently misplaced or lost. 
-                By replacing physical books with BEATS, offices save valuable workspace and can seamlessly track tasks by date.
-            </p>
-            <br>
-            <p>
-                Additionally, there was no centralized booking or reporting mechanism for the Conti studio. Staff entered and exited without coordination. 
-                With BEATS, staff can check studio availability and secure bookings anytime, anywhere even outside of standard office hours. 
-                The system also introduces a digital portal to file broken or missing equipment reports instantly.
-            </p>
+            <h3 class="timeline-headline">How this idea came to life</h3>
+            
+            <div class="production-timeline">
+                <div class="timeline-item">
+                    <div class="timeline-icon">🎙️</div>
+                    <div class="timeline-content">
+                        <h4>The Old Way</h4>
+                        <p>This system was designed to eliminate traditional logbooks and optimize studio management. Previously, staff manually tracked duties in paper books, which were frequently misplaced or lost.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-icon">💿</div>
+                    <div class="timeline-content">
+                        <h4>The Workspace Evolution</h4>
+                        <p>By replacing physical books with BEATS, offices save valuable workspace and can seamlessly track tasks down to the exact calendar date with minimal effort.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-icon">⚡</div>
+                    <div class="timeline-content">
+                        <h4>Centralized Studio Control</h4>
+                        <p>Additionally, there was no centralized booking or reporting mechanism for the Conti studio. Staff entered and exited without coordination. With BEATS, anyone can secure slots securely from anywhere, anytime.</p>
+                    </div>
+                </div>
+            </div>
         </div>
  
         <footer>
@@ -108,6 +123,14 @@
         logoutActionLink.addEventListener('click', () => {
             localStorage.removeItem('currentUser');
         });
+
+        // Soundboard Interactive Pad Effect
+        function triggerPadLight(element) {
+            element.classList.add('pressed');
+            setTimeout(() => {
+                element.classList.remove('pressed');
+            }, 150);
+        }
     </script>
 </body>
 </html>
