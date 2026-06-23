@@ -71,13 +71,15 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: 0 20px;
-    z-index: 100;
+    z-index: 1000; /* Forced high to float over modern full bleed sliders */
+    pointer-events: auto !important;
 }
 
 .left-nav-group {
     display: flex;
     align-items: center;
     gap: 15px;
+    pointer-events: auto !important;
 }
 
 .hamburger-btn {
@@ -87,7 +89,7 @@ body {
     cursor: pointer;
     color: var(--text-primary);
     position: relative;
-    z-index: 115;
+    z-index: 1005;
     pointer-events: auto !important;
 }
 
@@ -105,7 +107,7 @@ body {
     background-color: var(--bg-container);
     border-right: 3px solid var(--stroke-dark);
     box-shadow: 5px 0 15px rgba(0,0,0,0.1);
-    z-index: 200;
+    z-index: 2000;
     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     padding: 25px;
     display: flex;
@@ -172,7 +174,7 @@ body {
     width: 100%;
     height: 100%;
     background: rgba(0,0,0,0.4);
-    z-index: 150;
+    z-index: 1500;
     display: none;
 }
 
@@ -265,7 +267,7 @@ body {
 
 /*
 ==========================================
-    APP BOX CONTAINER FORM FIELD LAYOUT
+    APP BOX CONTAINER FORM LAYOUT
 ==========================================
 */
 .app-container {
@@ -403,7 +405,7 @@ footer p {
 
 /*
 ==========================================
-    DASHBOARD CORE MAIN WRAPPERS
+    DASHBOARD CORE WRAPPERS
 ==========================================
 */
 .dashboard-view-wrapper {
@@ -494,7 +496,7 @@ footer p {
 
 /*
 ==========================================
-    CONTI LOG DATA TABLES LAYOUT
+    CONTI LOG TABLES GRID
 ==========================================
 */
 .conti-big-box {
@@ -691,7 +693,7 @@ footer p {
 
 /*
 ======================================================
-    CREATIVE VISUAL MODULES & GLASS PANEL LAYOUT
+    ABOUT ME PAGE ARTISTIC SAMPLER STYLES
 ======================================================
 */
 .about-view-wrapper {
@@ -861,7 +863,7 @@ footer p {
 
 /*
 ==========================================
-    CONTI LIVE BOOKING INTERFACES
+    CONTI LIVE SCHEDULER WIDGETS
 ==========================================
 */
 .booking-scheduler-layout {
@@ -1002,7 +1004,7 @@ footer p {
 
 /*
 ==========================================
-    ADMIN SYSTEMS CONTROLS OVERRIDES
+    ADMIN PANELS OVERACTION STYLES
 ==========================================
 */
 .admin-section { margin-bottom: 40px; width: 100%; }
@@ -1043,7 +1045,7 @@ footer p {
 
 .actions-cell-inline-wrapper { display: flex !important; gap: 8px; align-items: center; flex-wrap: nowrap; }
 
-/* Analytics Grid Layout Systems */
+/* Dashboard Calendar Grids */
 .booking-dashboard-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -1251,7 +1253,7 @@ footer p {
 
 /*
 ==========================================
-    ANIMATION ENGINES KEYFRAMES
+    ANIMATION RUNTIME ENGINE
 ==========================================
 */
 @keyframes dropIn {
@@ -1265,8 +1267,8 @@ footer p {
 @keyframes l4 { to { clip-path: inset(0 -1ch 0 0); } }
 
 @keyframes comicPulse {
-    0%, 100-percent { transform: scale(1) rotate(-4deg); }
-    50-percent { transform: scale(1.06) rotate(-2deg); }
+    0%, 100% { transform: scale(1) rotate(-4deg); }
+    50% { transform: scale(1.06) rotate(-2deg); }
 }
 
 @keyframes autoSlideMotion {
@@ -1277,7 +1279,7 @@ footer p {
     100% { transform: translateX(0); }
 }
 
-/* Print Styles Engine Optimization */
+/* Print Configuration */
 @media print {
     body { background: #ffffff !important; color: #000000 !important; padding: 0 !important; }
     .menu-header-bar, .nav-sidebar, .overlay-screen, .bottom-buttons-grid, .actions-cell-wrapper, th:last-child, td:last-child { display: none !important; }
@@ -1291,7 +1293,7 @@ footer p {
 
 /*
 ==========================================
-    RESPONSIVE CELL PHONES BREAKPOINTS
+    MOBILE VIEW CONSTRAINTS
 ==========================================
 */
 @media (max-width: 600px) {
