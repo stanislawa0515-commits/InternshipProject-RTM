@@ -70,13 +70,59 @@
             75%, 95% { transform: translateX(-75%); }
             100% { transform: translateX(0%); }
         }
+
+        /* Notification Elements Layout */
+        .hamburger-container {
+            position: relative;
+            display: inline-block;
+        }
+        .nav-alert-dot {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 10px;
+            height: 10px;
+            background-color: #ff3366;
+            border-radius: 50%;
+            border: 2px solid var(--bg-container);
+            display: none;
+            z-index: 106;
+            pointer-events: none;
+        }
+        .sidebar-link-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            text-decoration: none;
+        }
+        .sidebar-link-row a {
+            margin: 0;
+            flex: 1;
+        }
+        .sidebar-count-badge {
+            background-color: #dc2b5c;
+            color: #ffffff;
+            font-size: 0.85rem;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 12px;
+            min-width: 24px;
+            text-align: center;
+            display: none;
+            font-family: 'Kanit', sans-serif;
+            border: 1px solid var(--stroke-dark);
+        }
     </style>
 </head>
 <body class="page-body-layout">
 
     <div class="menu-header-bar">
         <div class="left-nav-group">
-            <button class="hamburger-btn" id="openMenuToggle">☰</button>
+            <div class="hamburger-container">
+                <button class="hamburger-btn" id="openMenuToggle">☰</button>
+                <div class="nav-alert-dot" id="hamburgerAlertDot"></div>
+            </div>
             <div class="user-greeting">Admin: <span id="displayUsername">Master</span></div>
         </div>
         <div style="font-family: 'Kanit', sans-serif; font-weight: 900; color: #dc2b5c; font-size: 1.5rem; font-style: italic;">BEATS ADMIN</div>
@@ -87,9 +133,22 @@
         <button class="close-menu-btn" id="closeMenuToggle">✕</button>
         <div class="sidebar-links">
             <a href="#" class="sidebar-view-trigger active" data-target="adminHomeSection">Admin Home</a>
-            <a href="#" class="sidebar-view-trigger" data-target="contiBookingsSection">Conti Bookings</a>
-            <a href="#" class="sidebar-view-trigger" data-target="contiLogsSection">Conti Logs</a>
-            <a href="#" class="sidebar-view-trigger" data-target="equipmentReportsSection">Equipment Reports</a>
+            
+            <div class="sidebar-link-row">
+                <a href="#" class="sidebar-view-trigger" data-target="contiBookingsSection">Conti Bookings</a>
+                <span class="sidebar-count-badge" id="count-bookings">0</span>
+            </div>
+            
+            <div class="sidebar-link-row">
+                <a href="#" class="sidebar-view-trigger" data-target="contiLogsSection">Conti Logs</a>
+                <span class="sidebar-count-badge" id="count-logs">0</span>
+            </div>
+            
+            <div class="sidebar-link-row">
+                <a href="#" class="sidebar-view-trigger" data-target="equipmentReportsSection">Equipment Reports</a>
+                <span class="sidebar-count-badge" id="count-reports">0</span>
+            </div>
+            
             <a href="SignIn.html" id="logoutActionLink" style="color: #ff4d4d; margin-top: 20px;">Logout</a>
         </div>
         <div class="theme-toggle-row">
@@ -209,6 +268,33 @@
             await renderBookings();
             await renderContiSheetsRows();
             await renderReports();
+            updateNotificationBadges();
+        }
+
+        function updateNotificationBadges() {
+            const bookingsCount = globalBookingsArray.length;
+            const logsCount = document.querySelectorAll('#adminContiSheetsBody tr:not(:has(td[colspan]))').length;
+            const reportsCount = cachedReportsLocalArray.filter(item => !item.adminResponse).length;
+
+            const bookingsBadge = document.getElementById('count-bookings');
+            const logsBadge = document.getElementById('count-logs');
+            const reportsBadge = document.getElementById('count-reports');
+            const hamburgerDot = document.getElementById('hamburgerAlertDot');
+
+            if (bookingsCount > 0) { bookingsBadge.innerText = bookingsCount; bookingsBadge.style.display = 'block'; } 
+            else { bookingsBadge.style.display = 'none'; }
+
+            if (logsCount > 0) { logsBadge.innerText = logsCount; logsBadge.style.display = 'block'; } 
+            else { logsBadge.style.display = 'none'; }
+
+            if (reportsCount > 0) { reportsBadge.innerText = reportsCount; reportsBadge.style.display = 'block'; } 
+            else { reportsBadge.style.display = 'none'; }
+
+            if (bookingsCount > 0 || logsCount > 0 || reportsCount > 0) {
+                hamburgerDot.style.display = 'block';
+            </div> else {
+                hamburgerDot.style.display = 'none';
+            </div>
         }
 
         async function renderBookings() {
@@ -316,7 +402,8 @@
         async function deleteBooking(id) {
             if(confirm("Admin Override: Delete this booking?")) {
                 await deleteDoc(doc(db, "beats_bookings", id));
-                renderBookings();
+                await renderBookings();
+                updateNotificationBadges();
             }
         }
 
@@ -387,7 +474,8 @@
                                         payload.rows[rIdx].remarks = remarkVal;
                                         await setDoc(docRef, payload);
                                         alert("Remark text cell successfully pushed to user sheet!");
-                                        renderContiSheetsRows();
+                                        await renderContiSheetsRows();
+                                        updateNotificationBadges();
                                     }
                                 }
                             } catch(err) {
@@ -457,7 +545,8 @@
             try {
                 await updateDoc(doc(db, "beats_reports", id), { adminResponse: responseText });
                 alert("Response sent to reporter!");
-                renderReports();
+                await renderReports();
+                updateNotificationBadges();
             } catch(err) { alert("Send operation failed."); }
         }
 
@@ -465,7 +554,8 @@
             if(confirm("Admin Master Override: Permanent data erase warning?")) {
                 await deleteDoc(doc(db, "beats_reports", id));
                 alert("Equipment report deleted.");
-                renderReports(); 
+                await renderReports(); 
+                updateNotificationBadges();
             }
         }
 
