@@ -32,6 +32,19 @@
         .modal-preview-container img { width: 100%; height: auto; max-height: 345px; object-fit: contain; display: block; }
         
         .actions-cell-inline-wrapper { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; }
+
+        /* CSS Automatic Slider Styles */
+        .slider-box { width: 100%; max-width: 800px; margin: 20px auto; overflow: hidden; border-radius: 12px; border: 3px solid var(--stroke-dark); box-shadow: 0 5px 15px rgba(0,0,0,0.1); position: relative; }
+        .slider-track { display: flex; width: 400%; animation: slideAnimation 12s infinite ease-in-out; }
+        .slider-track img { width: 25%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; display: block; }
+        
+        @keyframes slideAnimation {
+            0%, 20% { transform: translateX(0%); }
+            25%, 45% { transform: translateX(-25%); }
+            50%, 70% { transform: translateX(-50%); }
+            75%, 95% { transform: translateX(-75%); }
+            100% { transform: translateX(0%); }
+        }
     </style>
 </head>
 <body class="page-body-layout">
@@ -48,7 +61,8 @@
     <div class="nav-sidebar" id="sidebarDrawer">
         <button class="close-menu-btn" id="closeMenuToggle">✕</button>
         <div class="sidebar-links">
-            <a href="#" class="sidebar-view-trigger active" data-target="contiBookingsSection">Conti Bookings</a>
+            <a href="#" class="sidebar-view-trigger active" data-target="adminHomeSection">Admin Home</a>
+            <a href="#" class="sidebar-view-trigger" data-target="contiBookingsSection">Conti Bookings</a>
             <a href="#" class="sidebar-view-trigger" data-target="contiLogsSection">Conti Logs</a>
             <a href="#" class="sidebar-view-trigger" data-target="equipmentReportsSection">Equipment Reports</a>
             <a href="SignIn.html" id="logoutActionLink" style="color: #ff4d4d; margin-top: 20px;">Logout</a>
@@ -62,7 +76,19 @@
     <div class="dashboard-view-wrapper">
         <h1 class="brand-header">Management</h1>
 
-        <section class="admin-section active-view" id="contiBookingsSection">
+        <section class="admin-section active-view" id="adminHomeSection">
+            <h2 class="core-functions-headline">Welcome to BEATS Hub</h2>
+            <div class="slider-box">
+                <div class="slider-track">
+                    <img src="image1.png" alt="Featured Space 1">
+                    <img src="image2.png" alt="Featured Space 2">
+                    <img src="image3.png" alt="Featured Space 3">
+                    <img src="image4.png" alt="Featured Space 4">
+                </div>
+            </div>
+        </section>
+
+        <section class="admin-section" id="contiBookingsSection">
             <h2 class="core-functions-headline">Conti Bookings</h2>
             <div class="table-responsive-container">
                 <table class="admin-table">
@@ -192,13 +218,11 @@
                     const sheetData = docSnapshot.data();
                     const rowsArray = sheetData.rows || [];
                     
-                    // 1. Time Filter check
                     const lastUpdated = sheetData.updatedAt || 0;
                     if (now - lastUpdated > twentyFourHours) {
                         return; 
                     }
 
-                    // 2. Row Check filter: If user cleared all rows out, hide it from admin view layout automatically
                     if (rowsArray.length === 0) {
                         return;
                     }
