@@ -71,12 +71,22 @@
             100% { transform: translateX(0%); }
         }
 
-        /* Notification Layout Overlays */
+        /* Fixed Layer Controls for Hamburger Trigger */
         .hamburger-container {
-            position: relative;
+            position: fixed !important;
+            top: 15px;
+            left: 20px;
             display: inline-block;
             pointer-events: auto !important;
-            z-index: 4005 !important;
+            z-index: 99999 !important; /* Forces layout prioritization above all wrapper grids */
+        }
+        .hamburger-btn {
+            background: none !important;
+            border: none !important;
+            font-size: 26px !important;
+            cursor: pointer !important;
+            color: var(--text-primary) !important;
+            pointer-events: auto !important;
         }
         .nav-alert-dot {
             position: absolute;
@@ -89,7 +99,6 @@
             border: 2px solid var(--bg-container);
             display: none;
             pointer-events: none;
-            z-index: 4010 !important;
         }
         .sidebar-link-row {
             display: flex;
@@ -125,7 +134,7 @@
                 <button class="hamburger-btn" id="openMenuToggle">☰</button>
                 <div class="nav-alert-dot" id="hamburgerAlertDot"></div>
             </div>
-            <div class="user-greeting">Admin: <span id="displayUsername">Master</span></div>
+            <div class="user-greeting" style="padding-left: 45px;">Admin: <span id="displayUsername">Master</span></div>
         </div>
         <div style="font-family: 'Kanit', sans-serif; font-weight: 900; color: #dc2b5c; font-size: 1.5rem; font-style: italic;">BEATS ADMIN</div>
     </div>
