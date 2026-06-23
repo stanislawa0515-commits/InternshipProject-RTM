@@ -74,7 +74,7 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: 0 20px;
-    z-index: 101; /* Lifted up so buttons remain interactive */
+    z-index: 100; /* Stays above the page content cleanly */
 }
 
 .left-nav-group {
@@ -89,6 +89,8 @@ body {
     font-size: 24px;
     cursor: pointer;
     color: var(--text-primary);
+    position: relative;
+    z-index: 105; /* Ensures the button layer is not blocked */
 }
 
 .user-greeting {
@@ -99,13 +101,13 @@ body {
 .nav-sidebar {
     position: fixed;
     top: 0;
-    left: -280px;
+    left: -290px; /* Fully clears out the width + border width to prevent overlap */
     width: 280px;
     height: 100%;
     background-color: var(--bg-container);
     border-right: 3px solid var(--stroke-dark);
     box-shadow: 5px 0 15px rgba(0,0,0,0.1);
-    z-index: 200; /* Stays above the top panel header bar */
+    z-index: 200; /* Sidebar drops cleanly on top of the screen layout when open */
     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     padding: 25px;
     display: flex;
@@ -170,7 +172,7 @@ body {
     width: 100%;
     height: 100%;
     background: rgba(0,0,0,0.4);
-    z-index: 150; /* Sits perfectly behind the drawer panel layout */
+    z-index: 150; /* Sits perfectly between header bar and sidebar */
     display: none;
 }
 
