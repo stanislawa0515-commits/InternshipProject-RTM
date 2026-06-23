@@ -9,11 +9,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:ital,wght@1,900&family=Kanit:ital,wght@1,900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Modern hidden toggle configuration for separated views */
+        /* Separated view configurations */
         .admin-section { margin-bottom: 40px; width: 100%; display: none; }
         .admin-section.active-view { display: block; }
         
-        /* Make Admin Home act as a full bleed relative container for the background slider */
         #adminHomeSection.active-view {
             display: block;
             position: fixed;
@@ -38,7 +37,7 @@
         .response-input:focus { border-color: var(--brand-cyan); }
         .attachment-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background-color: var(--brand-cyan); color: #fff; border: 1px solid var(--stroke-dark); border-radius: 6px; font-size: 0.75rem; cursor: pointer; text-decoration: none; font-weight: bold; }
         .no-attachment { font-size: 0.8rem; color: var(--text-secondary); font-style: italic; }
-        .modal-mask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 5000; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+        .modal-mask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 9999; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
         .modal-mask.active { opacity: 1; pointer-events: auto; }
         .modal-window { background: var(--bg-container); border: 3px solid var(--stroke-dark); border-radius: 16px; width: 90%; max-width: 480px; padding: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); transform: scale(0.8); transition: transform 0.2s ease; }
         .modal-mask.active .modal-window { transform: scale(1); }
@@ -71,35 +70,49 @@
             100% { transform: translateX(0%); }
         }
 
-        /* Fixed Layer Controls for Hamburger Trigger */
-        .hamburger-container {
-            position: fixed !important;
-            top: 15px;
-            left: 20px;
-            display: inline-block;
-            pointer-events: auto !important;
-            z-index: 99999 !important; /* Forces layout prioritization above all wrapper grids */
-        }
+        /* Fixed Layer Controls for Unblockable Hamburger Button Trigger */
         .hamburger-btn {
-            background: none !important;
-            border: none !important;
-            font-size: 26px !important;
+            position: fixed !important;
+            top: 12px !important;
+            left: 20px !important;
+            background: #ffffff !important; /* Forces solid background so slider text never blends behind it */
+            border: 2px solid var(--stroke-dark) !important;
+            border-radius: 8px !important;
+            font-size: 24px !important;
+            width: 42px !important;
+            height: 42px !important;
             cursor: pointer !important;
-            color: var(--text-primary) !important;
+            color: #12121c !important;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            z-index: 999999 !important; /* Completely floats over top banner headers and tables */
             pointer-events: auto !important;
+            box-shadow: 2px 2px 0px var(--stroke-dark);
+            padding-bottom: 4px;
         }
-        .nav-alert-dot {
+        
+        [data-theme="dark"] .hamburger-btn {
+            background: #141421 !important;
+            color: #ffffff !important;
+            border-color: #ffffff !important;
+            box-shadow: 2px 2px 0px #ffffff;
+        }
+
+        /* Clean Pseudo Dot Badge Configuration */
+        .hamburger-btn.has-alert::after {
+            content: '';
             position: absolute;
-            top: 2px;
-            right: 2px;
-            width: 10px;
-            height: 10px;
+            top: -2px;
+            right: -2px;
+            width: 12px;
+            height: 12px;
             background-color: #ff3366;
             border-radius: 50%;
-            border: 2px solid var(--bg-container);
-            display: none;
-            pointer-events: none;
+            border: 2px solid #ffffff;
+            z-index: 1000000;
         }
+
         .sidebar-link-row {
             display: flex;
             align-items: center;
@@ -130,11 +143,8 @@
 
     <div class="menu-header-bar">
         <div class="left-nav-group">
-            <div class="hamburger-container">
-                <button class="hamburger-btn" id="openMenuToggle">☰</button>
-                <div class="nav-alert-dot" id="hamburgerAlertDot"></div>
-            </div>
-            <div class="user-greeting" style="padding-left: 45px;">Admin: <span id="displayUsername">Master</span></div>
+            <button class="hamburger-btn" id="openMenuToggle">☰</button>
+            <div class="user-greeting" style="padding-left: 55px;">Admin: <span id="displayUsername">Master</span></div>
         </div>
         <div style="font-family: 'Kanit', sans-serif; font-weight: 900; color: #dc2b5c; font-size: 1.5rem; font-style: italic;">BEATS ADMIN</div>
     </div>
@@ -294,7 +304,7 @@
             const bookingsBadge = document.getElementById('count-bookings');
             const logsBadge = document.getElementById('count-logs');
             const reportsBadge = document.getElementById('count-reports');
-            const hamburgerDot = document.getElementById('hamburgerAlertDot');
+            const hamburgerBtn = document.getElementById('openMenuToggle');
 
             if (bookingsCount > 0) { bookingsBadge.innerText = bookingsCount; bookingsBadge.style.display = 'block'; } 
             else { bookingsBadge.style.display = 'none'; }
@@ -306,9 +316,9 @@
             else { reportsBadge.style.display = 'none'; }
 
             if ((bookingsCount > 0 || logsCount > 0 || reportsCount > 0) && !hasSeenNotifications) {
-                hamburgerDot.style.display = 'block';
-            </div> else {
-                hamburgerDot.style.display = 'none';
+                hamburgerBtn.classList.add('has-alert');
+            } else {
+                hamburgerBtn.classList.remove('has-alert');
             }
         }
 
@@ -597,9 +607,9 @@
                 sidebarDrawer.classList.add('open'); 
                 menuOverlay.classList.add('show');
                 
-                const hamburgerDot = document.getElementById('hamburgerAlertDot');
-                if (hamburgerDot) {
-                    hamburgerDot.style.display = 'none';
+                const hamburgerBtn = document.getElementById('openMenuToggle');
+                if (hamburgerBtn) {
+                    hamburgerBtn.classList.remove('has-alert');
                     hasSeenNotifications = true;
                 }
             }
