@@ -9,7 +9,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:ital,wght@1,900&family=Kanit:ital,wght@1,900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
-        .admin-section { margin-bottom: 40px; width: 100%; }
+        /* Modern hidden toggle configuration for separated views */
+        .admin-section { margin-bottom: 40px; width: 100%; display: none; }
+        .admin-section.active-view { display: block; }
+        
         .admin-table { width: 100%; border-collapse: collapse; background: var(--bg-container); border-radius: 12px; overflow: hidden; border: 2px solid var(--stroke-dark); margin-top: 15px; }
         .admin-table th, .admin-table td { padding: 12px; border: 1px solid var(--border-color); text-align: left; font-size: 0.9rem; vertical-align: middle; }
         .admin-table th { background: var(--stroke-dark); color: white; font-family: 'Kanit'; font-style: italic; }
@@ -45,7 +48,9 @@
     <div class="nav-sidebar" id="sidebarDrawer">
         <button class="close-menu-btn" id="closeMenuToggle">✕</button>
         <div class="sidebar-links">
-            <a href="AdminDashboard.html">Admin Home</a>
+            <a href="#" class="sidebar-view-trigger active" data-target="contiBookingsSection">Conti Bookings</a>
+            <a href="#" class="sidebar-view-trigger" data-target="contiLogsSection">Conti Logs</a>
+            <a href="#" class="sidebar-view-trigger" data-target="equipmentReportsSection">Equipment Reports</a>
             <a href="SignIn.html" id="logoutActionLink" style="color: #ff4d4d; margin-top: 20px;">Logout</a>
         </div>
         <div class="theme-toggle-row">
@@ -57,7 +62,7 @@
     <div class="dashboard-view-wrapper">
         <h1 class="brand-header">Management</h1>
 
-        <section class="admin-section">
+        <section class="admin-section active-view" id="contiBookingsSection">
             <h2 class="core-functions-headline">Conti Bookings</h2>
             <div class="table-responsive-container">
                 <table class="admin-table">
@@ -75,7 +80,7 @@
             </div>
         </section>
 
-        <section class="admin-section">
+        <section class="admin-section" id="contiLogsSection">
             <h2 class="core-functions-headline">Conti Logs</h2>
             <div class="table-responsive-container">
                 <table class="admin-table">
@@ -94,7 +99,7 @@
             </div>
         </section>
 
-        <section class="admin-section">
+        <section class="admin-section" id="equipmentReportsSection">
             <h2 class="core-functions-headline">Equipment Reports</h2>
             <div class="table-responsive-container">
                 <table class="admin-table">
@@ -367,6 +372,29 @@
         });
 
         logoutActionLink.addEventListener('click', () => { localStorage.removeItem('currentUser'); });
+
+        // View switching navigation engine logic
+        const viewTriggers = document.querySelectorAll('.sidebar-view-trigger');
+        const dashboardSections = document.querySelectorAll('.admin-section');
+
+        viewTriggers.forEach(trigger => {
+            trigger.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = trigger.getAttribute('data-target');
+
+                // Update navigation links status
+                viewTriggers.forEach(btn => btn.classList.remove('active'));
+                trigger.classList.add('active');
+
+                // Switch visible dashboard window sections
+                dashboardSections.forEach(section => section.classList.remove('active-view'));
+                document.getElementById(targetId).classList.add('active-view');
+
+                // Close drawer automatically upon section choice
+                toggleSidebar(false);
+            });
+        });
+
         window.addEventListener('DOMContentLoaded', loadAdminData);
     </script>
 </body>
