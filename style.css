@@ -80,18 +80,6 @@ body {
     align-items: center;
     gap: 15px;
     position: relative;
-    z-index: 4002 !important;
-    pointer-events: auto !important;
-}
-
-.hamburger-btn {
-    background: none !important;
-    border: none !important;
-    font-size: 24px;
-    cursor: pointer !important;
-    color: var(--text-primary) !important;
-    position: relative;
-    z-index: 99999 !important;
     pointer-events: auto !important;
 }
 
@@ -109,7 +97,7 @@ body {
     background-color: var(--bg-container);
     border-right: 3px solid var(--stroke-dark);
     box-shadow: 5px 0 15px rgba(0,0,0,0.1);
-    z-index: 99998 !important; /* Sidebar sets cleanly below trigger buttons */
+    z-index: 999998 !important;
     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     padding: 25px;
     display: flex;
@@ -269,7 +257,7 @@ body {
 
 /*
 ==========================================
-    APP BOX GRID CONTAINERS
+    APP BOX LAYOUT STRUCTURE
 ==========================================
 */
 .app-container {
@@ -407,7 +395,7 @@ footer p {
 
 /*
 ==========================================
-    DASHBOARD SECTIONS CONFIGURATIONS
+    MAIN VIEW CONTAINER ARCHITECTURE
 ==========================================
 */
 .dashboard-view-wrapper {
@@ -500,7 +488,7 @@ footer p {
 
 /*
 ==========================================
-    CONTI CORE SHEET LOG MODULES
+    CONTI TABULAR MODULES STYLES
 ==========================================
 */
 .conti-big-box {
@@ -697,7 +685,7 @@ footer p {
 
 /*
 ======================================================
-    ABOUT ME SAMPLER CORE INTERFACE
+    ABOUT ME PANEL GRAPHICS SAMPLERS
 ======================================================
 */
 .about-view-wrapper {
@@ -867,7 +855,7 @@ footer p {
 
 /*
 ==========================================
-    CONTI INTERWinter EVENT PLANNER 
+    CONTI EVENT TIMELINE MANAGEMENT
 ==========================================
 */
 .booking-scheduler-layout {
@@ -1008,7 +996,7 @@ footer p {
 
 /*
 ==========================================
-    ADMIN COUNTER RENDERING HOOKS
+    ADMIN SYSTEMS RENDERING TRACKERS
 ==========================================
 */
 .admin-section { margin-bottom: 40px; width: 100%; }
@@ -1256,7 +1244,7 @@ footer p {
 
 /*
 ==========================================
-    ANIMATION LIFETIME FRAMES
+    ANIMATION RUNTIME ENGINE
 ==========================================
 */
 @keyframes dropIn {
@@ -1295,7 +1283,7 @@ footer p {
 
 /*
 ==========================================
-    MOBILE VIEWPORT COMPRESSION RESPONSES
+    MOBILE LAYOUT CONSTRAINTS
 ==========================================
 */
 @media (max-width: 600px) {
@@ -1322,8 +1310,7 @@ footer p {
     .calendar-day-node { padding: 2px !important; justify-content: flex-start !important; gap: 2px !important; }
     .day-label-num { font-size: 0.75rem !important; margin-left: 0 !important; }
     
-    /* Repositions button safely for narrow layout bars bars */
-    .hamburger-container { top: 12px; left: 12px; }
+    .hamburger-btn { top: 10px !important; left: 10px !important; width: 38px !important; height: 38px !important; font-size: 20px !important; }
     
     .mini-event-pill {
         font-size: 0 !important;
