@@ -10,7 +10,6 @@
 }
 
 :root {
-    /* Default Light Mode Theme Colors */
     --bg-main: #f5f5fa;
     --bg-container: #ffffff;
     --bg-input: #f0f0f5;
@@ -18,14 +17,12 @@
     --text-primary: #12121c;
     --text-secondary: #535370;
     
-    /* Global Brand Identities */
     --brand-magenta: #dc2b5c;
     --brand-magenta-hover: #f1376b;
     --brand-cyan: #00b4cc;
     --stroke-dark: #2b0b18;
 }
 
-/* Dark Mode Variables Theme Overwrite */
 [data-theme="dark"] {
     --bg-main: #0b0b12;
     --bg-container: #141421;
@@ -185,7 +182,7 @@ body {
 
 /*
 ==========================================
-    WELCOME PAGE (INTRO SPLASH ANIMATIONS)
+    WELCOME PAGE MODULE
 ==========================================
 */
 .welcome-container {
@@ -268,7 +265,7 @@ body {
 
 /*
 ==========================================
-    APP BOX LAYOUT (SIGN IN / SIGN UP)
+    APP BOX CONTAINER FORM FIELD LAYOUT
 ==========================================
 */
 .app-container {
@@ -406,7 +403,7 @@ footer p {
 
 /*
 ==========================================
-    DASHBOARD PAGE SPECIFIC COMPONENTS
+    DASHBOARD CORE MAIN WRAPPERS
 ==========================================
 */
 .dashboard-view-wrapper {
@@ -497,7 +494,7 @@ footer p {
 
 /*
 ==========================================
-    CONTI LOG DATA TABLES GRID STRUCTURE
+    CONTI LOG DATA TABLES LAYOUT
 ==========================================
 */
 .conti-big-box {
@@ -540,9 +537,7 @@ footer p {
     font-size: 0.95rem;
 }
 
-.meta-highlight {
-    color: var(--brand-magenta);
-}
+.meta-highlight { color: var(--brand-magenta); }
 
 .table-responsive-container {
     width: 100%;
@@ -696,7 +691,7 @@ footer p {
 
 /*
 ======================================================
-    ABOUT ME PAGE LAYOUT & CREATIVE GLASS PANEL
+    CREATIVE VISUAL MODULES & GLASS PANEL LAYOUT
 ======================================================
 */
 .about-view-wrapper {
@@ -742,7 +737,6 @@ footer p {
     text-shadow: 4px 4px 0px var(--stroke-dark), 0 0 15px rgba(220, 43, 92, 0.4);
 }
 
-/* Soundboard MPC Sampler Pad Architecture */
 .soundboard-grid {
     display: flex;
     justify-content: center;
@@ -788,7 +782,6 @@ footer p {
     box-shadow: 0 0px 0px transparent !important;
 }
 
-/* Studio Narrative Timeline Module */
 .concept-description-box {
     text-align: left;
     max-width: 650px;
@@ -853,9 +846,7 @@ footer p {
     z-index: 2;
 }
 
-[data-theme="dark"] .timeline-icon {
-    border-color: #ffffff;
-}
+[data-theme="dark"] .timeline-icon { border-color: #ffffff; }
 
 .timeline-content h4 {
     font-family: 'Kanit', sans-serif;
@@ -866,14 +857,11 @@ footer p {
     font-style: italic;
 }
 
-.timeline-content p {
-    font-size: 0.95rem;
-    line-height: 1.5;
-}
+.timeline-content p { font-size: 0.95rem; line-height: 1.5; }
 
 /*
 ==========================================
-    CONTI BOOKING SYSTEM MODULES
+    CONTI LIVE BOOKING INTERFACES
 ==========================================
 */
 .booking-scheduler-layout {
@@ -893,9 +881,7 @@ footer p {
     background-color: var(--bg-input);
 }
 
-.slots-widget-card {
-    flex: 1.2;
-}
+.slots-widget-card { flex: 1.2; }
 
 .widget-title {
     font-size: 1rem;
@@ -987,10 +973,7 @@ footer p {
     gap: 10px;
 }
 
-.deck-info-details {
-    font-size: 0.9rem;
-    line-height: 1.4;
-}
+.deck-info-details { font-size: 0.9rem; line-height: 1.4; }
 
 .deck-badge {
     display: inline-block;
@@ -1019,40 +1002,10 @@ footer p {
 
 /*
 ==========================================
-    ADMIN CONTROL SYSTEM EXTENSIONS
+    ADMIN SYSTEMS CONTROLS OVERRIDES
 ==========================================
 */
-.admin-section {
-    margin-bottom: 40px;
-    width: 100%;
-}
-
-.admin-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: var(--bg-container);
-    border-radius: 12px;
-    overflow: hidden;
-    border: 2px solid var(--stroke-dark);
-    margin-top: 15px;
-}
-
-.admin-table th, .admin-table td {
-    padding: 12px;
-    border: 1px solid var(--border-color);
-    text-align: left;
-    font-size: 0.9rem;
-    vertical-align: middle;
-}
-
-.admin-table th {
-    background: #2b0b18;
-    color: white;
-    font-family: 'Kanit', sans-serif;
-    font-style: italic;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
+.admin-section { margin-bottom: 40px; width: 100%; }
 
 .status-badge {
     display: inline-block;
@@ -1065,22 +1018,10 @@ footer p {
     border: 1px solid var(--stroke-dark);
 }
 
-.status-pending {
-    background-color: #ffc107 !important;
-    color: #12121c !important;
-}
+.status-pending { background-color: #ffc107 !important; color: #12121c !important; }
+.status-replied { background-color: #28a745 !important; color: #ffffff !important; }
 
-.status-replied {
-    background-color: #28a745 !important;
-    color: #ffffff !important;
-}
-
-.response-box {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-}
+.response-box { display: flex; align-items: center; gap: 8px; width: 100%; }
 
 .response-input {
     flex: 1;
@@ -1100,14 +1041,9 @@ footer p {
     background-color: var(--bg-container);
 }
 
-.actions-cell-inline-wrapper {
-    display: flex !important;
-    gap: 8px;
-    align-items: center;
-    flex-wrap: nowrap;
-}
+.actions-cell-inline-wrapper { display: flex !important; gap: 8px; align-items: center; flex-wrap: nowrap; }
 
-/* Live Calendar Analytics Feed Layout Dashboard */
+/* Analytics Grid Layout Systems */
 .booking-dashboard-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -1143,10 +1079,7 @@ footer p {
     margin: 0;
 }
 
-.calendar-nav-buttons {
-    display: flex;
-    gap: 10px;
-}
+.calendar-nav-buttons { display: flex; gap: 10px; }
 
 .calendar-nav-buttons button {
     background: none;
@@ -1190,27 +1123,15 @@ footer p {
     overflow: hidden;
 }
 
-.calendar-day-node.empty-node {
-    background: transparent;
-    border: none;
-}
+.calendar-day-node.empty-node { background: transparent; border: none; }
 
 .calendar-day-node.today-node {
     border: 2px solid var(--brand-cyan);
     background: #e0f7fa;
 }
 
-.day-label-num {
-    align-self: flex-start;
-    margin-left: 2px;
-}
-
-.day-badges-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    width: 100%;
-}
+.day-label-num { align-self: flex-start; margin-left: 2px; }
+.day-badges-stack { display: flex; flex-direction: column; gap: 2px; width: 100%; }
 
 .mini-event-pill {
     font-size: 0.65rem;
@@ -1245,11 +1166,7 @@ footer p {
     margin-right: 4px;
 }
 
-.upcoming-feed-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
+.upcoming-feed-container { display: flex; flex-direction: column; gap: 15px; }
 
 .upcoming-headline-text {
     font-family: 'Kanit';
@@ -1287,10 +1204,7 @@ footer p {
 .circle-interview { background: #ffe6ec; color: var(--brand-magenta); }
 .circle-show { background: #e0f7fa; color: var(--brand-cyan); }
 
-.event-main-details {
-    flex: 1;
-    color: #111;
-}
+.event-main-details { flex: 1; color: #111; }
 
 .event-meta-date {
     font-weight: bold;
@@ -1308,12 +1222,7 @@ footer p {
     color: #222;
 }
 
-.event-sub-label {
-    font-size: 0.75rem;
-    color: #666;
-    margin-top: 2px;
-    font-weight: 500;
-}
+.event-sub-label { font-size: 0.75rem; color: #666; margin-top: 2px; font-weight: 500; }
 
 .event-card-type-badge {
     display: inline-block;
@@ -1342,7 +1251,7 @@ footer p {
 
 /*
 ==========================================
-    ANIMATION KEYFRAMES
+    ANIMATION ENGINES KEYFRAMES
 ==========================================
 */
 @keyframes dropIn {
@@ -1356,8 +1265,8 @@ footer p {
 @keyframes l4 { to { clip-path: inset(0 -1ch 0 0); } }
 
 @keyframes comicPulse {
-    0%, 100% { transform: scale(1) rotate(-4deg); }
-    50% { transform: scale(1.06) rotate(-2deg); }
+    0%, 100-percent { transform: scale(1) rotate(-4deg); }
+    50-percent { transform: scale(1.06) rotate(-2deg); }
 }
 
 @keyframes autoSlideMotion {
@@ -1368,74 +1277,26 @@ footer p {
     100% { transform: translateX(0); }
 }
 
-/*
-======================================================
-    UPDATED PRINT MEDIA CONFIGURATION
-====================================================== */
+/* Print Styles Engine Optimization */
 @media print {
-    body {
-        background: #ffffff !important;
-        color: #000000 !important;
-        padding: 0 !important;
-    }
-    .menu-header-bar, .nav-sidebar, .overlay-screen, .bottom-buttons-grid, .actions-cell-wrapper, th:last-child, td:last-child {
-        display: none !important;
-    }
-    .conti-big-box {
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-    .conti-table {
-        font-size: 10pt !important;
-        width: 100% !important;
-        table-layout: auto !important;
-    }
-    .conti-table th {
-        background-color: #f0f0f5 !important;
-        color: #000000 !important;
-        border: 1px solid #000000 !important;
-    }
-    .conti-table td {
-        border: 1px solid #000000 !important;
-        word-break: break-word !important; 
-    }
-    .table-text-editable {
-        border: none !important;
-        background: transparent !important;
-        color: #000000 !important;
-        padding: 0 !important;
-        word-break: break-word !important;
-        white-space: pre-wrap !important;
-    }
-    .table-dropdown, .row-time-select-container select {
-        border: none !important;
-        background: transparent !important;
-        color: #000000 !important;
-        appearance: none !important;
-        -webkit-appearance: none !important;
-        text-align-last: center;
-    }
+    body { background: #ffffff !important; color: #000000 !important; padding: 0 !important; }
+    .menu-header-bar, .nav-sidebar, .overlay-screen, .bottom-buttons-grid, .actions-cell-wrapper, th:last-child, td:last-child { display: none !important; }
+    .conti-big-box { border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; width: 100% !important; max-width: 100% !important; }
+    .conti-table { font-size: 10pt !important; width: 100% !important; table-layout: auto !important; }
+    .conti-table th { background-color: #f0f0f5 !important; color: #000000 !important; border: 1px solid #000000 !important; }
+    .conti-table td { border: 1px solid #000000 !important; word-break: break-word !important; }
+    .table-text-editable { border: none !important; background: transparent !important; color: #000000 !important; padding: 0 !important; word-break: break-word !important; white-space: pre-wrap !important; }
+    .table-dropdown, .row-time-select-container select { border: none !important; background: transparent !important; color: #000000 !important; appearance: none !important; -webkit-appearance: none !important; text-align-last: center; }
 }
 
 /*
 ==========================================
-    RESPONSIVE MEDIA QUERIES
+    RESPONSIVE CELL PHONES BREAKPOINTS
 ==========================================
 */
 @media (max-width: 600px) {
-    .actions-cell-inline-wrapper {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 6px;
-    }
-    .actions-cell-inline-wrapper button {
-        width: 100%;
-        text-align: center;
-    }
+    .actions-cell-inline-wrapper { flex-direction: column; align-items: stretch; gap: 6px; }
+    .actions-cell-inline-wrapper button { width: 100%; text-align: center; }
 }
 
 @media (max-width: 480px) {
@@ -1466,11 +1327,5 @@ footer p {
         margin: 1px auto 0 auto !important;
         overflow: hidden !important;
     }
-
-    .day-badges-stack {
-        flex-direction: row !important;
-        justify-content: center !important;
-        gap: 3px !important;
-        width: 100% !important;
-    }
+    .day-badges-stack { flex-direction: row !important; justify-content: center !important; gap: 3px !important; width: 100% !important; }
 }
