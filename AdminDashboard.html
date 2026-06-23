@@ -13,6 +13,20 @@
         .admin-section { margin-bottom: 40px; width: 100%; display: none; }
         .admin-section.active-view { display: block; }
         
+        /* Make Admin Home act as a full bleed relative container for the background slider */
+        #adminHomeSection.active-view {
+            display: block;
+            position: fixed;
+            top: 60px; /* Adjust based on your menu-header-bar height */
+            left: 0;
+            width: 100vw;
+            height: calc(100vh - 60px);
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            z-index: 1;
+        }
+
         .admin-table { width: 100%; border-collapse: collapse; background: var(--bg-container); border-radius: 12px; overflow: hidden; border: 2px solid var(--stroke-dark); margin-top: 15px; }
         .admin-table th, .admin-table td { padding: 12px; border: 1px solid var(--border-color); text-align: left; font-size: 0.9rem; vertical-align: middle; }
         .admin-table th { background: var(--stroke-dark); color: white; font-family: 'Kanit'; font-style: italic; }
@@ -33,10 +47,21 @@
         
         .actions-cell-inline-wrapper { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; }
 
-        /* CSS Automatic Slider Styles */
-        .slider-box { width: 100%; max-width: 800px; margin: 20px auto; overflow: hidden; border-radius: 12px; border: 3px solid var(--stroke-dark); box-shadow: 0 5px 15px rgba(0,0,0,0.1); position: relative; }
-        .slider-track { display: flex; width: 400%; animation: slideAnimation 12s infinite ease-in-out; }
-        .slider-track img { width: 25%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; display: block; }
+        /* CSS Automatic Slider Configured as Fullscreen Background */
+        .slider-box { 
+            width: 100%; 
+            height: 100%; 
+            margin: 0; 
+            overflow: hidden; 
+            border-radius: 0; 
+            border: none; 
+            box-shadow: none; 
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .slider-track { display: flex; width: 400%; height: 100%; animation: slideAnimation 12s infinite ease-in-out; }
+        .slider-track img { width: 25%; height: 100%; object-fit: cover; display: block; }
         
         @keyframes slideAnimation {
             0%, 20% { transform: translateX(0%); }
@@ -77,7 +102,6 @@
         <h1 class="brand-header">Management</h1>
 
         <section class="admin-section active-view" id="adminHomeSection">
-            <h2 class="core-functions-headline">Welcome to BEATS Hub</h2>
             <div class="slider-box">
                 <div class="slider-track">
                     <img src="image1.png" alt="Featured Space 1">
@@ -470,7 +494,7 @@
         const themeSwitchTrigger = document.getElementById('themeSwitchTrigger');
         const logoutActionLink = document.getElementById('logoutActionLink');
 
-        // NEW ENHANCED SIDEBAR TOGGLE MECHANISM (Explicit pointer configuration overrides)
+        // Sidebar configuration controls
         function toggleSidebar(open) {
             if(open) { 
                 sidebarDrawer.classList.add('open'); 
@@ -484,7 +508,6 @@
             }
         }
 
-        // Initialize state tracking variables explicitly at screen startup
         sidebarDrawer.style.pointerEvents = "none";
 
         document.getElementById('openMenuToggle').addEventListener('click', () => toggleSidebar(true));
@@ -503,7 +526,7 @@
 
         logoutActionLink.addEventListener('click', () => { localStorage.removeItem('currentUser'); });
 
-        // View switching navigation engine logic
+        // View switching navigation routing
         const viewTriggers = document.querySelectorAll('.sidebar-view-trigger');
         const dashboardSections = document.querySelectorAll('.admin-section');
 
