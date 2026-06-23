@@ -1074,12 +1074,12 @@ footer p {
 
 .calendar-days-grid {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(7, minmax(0, 1fr)); /* Force column limits to prevent overflow structural tracking breaks */
     gap: 6px;
 }
 
 .calendar-day-node {
-    aspect-ratio: 1.1;
+    aspect-ratio: 1; /* Keep perfect square proportions across viewport scaling modes */
     border: 1px solid #eee;
     border-radius: 8px;
     padding: 4px;
@@ -1090,6 +1090,8 @@ footer p {
     font-size: 0.85rem;
     font-weight: bold;
     position: relative;
+    min-width: 0; /* Let box resize beneath raw text bounds cleanly */
+    overflow: hidden;
 }
 
 .calendar-day-node.empty-node {
@@ -1353,4 +1355,50 @@ footer p {
     .slots-time-grid { grid-template-columns: 1fr; }
     .response-box { flex-direction: column; gap: 6px; }
     .response-input { width: 100%; }
+
+    /* ======================================================
+        MOBILE PORTRAIT FINETUNING (FOR NARROW PHONE VIEWS)
+       ====================================================== */
+    .booking-dashboard-grid {
+        gap: 20px !important;
+    }
+
+    .calendar-card {
+        padding: 12px !important;
+    }
+
+    .calendar-weekdays-row {
+        font-size: 0.75rem !important;
+        margin-bottom: 5px !important;
+    }
+
+    .calendar-day-node {
+        padding: 2px !important;
+        justify-content: flex-start !important;
+        gap: 2px !important;
+    }
+
+    .day-label-num {
+        font-size: 0.75rem !important;
+        margin-left: 0 !important;
+    }
+
+    /* Convert text badges into clean design dots on tight screens */
+    .mini-event-pill {
+        font-size: 0 !important; /* Hides the text string securely */
+        height: 6px !important;
+        width: 6px !important;
+        border-radius: 50% !important; /* Turns the pill into a round circle dot */
+        display: inline-block !important;
+        margin: 1px auto 0 auto !important;
+        overflow: hidden !important;
+    }
+
+    /* Align the indicator dots horizontally inside the cell stack */
+    .day-badges-stack {
+        flex-direction: row !important;
+        justify-content: center !important;
+        gap: 3px !important;
+        width: 100% !important;
+    }
 }
