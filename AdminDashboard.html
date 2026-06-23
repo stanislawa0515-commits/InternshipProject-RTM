@@ -38,7 +38,7 @@
         .response-input:focus { border-color: var(--brand-cyan); }
         .attachment-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background-color: var(--brand-cyan); color: #fff; border: 1px solid var(--stroke-dark); border-radius: 6px; font-size: 0.75rem; cursor: pointer; text-decoration: none; font-weight: bold; }
         .no-attachment { font-size: 0.8rem; color: var(--text-secondary); font-style: italic; }
-        .modal-mask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+        .modal-mask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 5000; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
         .modal-mask.active { opacity: 1; pointer-events: auto; }
         .modal-window { background: var(--bg-container); border: 3px solid var(--stroke-dark); border-radius: 16px; width: 90%; max-width: 480px; padding: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); transform: scale(0.8); transition: transform 0.2s ease; }
         .modal-mask.active .modal-window { transform: scale(1); }
@@ -76,6 +76,7 @@
             position: relative;
             display: inline-block;
             pointer-events: auto !important;
+            z-index: 4005 !important;
         }
         .nav-alert-dot {
             position: absolute;
@@ -88,6 +89,7 @@
             border: 2px solid var(--bg-container);
             display: none;
             pointer-events: none;
+            z-index: 4010 !important;
         }
         .sidebar-link-row {
             display: flex;
@@ -158,7 +160,7 @@
     </div>
 
     <div class="dashboard-view-wrapper">
-        
+        <h1 class="brand-header">Management</h1>
 
         <section class="admin-section active-view" id="adminHomeSection">
             <div class="slider-box">
