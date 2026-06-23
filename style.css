@@ -90,7 +90,8 @@ body {
     cursor: pointer;
     color: var(--text-primary);
     position: relative;
-    z-index: 105;
+    z-index: 115;
+    pointer-events: auto !important;
 }
 
 .user-greeting {
@@ -112,10 +113,12 @@ body {
     padding: 25px;
     display: flex;
     flex-direction: column;
+    pointer-events: none;
 }
 
 .nav-sidebar.open {
     left: 0;
+    pointer-events: auto;
 }
 
 .close-menu-btn {
