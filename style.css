@@ -71,7 +71,7 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: 0 20px;
-    z-index: 4000 !important; /* Force bar above scrolling layout grids */
+    z-index: 4000 !important;
     pointer-events: auto !important;
 }
 
@@ -85,13 +85,13 @@ body {
 }
 
 .hamburger-btn {
-    background: none;
-    border: none;
+    background: none !important;
+    border: none !important;
     font-size: 24px;
-    cursor: pointer;
-    color: var(--text-primary);
+    cursor: pointer !important;
+    color: var(--text-primary) !important;
     position: relative;
-    z-index: 4015 !important; /* Floats above alert indicators */
+    z-index: 99999 !important;
     pointer-events: auto !important;
 }
 
@@ -109,7 +109,7 @@ body {
     background-color: var(--bg-container);
     border-right: 3px solid var(--stroke-dark);
     box-shadow: 5px 0 15px rgba(0,0,0,0.1);
-    z-index: 4500 !important;
+    z-index: 99998 !important; /* Sidebar sets cleanly below trigger buttons */
     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     padding: 25px;
     display: flex;
@@ -186,7 +186,7 @@ body {
 
 /*
 ==========================================
-    WELCOME SPLASH COMPONENT
+    WELCOME SPLASH TIMELINES
 ==========================================
 */
 .welcome-container {
@@ -269,7 +269,7 @@ body {
 
 /*
 ==========================================
-    FORM GRID INTERACTIVE BLOCKS
+    APP BOX GRID CONTAINERS
 ==========================================
 */
 .app-container {
@@ -407,7 +407,7 @@ footer p {
 
 /*
 ==========================================
-    MAIN DASHBOARD PAGE WRAPPERS
+    DASHBOARD SECTIONS CONFIGURATIONS
 ==========================================
 */
 .dashboard-view-wrapper {
@@ -419,7 +419,7 @@ footer p {
     gap: 30px;
     padding: 0 10px;
     position: relative;
-    z-index: 10; /* Set below header bar layout layers */
+    z-index: 10;
 }
 
 .slider-container {
@@ -500,7 +500,7 @@ footer p {
 
 /*
 ==========================================
-    CONTI LOG ARCHITECTURE VIEWS
+    CONTI CORE SHEET LOG MODULES
 ==========================================
 */
 .conti-big-box {
@@ -697,7 +697,7 @@ footer p {
 
 /*
 ======================================================
-    ABOUT ME PAGE ARTISTIC TIMELINE MODALS
+    ABOUT ME SAMPLER CORE INTERFACE
 ======================================================
 */
 .about-view-wrapper {
@@ -867,7 +867,7 @@ footer p {
 
 /*
 ==========================================
-    CONTI LIVE SCHEDULER LOGISTICS
+    CONTI INTERWinter EVENT PLANNER 
 ==========================================
 */
 .booking-scheduler-layout {
@@ -1008,7 +1008,7 @@ footer p {
 
 /*
 ==========================================
-    ADMIN ANALYTICS INTERFACE BADGES
+    ADMIN COUNTER RENDERING HOOKS
 ==========================================
 */
 .admin-section { margin-bottom: 40px; width: 100%; }
@@ -1256,7 +1256,7 @@ footer p {
 
 /*
 ==========================================
-    ANIMATION RUNTIME DRIVERS
+    ANIMATION LIFETIME FRAMES
 ==========================================
 */
 @keyframes dropIn {
@@ -1295,7 +1295,7 @@ footer p {
 
 /*
 ==========================================
-    MOBILE LAYOUT CONSTRAINTS
+    MOBILE VIEWPORT COMPRESSION RESPONSES
 ==========================================
 */
 @media (max-width: 600px) {
@@ -1321,6 +1321,9 @@ footer p {
     .calendar-weekdays-row { font-size: 0.75rem !important; margin-bottom: 5px !important; }
     .calendar-day-node { padding: 2px !important; justify-content: flex-start !important; gap: 2px !important; }
     .day-label-num { font-size: 0.75rem !important; margin-left: 0 !important; }
+    
+    /* Repositions button safely for narrow layout bars bars */
+    .hamburger-container { top: 12px; left: 12px; }
     
     .mini-event-pill {
         font-size: 0 !important;
