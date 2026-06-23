@@ -75,6 +75,8 @@
         .hamburger-container {
             position: relative;
             display: inline-block;
+            z-index: 110;
+            pointer-events: auto !important;
         }
         .nav-alert-dot {
             position: absolute;
@@ -86,7 +88,7 @@
             border-radius: 50%;
             border: 2px solid var(--bg-container);
             display: none;
-            z-index: 106;
+            z-index: 116;
             pointer-events: none;
         }
         .sidebar-link-row {
@@ -589,18 +591,17 @@
             if(open) { 
                 sidebarDrawer.classList.add('open'); 
                 menuOverlay.classList.add('show');
-                sidebarDrawer.style.pointerEvents = "auto";
             }
             else { 
                 sidebarDrawer.classList.remove('open'); 
                 menuOverlay.classList.remove('show');
-                sidebarDrawer.style.pointerEvents = "none";
             }
         }
 
-        sidebarDrawer.style.pointerEvents = "none";
-
-        document.getElementById('openMenuToggle').addEventListener('click', () => toggleSidebar(true));
+        document.getElementById('openMenuToggle').addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleSidebar(true);
+        });
         document.getElementById('closeMenuToggle').addEventListener('click', () => toggleSidebar(false));
         menuOverlay.addEventListener('click', () => toggleSidebar(false));
 
