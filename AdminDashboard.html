@@ -17,7 +17,7 @@
         #adminHomeSection.active-view {
             display: block;
             position: fixed;
-            top: 60px; /* Adjust based on your menu-header-bar height */
+            top: 60px;
             left: 0;
             width: 100vw;
             height: calc(100vh - 60px);
@@ -47,7 +47,7 @@
         
         .actions-cell-inline-wrapper { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; }
 
-        /* CSS Automatic Slider Configured as Fullscreen Background */
+        /* Fullscreen Automatic Slider Background */
         .slider-box { 
             width: 100%; 
             height: 100%; 
@@ -71,7 +71,7 @@
             100% { transform: translateX(0%); }
         }
 
-        /* Notification Elements Layout */
+        /* Notification Layout Overlays */
         .hamburger-container {
             position: relative;
             display: inline-block;
@@ -263,19 +263,24 @@
 
         let cachedReportsLocalArray = [];
         let globalBookingsArray = [];
-        
         let calendarCurrentDate = new Date();
 
         async function loadAdminData() {
-            await renderBookings();
-            await renderContiSheetsRows();
-            await renderReports();
-            updateNotificationBadges();
+            try {
+                await renderBookings();
+                await renderContiSheetsRows();
+                await renderReports();
+                updateNotificationBadges();
+            } catch(e) {
+                console.error("Data tracking process halted: ", e);
+            }
         }
 
         function updateNotificationBadges() {
             const bookingsCount = globalBookingsArray.length;
+            // Counts only valid content table logs rows, ignoring fallback empty placeholders
             const logsCount = document.querySelectorAll('#adminContiSheetsBody tr:not(:has(td[colspan]))').length;
+            // Only alerts reports that don't have an active admin text reply field filled
             const reportsCount = cachedReportsLocalArray.filter(item => !item.adminResponse).length;
 
             const bookingsBadge = document.getElementById('count-bookings');
@@ -294,9 +299,9 @@
 
             if (bookingsCount > 0 || logsCount > 0 || reportsCount > 0) {
                 hamburgerDot.style.display = 'block';
-            </div> else {
+            } else {
                 hamburgerDot.style.display = 'none';
-            </div>
+            }
         }
 
         async function renderBookings() {
@@ -339,9 +344,7 @@
                         cardStack.appendChild(cardNode);
                     });
                 }
-
                 buildLiveCalendarGrid();
-
             } catch (err) { console.error(err); }
         }
 
@@ -426,13 +429,8 @@
                     const rowsArray = sheetData.rows || [];
                     
                     const lastUpdated = sheetData.updatedAt || 0;
-                    if (now - lastUpdated > twentyFourHours) {
-                        return; 
-                    }
-
-                    if (rowsArray.length === 0) {
-                        return;
-                    }
+                    if (now - lastUpdated > twentyFourHours) { return; }
+                    if (rowsArray.length === 0) { return; }
 
                     rowsArray.forEach((rowItem, rowIndex) => {
                         displayedRowsCount++;
@@ -586,7 +584,6 @@
         const themeSwitchTrigger = document.getElementById('themeSwitchTrigger');
         const logoutActionLink = document.getElementById('logoutActionLink');
 
-        // Sidebar configuration controls
         function toggleSidebar(open) {
             if(open) { 
                 sidebarDrawer.classList.add('open'); 
@@ -617,7 +614,6 @@
 
         logoutActionLink.addEventListener('click', () => { localStorage.removeItem('currentUser'); });
 
-        // View switching navigation routing
         const viewTriggers = document.querySelectorAll('.sidebar-view-trigger');
         const dashboardSections = document.querySelectorAll('.admin-section');
 
