@@ -46,7 +46,7 @@
         
         .actions-cell-inline-wrapper { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; }
 
-        /* Fullscreen Automatic Slider Background */
+        /* Fullscreen Slider Background */
         .slider-box { 
             width: 100%; 
             height: 100%; 
@@ -70,25 +70,25 @@
             100% { transform: translateX(0%); }
         }
 
-        /* Fixed Layer Controls for Unblockable Hamburger Button Trigger */
+        /* Fixed Layer Controls for Hamburger Button Trigger */
         .hamburger-btn {
             position: fixed !important;
-            top: 12px !important;
+            top: 10px !important;
             left: 20px !important;
-            background: #ffffff !important; /* Forces solid background so slider text never blends behind it */
-            border: 2px solid var(--stroke-dark) !important;
+            background: #ffffff !important;
+            border: 3px solid var(--stroke-dark) !important;
             border-radius: 8px !important;
             font-size: 24px !important;
-            width: 42px !important;
-            height: 42px !important;
+            width: 44px !important;
+            height: 44px !important;
             cursor: pointer !important;
             color: #12121c !important;
             display: flex !important;
             align-items: center;
             justify-content: center;
-            z-index: 999999 !important; /* Completely floats over top banner headers and tables */
+            z-index: 9999999 !important; /* Highest layer prioritization */
             pointer-events: auto !important;
-            box-shadow: 2px 2px 0px var(--stroke-dark);
+            box-shadow: 3px 3px 0px var(--stroke-dark);
             padding-bottom: 4px;
         }
         
@@ -96,21 +96,20 @@
             background: #141421 !important;
             color: #ffffff !important;
             border-color: #ffffff !important;
-            box-shadow: 2px 2px 0px #ffffff;
+            box-shadow: 3px 3px 0px #ffffff;
         }
 
-        /* Clean Pseudo Dot Badge Configuration */
+        /* Red Badge Counter Dot */
         .hamburger-btn.has-alert::after {
             content: '';
             position: absolute;
-            top: -2px;
-            right: -2px;
+            top: -4px;
+            right: -4px;
             width: 12px;
             height: 12px;
             background-color: #ff3366;
             border-radius: 50%;
             border: 2px solid #ffffff;
-            z-index: 1000000;
         }
 
         .sidebar-link-row {
@@ -143,15 +142,15 @@
 
     <div class="menu-header-bar">
         <div class="left-nav-group">
-            <button class="hamburger-btn" id="openMenuToggle">☰</button>
+            <button class="hamburger-btn" id="openMenuToggle" onclick="window.toggleSidebarDrawer(true); event.stopPropagation();">☰</button>
             <div class="user-greeting" style="padding-left: 55px;">Admin: <span id="displayUsername">Master</span></div>
         </div>
         <div style="font-family: 'Kanit', sans-serif; font-weight: 900; color: #dc2b5c; font-size: 1.5rem; font-style: italic;">BEATS ADMIN</div>
     </div>
 
-    <div class="overlay-screen" id="menuOverlay"></div>
+    <div class="overlay-screen" id="menuOverlay" onclick="window.toggleSidebarDrawer(false)"></div>
     <div class="nav-sidebar" id="sidebarDrawer">
-        <button class="close-menu-btn" id="closeMenuToggle">✕</button>
+        <button class="close-menu-btn" id="closeMenuToggle" onclick="window.toggleSidebarDrawer(false)">✕</button>
         <div class="sidebar-links">
             <a href="#" class="sidebar-view-trigger active" data-target="adminHomeSection">Admin Home</a>
             
@@ -321,6 +320,25 @@
                 hamburgerBtn.classList.remove('has-alert');
             }
         }
+
+        // Expose function globally to make it accessible to inline onclick handlers
+        window.toggleSidebarDrawer = function(open) {
+            const sidebarDrawer = document.getElementById('sidebarDrawer');
+            const menuOverlay = document.getElementById('menuOverlay');
+            const hamburgerBtn = document.getElementById('openMenuToggle');
+
+            if(open) { 
+                sidebarDrawer.classList.add('open'); 
+                menuOverlay.classList.add('show');
+                if (hamburgerBtn) {
+                    hamburgerBtn.classList.remove('has-alert');
+                    hasSeenNotifications = true;
+                }
+            } else { 
+                sidebarDrawer.classList.remove('open'); 
+                menuOverlay.classList.remove('show');
+            }
+        };
 
         async function renderBookings() {
             const cardStack = document.getElementById('upcomingEventsCardStack');
@@ -597,34 +615,8 @@
         photoModalMask.addEventListener('click', closePhotoViewerModal);
         modalImageHolder.parentNode.addEventListener('click', (e) => e.stopPropagation());
 
-        const sidebarDrawer = document.getElementById('sidebarDrawer');
-        const menuOverlay = document.getElementById('menuOverlay');
         const themeSwitchTrigger = document.getElementById('themeSwitchTrigger');
         const logoutActionLink = document.getElementById('logoutActionLink');
-
-        function toggleSidebar(open) {
-            if(open) { 
-                sidebarDrawer.classList.add('open'); 
-                menuOverlay.classList.add('show');
-                
-                const hamburgerBtn = document.getElementById('openMenuToggle');
-                if (hamburgerBtn) {
-                    hamburgerBtn.classList.remove('has-alert');
-                    hasSeenNotifications = true;
-                }
-            }
-            else { 
-                sidebarDrawer.classList.remove('open'); 
-                menuOverlay.classList.remove('show');
-            }
-        }
-
-        document.getElementById('openMenuToggle').addEventListener('click', (e) => {
-            e.stopPropagation();
-            toggleSidebar(true);
-        });
-        document.getElementById('closeMenuToggle').addEventListener('click', () => toggleSidebar(false));
-        menuOverlay.addEventListener('click', () => toggleSidebar(false));
 
         themeSwitchTrigger.addEventListener('click', () => {
             if(document.documentElement.hasAttribute('data-theme')) {
@@ -652,7 +644,7 @@
                 dashboardSections.forEach(section => section.classList.remove('active-view'));
                 document.getElementById(targetId).classList.add('active-view');
 
-                toggleSidebar(false);
+                window.toggleSidebarDrawer(false);
             });
         });
 
