@@ -264,6 +264,7 @@
         let cachedReportsLocalArray = [];
         let globalBookingsArray = [];
         let calendarCurrentDate = new Date();
+        let hasSeenNotifications = false;
 
         async function loadAdminData() {
             try {
@@ -278,9 +279,7 @@
 
         function updateNotificationBadges() {
             const bookingsCount = globalBookingsArray.length;
-            // Counts only valid content table logs rows, ignoring fallback empty placeholders
             const logsCount = document.querySelectorAll('#adminContiSheetsBody tr:not(:has(td[colspan]))').length;
-            // Only alerts reports that don't have an active admin text reply field filled
             const reportsCount = cachedReportsLocalArray.filter(item => !item.adminResponse).length;
 
             const bookingsBadge = document.getElementById('count-bookings');
@@ -297,9 +296,9 @@
             if (reportsCount > 0) { reportsBadge.innerText = reportsCount; reportsBadge.style.display = 'block'; } 
             else { reportsBadge.style.display = 'none'; }
 
-            if (bookingsCount > 0 || logsCount > 0 || reportsCount > 0) {
+            if ((bookingsCount > 0 || logsCount > 0 || reportsCount > 0) && !hasSeenNotifications) {
                 hamburgerDot.style.display = 'block';
-            } else {
+            </div> else {
                 hamburgerDot.style.display = 'none';
             }
         }
@@ -588,6 +587,12 @@
             if(open) { 
                 sidebarDrawer.classList.add('open'); 
                 menuOverlay.classList.add('show');
+                
+                const hamburgerDot = document.getElementById('hamburgerAlertDot');
+                if (hamburgerDot) {
+                    hamburgerDot.style.display = 'none';
+                    hasSeenNotifications = true;
+                }
             }
             else { 
                 sidebarDrawer.classList.remove('open'); 
