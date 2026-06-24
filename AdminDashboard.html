@@ -228,7 +228,6 @@
                             <th>Program / Segment Title</th>
                             <th>Broadcaster Crew</th>
                             <th>Remarks</th>
-                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody id="adminContiSheetsBody"></tbody>
@@ -538,22 +537,17 @@
                                 <input type="text" class="response-input text-remark-field" 
                                     id="cell-remark-${sheetId}-${rowIndex}" 
                                     value="${rowItem.remarks || ''}" 
+                                    data-sheetid="${sheetId}" 
+                                    data-rowidx="${rowIndex}"
                                     placeholder="Write table remark reply...">
-                            </td>
-                            <td>
-                                <div class="actions-cell-inline-wrapper">
-                                    <button type="button" class="row-btn row-btn-save btn-sync-remark" 
-                                        style="background-color: #28a745; color: white;"
-                                        data-sheetid="${sheetId}" 
-                                        data-rowidx="${rowIndex}">Update Remark</button>
-                                </div>
                             </td>
                         `;
 
-                        tr.querySelector('.btn-sync-remark').addEventListener('click', async (e) => {
+                        // INSTANT INLINE AUTOMATIC SYNC REPLACEMENT
+                        tr.querySelector('.text-remark-field').addEventListener('change', async (e) => {
                             const sId = e.target.dataset.sheetid;
                             const rIdx = parseInt(e.target.dataset.rowidx);
-                            const remarkVal = document.getElementById(`cell-remark-${sId}-${rIdx}`).value;
+                            const remarkVal = e.target.value;
 
                             try {
                                 const docRef = doc(db, "beats_conti_sheets", sId);
@@ -563,13 +557,11 @@
                                     if(payload.rows && payload.rows[rIdx]) {
                                         payload.rows[rIdx].remarks = remarkVal;
                                         await setDoc(docRef, payload);
-                                        alert("Remark text cell successfully pushed to user sheet!");
-                                        await renderContiSheetsRows();
+                                        console.log("Remark field structural index dynamically synced back to server.");
                                     }
                                 }
                             } catch(err) {
-                                console.error(err);
-                                alert("Failed to modify remark value.");
+                                console.error("Inline save configuration breakdown: ", err);
                             }
                         });
 
@@ -578,7 +570,7 @@
                 });
 
                 if (totalRowsDisplayed === 0) {
-                    container.innerHTML = `<tr><td colspan="6" style="text-align:center; font-style:italic;">No active sheet logs found.</td></tr>`;
+                    container.innerHTML = `<tr><td colspan="5" style="text-align:center; font-style:italic;">No active sheet logs found.</td></tr>`;
                 }
                 
                 uniqueLogUserCount = uniqueUsersSet.size;
