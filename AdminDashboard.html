@@ -178,7 +178,7 @@
     </div>
 
     <div class="dashboard-view-wrapper">
-       
+        
 
         <section class="admin-section active-view" id="adminHomeSection">
             <div class="slider-box">
@@ -283,6 +283,7 @@
         let globalBookingsArray = [];
         let calendarCurrentDate = new Date();
         let hasSeenNotifications = false;
+        let selectedDateString = null; // Variable to manage our filter
 
         async function loadAdminData() {
             try {
@@ -341,8 +342,6 @@
         };
 
         async function renderBookings() {
-            const cardStack = document.getElementById('upcomingEventsCardStack');
-            cardStack.innerHTML = '';
             globalBookingsArray = [];
 
             try {
@@ -355,32 +354,8 @@
 
                 globalBookingsArray.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-                if(globalBookingsArray.length === 0) {
-                    cardStack.innerHTML = `<div style="text-align:center; font-style:italic; padding:20px; color:#666;">No upcoming bookings found.</div>`;
-                } else {
-                    globalBookingsArray.forEach(item => {
-                        const isInterview = item.type && item.type.toLowerCase().includes('interview');
-                        const iconSymbol = isInterview ? '🎙️' : '💿';
-                        const styleClass = isInterview ? 'circle-interview' : 'circle-show';
-
-                        const cardNode = document.createElement('div');
-                        cardNode.className = 'event-item-card';
-                        cardNode.innerHTML = `
-                            <div class="event-icon-circle ${styleClass}">${iconSymbol}</div>
-                            <div class="event-main-details">
-                                <div class="event-meta-date">${item.date}</div>
-                                <h4 class="event-display-title">${item.dj || 'Unknown DJ'} - ${item.timeSlot || 'Session'}</h4>
-                                <div class="event-sub-label">by: ${item.bookedBy || 'Admin'} ${item.remarks ? `• "${item.remarks}"` : ''}</div>
-                                <span class="event-card-type-badge">${item.type || 'Show'}</span>
-                            </div>
-                            <button type="button" class="card-action-bin-btn">DELETE</button>
-                        `;
-
-                        cardNode.querySelector('.card-action-bin-btn').addEventListener('click', () => deleteBooking(item.id));
-                        cardStack.appendChild(cardNode);
-                    });
-                }
                 buildLiveCalendarGrid();
+                renderFilteredEventsFeed();
             } catch (err) { console.error(err); }
         }
 
@@ -408,6 +383,7 @@
             for(let day = 1; day <= totalDaysInMonth; day++) {
                 const cellNode = document.createElement('div');
                 cellNode.className = 'calendar-day-node';
+                cellNode.style.cursor = 'pointer';
                 
                 if(day === todayObj.getDate() && month === todayObj.getMonth() && year === todayObj.getFullYear()) {
                     cellNode.classList.add('today-node');
@@ -418,6 +394,12 @@
 
                 const targetDateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 
+                // Highlight active selected node outline border structure
+                if (selectedDateString === targetDateString) {
+                    cellNode.style.border = '2px dashed var(--brand-magenta)';
+                    cellNode.style.backgroundColor = 'var(--bg-input)';
+                }
+
                 const dayMatches = globalBookingsArray.filter(b => b.date === targetDateString);
                 dayMatches.forEach(match => {
                     const pillNode = document.createElement('span');
@@ -427,7 +409,57 @@
                     badgesStack.appendChild(pillNode);
                 });
 
+                cellNode.addEventListener('click', () => {
+                    if (selectedDateString === targetDateString) {
+                        selectedDateString = null; // Clear filter if clicking current again
+                    } else {
+                        selectedDateString = targetDateString; // Inject active filter point
+                    }
+                    buildLiveCalendarGrid();
+                    renderFilteredEventsFeed();
+                });
+
                 container.appendChild(cellNode);
+            }
+        }
+
+        function renderFilteredEventsFeed() {
+            const cardStack = document.getElementById('upcomingEventsCardStack');
+            const feedHeadline = document.querySelector('.upcoming-headline-text');
+            cardStack.innerHTML = '';
+
+            let filteredArray = globalBookingsArray;
+            if (selectedDateString) {
+                filteredArray = globalBookingsArray.filter(item => item.date === selectedDateString);
+                feedHeadline.innerText = `Bookings for ${selectedDateString}`;
+            } else {
+                feedHeadline.innerText = "Upcoming Events";
+            }
+
+            if(filteredArray.length === 0) {
+                cardStack.innerHTML = `<div style="text-align:center; font-style:italic; padding:20px; color:#666;">No bookings found for this day.</div>`;
+            } else {
+                filteredArray.forEach(item => {
+                    const isInterview = item.type && item.type.toLowerCase().includes('interview');
+                    const iconSymbol = isInterview ? '🎙️' : '💿';
+                    const styleClass = isInterview ? 'circle-interview' : 'circle-show';
+
+                    const cardNode = document.createElement('div');
+                    cardNode.className = 'event-item-card';
+                    cardNode.innerHTML = `
+                        <div class="event-icon-circle ${styleClass}">${iconSymbol}</div>
+                        <div class="event-main-details">
+                            <div class="event-meta-date">${item.date}</div>
+                            <h4 class="event-display-title">${item.dj || 'Unknown DJ'} - ${item.timeSlot || 'Session'}</h4>
+                            <div class="event-sub-label">by: ${item.bookedBy || 'Admin'} ${item.remarks ? `• "${item.remarks}"` : ''}</div>
+                            <span class="event-card-type-badge">${item.type || 'Show'}</span>
+                        </div>
+                        <button type="button" class="card-action-bin-btn">DELETE</button>
+                    `;
+
+                    cardNode.querySelector('.card-action-bin-btn').addEventListener('click', () => deleteBooking(item.id));
+                    cardStack.appendChild(cardNode);
+                });
             }
         }
 
