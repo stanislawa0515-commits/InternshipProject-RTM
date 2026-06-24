@@ -25,13 +25,14 @@
             border: 2px solid var(--bg-container);
         }
 
-        /* Sidebar Item Counts */
+        /* Sidebar Item Counts Container Setup */
         .sidebar-link-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
             width: 100%;
             text-decoration: none;
+            margin-bottom: 5px;
         }
         .sidebar-link-row a {
             margin: 0;
@@ -40,11 +41,11 @@
         .sidebar-count-badge {
             background-color: #dc2b5c;
             color: #ffffff;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             font-weight: bold;
             padding: 2px 8px;
             border-radius: 12px;
-            min-width: 24px;
+            min-width: 20px;
             text-align: center;
             display: none;
             font-family: 'Kanit', sans-serif;
@@ -57,22 +58,18 @@
             user-select: none;
         }
         
+        /* Updated aesthetic styling: clean glowing notification dot on the top right corners of box cards */
         .card-alert-badge {
             position: absolute;
             top: 15px;
             right: 15px;
-            background-color: #dc2b5c;
-            color: #ffffff;
-            font-size: 0.85rem;
-            font-weight: bold;
-            padding: 2px 8px;
-            border-radius: 12px;
-            min-width: 24px;
-            text-align: center;
+            width: 12px;
+            height: 12px;
+            background-color: #ff3366;
+            border-radius: 50%;
+            border: 2px solid var(--bg-container);
+            box-shadow: 0 0 8px rgba(255, 51, 102, 0.6);
             display: none; 
-            font-family: 'Kanit', sans-serif;
-            border: 1px solid var(--stroke-dark);
-            box-shadow: 2px 2px 0px var(--stroke-dark);
             pointer-events: none; /* Clicks pass straight through to the parent card */
         }
     </style>
@@ -92,6 +89,19 @@
         <button class="close-menu-btn" id="closeMenuToggle">✕</button>
         <div class="sidebar-links">
             <a href="dashboard.html" class="sidebar-view-trigger active">Dashboard</a>
+            
+            <div class="sidebar-link-row">
+                <a href="contiLog1.html" id="navLinkLogs">Conti Logs</a>
+                <span class="sidebar-count-badge" id="count-logs">0</span>
+            </div>
+            <div class="sidebar-link-row">
+                <a href="contiBook.html" id="navLinkBookings">Conti Bookings</a>
+                <span class="sidebar-count-badge" id="count-bookings">0</span>
+            </div>
+            <div class="sidebar-link-row">
+                <a href="Ereport.html" id="navLinkReports">Equipment Reports</a>
+                <span class="sidebar-count-badge" id="count-reports">0</span>
+            </div>
             
             <a href="AboutMe.html">About me</a>
             <a href="SignIn.html" id="logoutActionLink" style="color: #ff4d4d; margin-top: 20px;">Logout</a>
@@ -118,20 +128,21 @@
  
         <div class="functions-grid">
             <div class="feature-card" onclick="handleSectionNavigation('logs', 'contiLog1.html')">
-                <span class="card-alert-badge" id="card-count-logs">0</span>
+                <span class="card-alert-badge" id="card-count-logs"></span>
                 <span class="card-icon">📻</span>
                 <h3>Conti Log</h3>
                 <p>Track daily on-air activities and programme updates.</p>
             </div>
  
-            <div class="feature-card" onclick="window.location.href='contiBook.html'">
+            <div class="feature-card" onclick="handleSectionNavigation('bookings', 'contiBook.html')">
+                <span class="card-alert-badge" id="card-count-bookings"></span>
                 <span class="card-icon">📅</span>
                 <h3>Conti Booking</h3>
                 <p>Manage bookings for recordings and guest interviews.</p>
             </div>
  
             <div class="feature-card" onclick="handleSectionNavigation('reports', 'Ereport.html')">
-                <span class="card-alert-badge" id="card-count-reports">0</span>
+                <span class="card-alert-badge" id="card-count-reports"></span>
                 <span class="card-icon">🔧</span>
                 <h3>E-Equipment Report</h3>
                 <p>Report equipment issues, damage, or loss.</p>
@@ -188,6 +199,7 @@
         logoutActionLink.addEventListener('click', () => {
             localStorage.removeItem('currentUser');
             localStorage.removeItem('lastCheckedUserLogs');
+            localStorage.removeItem('lastCheckedUserBookings');
             localStorage.removeItem('lastCheckedUserReports');
         });
 
@@ -197,12 +209,14 @@
         async function fetchUserRepliesAndAlert() {
             try {
                 const lastCheckedUserLogs = parseInt(localStorage.getItem('lastCheckedUserLogs') || '0');
+                const lastCheckedUserBookings = parseInt(localStorage.getItem('lastCheckedUserBookings') || '0');
                 const lastCheckedUserReports = parseInt(localStorage.getItem('lastCheckedUserReports') || '0');
 
                 let totalUnreadLogsReplies = 0;
+                let totalUnreadBookingsReplies = 0;
                 let totalUnreadReportsReplies = 0;
 
-                // 1. Check for Admin Updates in Conti Sheets
+                // 1. Check for Admin Remarks updates in Conti Sheets
                 const sheetsSnapshot = await getDocs(collection(db, "beats_conti_sheets"));
                 sheetsSnapshot.forEach(docSnap => {
                     const data = docSnap.data();
@@ -217,7 +231,19 @@
                     }
                 });
 
-                // 2. Check for Admin Updates in Equipment Reports
+                // 2. Check for Admin action updates in Conti Bookings
+                const bookingsSnapshot = await getDocs(collection(db, "beats_bookings"));
+                bookingsSnapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const lastUpdated = data.updatedAt || 0;
+                    
+                    // Trigger alert if data adjusted since user's last tab review click
+                    if (lastUpdated > lastCheckedUserBookings && (data.bookedBy === activeUser || activeUser === "Master")) {
+                        totalUnreadBookingsReplies++;
+                    }
+                });
+
+                // 3. Check for Admin Responses in Equipment Reports
                 const reportsSnapshot = await getDocs(collection(db, "beats_reports"));
                 reportsSnapshot.forEach(docSnap => {
                     const data = docSnap.data();
@@ -232,32 +258,46 @@
                     }
                 });
 
-                // Update UI Element Badges
+                // Get UI Badge references safely
                 const logsBadge = document.getElementById('count-logs');
+                const bookingsBadge = document.getElementById('count-bookings');
                 const reportsBadge = document.getElementById('count-reports');
+                
                 const cardLogsBadge = document.getElementById('card-count-logs');
+                const cardBookingsBadge = document.getElementById('card-count-bookings');
                 const cardReportsBadge = document.getElementById('card-count-reports');
+                
                 const hamburgerBtn = document.getElementById('openMenuToggle');
 
+                // Toggle Conti Logs Red Dots
                 if (totalUnreadLogsReplies > 0) {
-                    if(logsBadge) { logsBadge.innerText = totalUnreadLogsReplies; logsBadge.style.display = 'block'; }
-                    cardLogsBadge.innerText = totalUnreadLogsReplies;
-                    cardLogsBadge.style.display = 'block';
+                    if (logsBadge) { logsBadge.innerText = totalUnreadLogsReplies; logsBadge.style.display = 'block'; }
+                    if (cardLogsBadge) cardLogsBadge.style.display = 'block';
                 } else {
-                    if(logsBadge) logsBadge.style.display = 'none';
-                    cardLogsBadge.style.display = 'none';
+                    if (logsBadge) logsBadge.style.display = 'none';
+                    if (cardLogsBadge) cardLogsBadge.style.display = 'none';
                 }
 
+                // Toggle Conti Bookings Red Dots
+                if (totalUnreadBookingsReplies > 0) {
+                    if (bookingsBadge) { bookingsBadge.innerText = totalUnreadBookingsReplies; bookingsBadge.style.display = 'block'; }
+                    if (cardBookingsBadge) cardBookingsBadge.style.display = 'block';
+                } else {
+                    if (bookingsBadge) bookingsBadge.style.display = 'none';
+                    if (cardBookingsBadge) cardBookingsBadge.style.display = 'none';
+                }
+
+                // Toggle Equipment Reports Red Dots
                 if (totalUnreadReportsReplies > 0) {
-                    if(reportsBadge) { reportsBadge.innerText = totalUnreadReportsReplies; reportsBadge.style.display = 'block'; }
-                    cardReportsBadge.innerText = totalUnreadReportsReplies;
-                    cardReportsBadge.style.display = 'block';
+                    if (reportsBadge) { reportsBadge.innerText = totalUnreadReportsReplies; reportsBadge.style.display = 'block'; }
+                    if (cardReportsBadge) cardReportsBadge.style.display = 'block';
                 } else {
-                    if(reportsBadge) reportsBadge.style.display = 'none';
-                    cardReportsBadge.style.display = 'none';
+                    if (reportsBadge) reportsBadge.style.display = 'none';
+                    if (cardReportsBadge) cardReportsBadge.style.display = 'none';
                 }
 
-                if (totalUnreadLogsReplies > 0 || totalUnreadReportsReplies > 0) {
+                // Manage global accent hamburger header button alert
+                if (totalUnreadLogsReplies > 0 || totalUnreadBookingsReplies > 0 || totalUnreadReportsReplies > 0) {
                     hamburgerBtn.classList.add('has-alert');
                 } else {
                     hamburgerBtn.classList.remove('has-alert');
@@ -272,14 +312,17 @@
         window.handleSectionNavigation = function(type, targetUrl) {
             if (type === 'logs') {
                 localStorage.setItem('lastCheckedUserLogs', Date.now().toString());
+            } else if (type === 'bookings') {
+                localStorage.setItem('lastCheckedUserBookings', Date.now().toString());
             } else if (type === 'reports') {
                 localStorage.setItem('lastCheckedUserReports', Date.now().toString());
             }
             window.location.href = targetUrl;
         };
 
-        document.getElementById('navLinkLogs').addEventListener('click', (e) => { e.preventDefault(); handleSectionNavigation('logs', 'contiLog1.html'); });
-        document.getElementById('navLinkReports').addEventListener('click', (e) => { e.preventDefault(); handleSectionNavigation('reports', 'Ereport.html'); });
+        document.getElementById('navLinkLogs')?.addEventListener('click', (e) => { e.preventDefault(); handleSectionNavigation('logs', 'contiLog1.html'); });
+        document.getElementById('navLinkBookings')?.addEventListener('click', (e) => { e.preventDefault(); handleSectionNavigation('bookings', 'contiBook.html'); });
+        document.getElementById('navLinkReports')?.addEventListener('click', (e) => { e.preventDefault(); handleSectionNavigation('reports', 'Ereport.html'); });
 
         window.addEventListener('DOMContentLoaded', fetchUserRepliesAndAlert);
     </script>
