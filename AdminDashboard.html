@@ -103,6 +103,39 @@
             font-family: Arial, sans-serif;
             display: none;
         }
+
+        /* Interactive Calendar Additions */
+        .calendar-day-node {
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .calendar-day-node:not(.empty-node):hover {
+            background-color: rgba(0, 188, 212, 0.15);
+        }
+        .calendar-day-node.selected-node {
+            border: 2px solid var(--brand-cyan, #00bcd4) !important;
+            background-color: rgba(0, 188, 212, 0.25) !important;
+        }
+        .filter-reset-banner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--stroke-dark, #222);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size: 0.8rem;
+        }
+        .filter-reset-banner button {
+            background: var(--brand-cyan, #00bcd4);
+            border: none;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body class="page-body-layout">
@@ -123,13 +156,13 @@
         <button class="close-menu-btn" id="closeMenuToggle">✕</button>
         <div class="sidebar-links">
             <a href="#" class="sidebar-view-trigger active" data-target="adminHomeSection">Admin Home</a>
-            <a href="#" class="sidebar-view-trigger" data-target="contiBookingsSection">
+            <a href="#" class="sidebar-view-trigger" data-target="contiBookingsSection" id="linkBookings">
                 Conti Bookings <span class="sidebar-badge" id="badgeBookings">0</span>
             </a>
-            <a href="#" class="sidebar-view-trigger" data-target="contiLogsSection">
+            <a href="#" class="sidebar-view-trigger" data-target="contiLogsSection" id="linkLogs">
                 Conti Logs <span class="sidebar-badge" id="badgeLogs">0</span>
             </a>
-            <a href="#" class="sidebar-view-trigger" data-target="equipmentReportsSection">
+            <a href="#" class="sidebar-view-trigger" data-target="equipmentReportsSection" id="linkReports">
                 Equipment Reports <span class="sidebar-badge" id="badgeReports">0</span>
             </a>
             <a href="SignIn.html" id="logoutActionLink" style="color: #ff4d4d; margin-top: 20px;">Logout</a>
@@ -177,6 +210,7 @@
 
                 <div class="upcoming-feed-container">
                     <h3 class="upcoming-headline-text">Upcoming Events</h3>
+                    <div id="calendarFilterStatus"></div>
                     <div class="events-list" id="upcomingEventsCardStack"></div>
                 </div>
 
@@ -244,8 +278,15 @@
 
         let cachedReportsLocalArray = [];
         let globalBookingsArray = [];
-        
         let calendarCurrentDate = new Date();
+        let selectedDateFilterString = null; // Keeps track of active calendar date selection
+
+        // Tracks whether user has viewed sections to reset badges during the session
+        let sessionClearedBadges = {
+            bookings: false,
+            logs: false,
+            reports: false
+        };
 
         async function loadAdminData() {
             await renderBookings();
@@ -258,7 +299,7 @@
 
         function updateNotificationBadges() {
             // 1. Bookings Count Badge
-            const bookingsCount = globalBookingsArray.length;
+            const bookingsCount = sessionClearedBadges.bookings ? 0 : globalBookingsArray.length;
             const badgeBookings = document.getElementById('badgeBookings');
             if (bookingsCount > 0) {
                 badgeBookings.innerText = bookingsCount;
@@ -267,9 +308,9 @@
                 badgeBookings.style.display = 'none';
             }
 
-            // 2. Conti Logs Count Badge (Count existing rows excluding fallback message row)
+            // 2. Conti Logs Count Badge
             const logsRows = document.querySelectorAll('#adminContiSheetsBody tr:not(:has(td[colspan]))');
-            const logsCount = logsRows.length;
+            const logsCount = sessionClearedBadges.logs ? 0 : logsRows.length;
             const badgeLogs = document.getElementById('badgeLogs');
             if (logsCount > 0) {
                 badgeLogs.innerText = logsCount;
@@ -278,8 +319,8 @@
                 badgeLogs.style.display = 'none';
             }
 
-            // 3. Equipment Reports Count Badge (Filter where response string is missing/empty)
-            const pendingReportsCount = cachedReportsLocalArray.filter(report => !report.adminResponse || report.adminResponse.trim() === '').length;
+            // 3. Equipment Reports Count Badge
+            const pendingReportsCount = sessionClearedBadges.reports ? 0 : cachedReportsLocalArray.filter(report => !report.adminResponse || report.adminResponse.trim() === '').length;
             const badgeReports = document.getElementById('badgeReports');
             if (pendingReportsCount > 0) {
                 badgeReports.innerText = pendingReportsCount;
@@ -298,10 +339,7 @@
         }
 
         async function renderBookings() {
-            const cardStack = document.getElementById('upcomingEventsCardStack');
-            cardStack.innerHTML = '';
             globalBookingsArray = [];
-
             try {
                 const snapshot = await getDocs(collection(db, "beats_bookings"));
                 snapshot.forEach(docSnapshot => {
@@ -311,36 +349,59 @@
                 });
 
                 globalBookingsArray.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-                if(globalBookingsArray.length === 0) {
-                    cardStack.innerHTML = `<div style="text-align:center; font-style:italic; padding:20px; color:#666;">No upcoming bookings found.</div>`;
-                } else {
-                    globalBookingsArray.forEach(item => {
-                        const isInterview = item.type && item.type.toLowerCase().includes('interview');
-                        const iconSymbol = isInterview ? '🎙️' : '💿';
-                        const styleClass = isInterview ? 'circle-interview' : 'circle-show';
-
-                        const cardNode = document.createElement('div');
-                        cardNode.className = 'event-item-card';
-                        cardNode.innerHTML = `
-                            <div class="event-icon-circle ${styleClass}">${iconSymbol}</div>
-                            <div class="event-main-details">
-                                <div class="event-meta-date">${item.date}</div>
-                                <h4 class="event-display-title">${item.dj || 'Unknown DJ'} - ${item.timeSlot || 'Session'}</h4>
-                                <div class="event-sub-label">by: ${item.bookedBy || 'Admin'} ${item.remarks ? `• "${item.remarks}"` : ''}</div>
-                                <span class="event-card-type-badge">${item.type || 'Show'}</span>
-                            </div>
-                            <button type="button" class="card-action-bin-btn">DELETE</button>
-                        `;
-
-                        cardNode.querySelector('.card-action-bin-btn').addEventListener('click', () => deleteBooking(item.id));
-                        cardStack.appendChild(cardNode);
-                    });
-                }
-
+                populateUpcomingStackDOM();
                 buildLiveCalendarGrid();
 
             } catch (err) { console.error(err); }
+        }
+
+        function populateUpcomingStackDOM() {
+            const cardStack = document.getElementById('upcomingEventsCardStack');
+            const filterStatus = document.getElementById('calendarFilterStatus');
+            cardStack.innerHTML = '';
+
+            let filteredArray = globalBookingsArray;
+            if (selectedDateFilterString) {
+                filteredArray = globalBookingsArray.filter(b => b.date === selectedDateFilterString);
+                filterStatus.innerHTML = `
+                    <div class="filter-reset-banner">
+                        <span>Viewing: <strong>${selectedDateFilterString}</strong></span>
+                        <button type="button" id="clearCalendarFilterBtn">Show All</button>
+                    </div>`;
+                document.getElementById('clearCalendarFilterBtn').addEventListener('click', () => {
+                    selectedDateFilterString = null;
+                    populateUpcomingStackDOM();
+                    buildLiveCalendarGrid();
+                });
+            } else {
+                filterStatus.innerHTML = '';
+            }
+
+            if(filteredArray.length === 0) {
+                cardStack.innerHTML = `<div style="text-align:center; font-style:italic; padding:20px; color:#666;">No bookings found for this scope.</div>`;
+            } else {
+                filteredArray.forEach(item => {
+                    const isInterview = item.type && item.type.toLowerCase().includes('interview');
+                    const iconSymbol = isInterview ? '🎙️' : '💿';
+                    const styleClass = isInterview ? 'circle-interview' : 'circle-show';
+
+                    const cardNode = document.createElement('div');
+                    cardNode.className = 'event-item-card';
+                    cardNode.innerHTML = `
+                        <div class="event-icon-circle ${styleClass}">${iconSymbol}</div>
+                        <div class="event-main-details">
+                            <div class="event-meta-date">${item.date}</div>
+                            <h4 class="event-display-title">${item.dj || 'Unknown DJ'} - ${item.timeSlot || 'Session'}</h4>
+                            <div class="event-sub-label">by: ${item.bookedBy || 'Admin'} ${item.remarks ? `• "${item.remarks}"` : ''}</div>
+                            <span class="event-card-type-badge">${item.type || 'Show'}</span>
+                        </div>
+                        <button type="button" class="card-action-bin-btn">DELETE</button>
+                    `;
+
+                    cardNode.querySelector('.card-action-bin-btn').addEventListener('click', () => deleteBooking(item.id));
+                    cardStack.appendChild(cardNode);
+                });
+            }
         }
 
         function buildLiveCalendarGrid() {
@@ -368,14 +429,17 @@
                 const cellNode = document.createElement('div');
                 cellNode.className = 'calendar-day-node';
                 
+                const targetDateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
                 if(day === todayObj.getDate() && month === todayObj.getMonth() && year === todayObj.getFullYear()) {
                     cellNode.classList.add('today-node');
+                }
+                if(selectedDateFilterString === targetDateString) {
+                    cellNode.classList.add('selected-node');
                 }
 
                 cellNode.innerHTML = `<span class="day-label-num">${day}</span><div class="day-badges-stack"></div>`;
                 const badgesStack = cellNode.querySelector('.day-badges-stack');
-
-                const targetDateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 
                 const dayMatches = globalBookingsArray.filter(b => b.date === targetDateString);
                 dayMatches.forEach(match => {
@@ -384,6 +448,13 @@
                     pillNode.className = `mini-event-pill ${isInt ? 'pill-interview' : 'pill-show'}`;
                     pillNode.innerText = isInt ? 'Interviews' : 'Events';
                     badgesStack.appendChild(pillNode);
+                });
+
+                // Attach Calendar click action to filter lists
+                cellNode.addEventListener('click', () => {
+                    selectedDateFilterString = targetDateString;
+                    populateUpcomingStackDOM();
+                    buildLiveCalendarGrid();
                 });
 
                 container.appendChild(cellNode);
@@ -584,7 +655,6 @@
         const themeSwitchTrigger = document.getElementById('themeSwitchTrigger');
         const logoutActionLink = document.getElementById('logoutActionLink');
 
-        // Sidebar configuration controls
         function toggleSidebar(open) {
             if(open) { 
                 sidebarDrawer.classList.add('open'); 
@@ -616,7 +686,7 @@
 
         logoutActionLink.addEventListener('click', () => { localStorage.removeItem('currentUser'); });
 
-        // View switching navigation routing
+        // View switching navigation routing & Badge clear rules
         const viewTriggers = document.querySelectorAll('.sidebar-view-trigger');
         const dashboardSections = document.querySelectorAll('.admin-section');
 
@@ -625,12 +695,19 @@
                 e.preventDefault();
                 const targetId = trigger.getAttribute('data-target');
 
+                // Clear badges depending on targets selected
+                if (targetId === 'contiBookingsSection') sessionClearedBadges.bookings = true;
+                if (targetId === 'contiLogsSection') sessionClearedBadges.logs = true;
+                if (targetId === 'equipmentReportsSection') sessionClearedBadges.reports = true;
+
                 viewTriggers.forEach(btn => btn.classList.remove('active'));
                 trigger.classList.add('active');
 
                 dashboardSections.forEach(section => section.classList.remove('active-view'));
                 document.getElementById(targetId).classList.add('active-view');
 
+                // Refresh badge displays instantly
+                updateNotificationBadges();
                 toggleSidebar(false);
             });
         });
