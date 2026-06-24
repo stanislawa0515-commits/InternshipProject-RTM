@@ -278,6 +278,7 @@
 
         let cachedReportsLocalArray = [];
         let globalBookingsArray = [];
+        let totalActiveLogRowsCount = 0; // Fixed tracking metric for dynamic row items
         let calendarCurrentDate = new Date();
         let selectedDateFilterString = null; 
 
@@ -289,12 +290,12 @@
         };
 
         async function loadAdminData() {
-            // Await data collections to complete downloading
+            // Await data collections to complete downloading sequentially
             await renderBookings();
             await renderContiSheetsRows();
             await renderReports();
             
-            // Recalculate once everything is fully present in the DOM
+            // Recalculate once everything has completely loaded
             updateNotificationBadges();
         }
 
@@ -310,8 +311,7 @@
             }
 
             // 2. Conti Logs Count Badge
-            const logsRows = document.querySelectorAll('#adminContiSheetsBody tr:not(:has(td[colspan]))');
-            const logsCount = sessionClearedBadges.logs ? 0 : logsRows.length;
+            const logsCount = sessionClearedBadges.logs ? 0 : totalActiveLogRowsCount;
             const badgeLogs = document.getElementById('badgeLogs');
             if (logsCount > 0) {
                 badgeLogs.innerText = logsCount;
@@ -320,7 +320,7 @@
                 badgeLogs.style.display = 'none';
             }
 
-            // 3. Equipment Reports Count Badge
+            // 3. Equipment Reports Count Badge (Filters items with completely clean/empty responses)
             const pendingReportsCount = sessionClearedBadges.reports ? 0 : cachedReportsLocalArray.filter(report => !report.adminResponse || report.adminResponse.trim() === '').length;
             const badgeReports = document.getElementById('badgeReports');
             if (pendingReportsCount > 0) {
@@ -353,7 +353,6 @@
                 populateUpcomingStackDOM();
                 buildLiveCalendarGrid();
                 
-                // Refresh badges once global list is populated
                 updateNotificationBadges();
 
             } catch (err) { console.error(err); }
@@ -486,10 +485,10 @@
         async function renderContiSheetsRows() {
             const container = document.getElementById('adminContiSheetsBody');
             container.innerHTML = '';
+            totalActiveLogRowsCount = 0; 
             
             const now = Date.now();
             const twentyFourHours = 24 * 60 * 60 * 1000; 
-            let displayedRowsCount = 0;
 
             try {
                 const snapshot = await getDocs(collection(db, "beats_conti_sheets"));
@@ -499,7 +498,8 @@
                     const sheetData = docSnapshot.data();
                     const rowsArray = sheetData.rows || [];
                     
-                    const lastUpdated = sheetData.updatedAt || 0;
+                    // Fixed: Fallback protection logic if updatedAt stamp property is not configured inside Firestore doc
+                    const lastUpdated = sheetData.updatedAt || now;
                     if (now - lastUpdated > twentyFourHours) {
                         return; 
                     }
@@ -509,7 +509,7 @@
                     }
 
                     rowsArray.forEach((rowItem, rowIndex) => {
-                        displayedRowsCount++;
+                        totalActiveLogRowsCount++;
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
                             <td>
@@ -568,11 +568,10 @@
                     });
                 });
 
-                if (displayedRowsCount === 0) {
+                if (totalActiveLogRowsCount === 0) {
                     container.innerHTML = `<tr><td colspan="6" style="text-align:center; font-style:italic;">No active sheet logs found from the last 24 hours.</td></tr>`;
                 }
                 
-                // Refresh badges once table structure generates
                 updateNotificationBadges();
 
             } catch(err) { console.error(err); }
@@ -621,6 +620,9 @@
                     container.appendChild(tr);
                     trackingIdx++;
                 });
+
+                updateNotificationBadges();
+
             } catch(err) { console.error(err); }
         }
 
