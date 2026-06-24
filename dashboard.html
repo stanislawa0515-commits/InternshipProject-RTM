@@ -25,7 +25,7 @@
             border: 2px solid var(--bg-container);
         }
 
-        /* Sidebar Item Counts Container Setup */
+        /* Sidebar Item Counts */
         .sidebar-link-row {
             display: flex;
             align-items: center;
@@ -58,7 +58,7 @@
             user-select: none;
         }
         
-        /* Growing notification dot on the top right corners of box cards as requested */
+        /* Circular red notification dot positioned explicitly on top-right corners */
         .card-alert-badge {
             position: absolute;
             top: 15px;
@@ -70,7 +70,7 @@
             border: 2px solid var(--bg-container);
             box-shadow: 0 0 8px rgba(255, 51, 102, 0.8);
             display: none; 
-            pointer-events: none; /* Clicks pass straight through to the parent card */
+            pointer-events: none; /* Clicks pass straight through to the card */
         }
     </style>
 </head>
@@ -127,7 +127,6 @@
         <h2 class="core-functions-headline">System Core Functions</h2>
  
         <div class="functions-grid">
-            <!-- Added the click handlers that save the read timestamp and wipe the red dots permanently -->
             <div class="feature-card" onclick="handleSectionNavigation('logs', 'contiLog1.html')">
                 <span class="card-alert-badge" id="card-count-logs"></span>
                 <span class="card-icon">📻</span>
@@ -209,7 +208,6 @@
         // ==========================================
         async function fetchUserRepliesAndAlert() {
             try {
-                // Get the user's last tab-view time checkpoint from local device memory
                 const lastCheckedUserLogs = parseInt(localStorage.getItem('lastCheckedUserLogs') || '0');
                 const lastCheckedUserBookings = parseInt(localStorage.getItem('lastCheckedUserBookings') || '0');
                 const lastCheckedUserReports = parseInt(localStorage.getItem('lastCheckedUserReports') || '0');
@@ -223,11 +221,8 @@
                 sheetsSnapshot.forEach(docSnap => {
                     const data = docSnap.data();
                     
-                    // If the sheet belongs to the logged-in user or master admin
                     if (data.metaPerson === activeUser || activeUser === "Master" || activeUser === "Admin") {
                         const lastUpdated = data.updatedAt || 0;
-                        
-                        // Flash red dot if admin updated this sheet since user last opened it
                         if (lastUpdated > lastCheckedUserLogs) {
                             const rows = data.rows || [];
                             const hasAdminRemark = rows.some(row => row.remarks && row.remarks.trim() !== "");
@@ -238,7 +233,7 @@
                     }
                 });
 
-                // 2. Check for updates in Conti Bookings
+                // 2. Check for action updates in Conti Bookings
                 const bookingsSnapshot = await getDocs(collection(db, "beats_bookings"));
                 bookingsSnapshot.forEach(docSnap => {
                     const data = docSnap.data();
@@ -275,7 +270,7 @@
                 
                 const hamburgerBtn = document.getElementById('openMenuToggle');
 
-                // Toggle Conti Logs Card & Sidebar Red Dots
+                // Toggle Conti Logs Red Dots
                 if (totalUnreadLogsReplies > 0) {
                     if (logsBadge) { logsBadge.innerText = totalUnreadLogsReplies; logsBadge.style.display = 'block'; }
                     if (cardLogsBadge) cardLogsBadge.style.display = 'block';
@@ -284,7 +279,7 @@
                     if (cardLogsBadge) cardLogsBadge.style.display = 'none';
                 }
 
-                // Toggle Conti Bookings Card & Sidebar Red Dots
+                // Toggle Conti Bookings Red Dots
                 if (totalUnreadBookingsReplies > 0) {
                     if (bookingsBadge) { bookingsBadge.innerText = totalUnreadBookingsReplies; bookingsBadge.style.display = 'block'; }
                     if (cardBookingsBadge) cardBookingsBadge.style.display = 'block';
@@ -293,7 +288,7 @@
                     if (cardBookingsBadge) cardBookingsBadge.style.display = 'none';
                 }
 
-                // Toggle Equipment Reports Card & Sidebar Red Dots
+                // Toggle Equipment Reports Red Dots
                 if (totalUnreadReportsReplies > 0) {
                     if (reportsBadge) { reportsBadge.innerText = totalUnreadReportsReplies; reportsBadge.style.display = 'block'; }
                     if (cardReportsBadge) cardReportsBadge.style.display = 'block';
@@ -302,7 +297,7 @@
                     if (cardReportsBadge) cardReportsBadge.style.display = 'none';
                 }
 
-                // Manage global header button notification accent status
+                // Manage global header hamburger notification badge
                 if (totalUnreadLogsReplies > 0 || totalUnreadBookingsReplies > 0 || totalUnreadReportsReplies > 0) {
                     hamburgerBtn.classList.add('has-alert');
                 } else {
@@ -314,7 +309,7 @@
             }
         }
 
-        // Expose navigation checkpoint managers to browser global window context
+        // Expose navigation rules to global context
         window.handleSectionNavigation = function(type, targetUrl) {
             if (type === 'logs') {
                 localStorage.setItem('lastCheckedUserLogs', Date.now().toString());
