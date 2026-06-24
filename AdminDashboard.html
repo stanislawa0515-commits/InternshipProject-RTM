@@ -281,9 +281,10 @@
 
         let cachedReportsLocalArray = [];
         let globalBookingsArray = [];
+        let rawLogsDataArray = []; // Store logs with metadata to read timestamps
         let calendarCurrentDate = new Date();
         let hasSeenNotifications = false;
-        let selectedDateString = null; // Variable to manage our filter
+        let selectedDateString = null;
 
         async function loadAdminData() {
             try {
@@ -297,9 +298,25 @@
         }
 
         function updateNotificationBadges() {
-            const bookingsCount = globalBookingsArray.length;
-            const logsCount = document.querySelectorAll('#adminContiSheetsBody tr:not(:has(td[colspan]))').length;
-            const reportsCount = cachedReportsLocalArray.filter(item => !item.adminResponse).length;
+            // Retrieve your historical panel checkout timestamps from storage
+            const lastViewedBookings = parseInt(localStorage.getItem('lastViewedBookings') || '0');
+            const lastViewedLogs = parseInt(localStorage.getItem('lastViewedLogs') || '0');
+            const lastViewedReports = parseInt(localStorage.getItem('lastViewedReports') || '0');
+
+            // Count items only if they were added/updated *after* your last click timestamp profile
+            const bookingsCount = globalBookingsArray.filter(b => {
+                const itemTime = b.createdAt ? (b.createdAt.seconds ? b.createdAt.seconds * 1000 : new Date(b.createdAt).getTime()) : 0;
+                return itemTime > lastViewedBookings;
+            }).length;
+
+            const logsCount = rawLogsDataArray.filter(l => {
+                return (l.updatedAt || 0) > lastViewedLogs;
+            }).length;
+
+            const reportsCount = cachedReportsLocalArray.filter(r => {
+                const itemTime = r.createdAt ? (r.createdAt.seconds ? r.createdAt.seconds * 1000 : new Date(r.createdAt).getTime()) : 0;
+                return !r.adminResponse && itemTime > lastViewedReports;
+            }).length;
 
             const bookingsBadge = document.getElementById('count-bookings');
             const logsBadge = document.getElementById('count-logs');
@@ -394,7 +411,6 @@
 
                 const targetDateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 
-                // Highlight active selected node outline border structure
                 if (selectedDateString === targetDateString) {
                     cellNode.style.border = '2px dashed var(--brand-magenta)';
                     cellNode.style.backgroundColor = 'var(--bg-input)';
@@ -411,9 +427,9 @@
 
                 cellNode.addEventListener('click', () => {
                     if (selectedDateString === targetDateString) {
-                        selectedDateString = null; // Clear filter if clicking current again
+                        selectedDateString = null;
                     } else {
-                        selectedDateString = targetDateString; // Inject active filter point
+                        selectedDateString = targetDateString;
                     }
                     buildLiveCalendarGrid();
                     renderFilteredEventsFeed();
@@ -483,6 +499,7 @@
         async function renderContiSheetsRows() {
             const container = document.getElementById('adminContiSheetsBody');
             container.innerHTML = '';
+            rawLogsDataArray = [];
             
             const now = Date.now();
             const twentyFourHours = 24 * 60 * 60 * 1000; 
@@ -499,6 +516,9 @@
                     const lastUpdated = sheetData.updatedAt || 0;
                     if (now - lastUpdated > twentyFourHours) { return; }
                     if (rowsArray.length === 0) { return; }
+
+                    // Cache structural data reference details globally
+                    rawLogsDataArray.push({ id: sheetId, updatedAt: lastUpdated });
 
                     rowsArray.forEach((rowItem, rowIndex) => {
                         displayedRowsCount++;
@@ -540,10 +560,11 @@
                                     const payload = currentSnap.data();
                                     if(payload.rows && payload.rows[rIdx]) {
                                         payload.rows[rIdx].remarks = remarkVal;
+                                        // Update local metadata timestamp before setting documentation
+                                        payload.updatedAt = Date.now();
                                         await setDoc(docRef, payload);
                                         alert("Remark text cell successfully pushed to user sheet!");
                                         await renderContiSheetsRows();
-                                        updateNotificationBadges();
                                     }
                                 }
                             } catch(err) {
@@ -559,6 +580,8 @@
                 if (displayedRowsCount === 0) {
                     container.innerHTML = `<tr><td colspan="6" style="text-align:center; font-style:italic;">No active sheet logs found from the last 24 hours.</td></tr>`;
                 }
+                
+                updateNotificationBadges();
             } catch(err) { console.error(err); }
         }
 
@@ -605,6 +628,8 @@
                     container.appendChild(tr);
                     trackingIdx++;
                 });
+                
+                updateNotificationBadges();
             } catch(err) { console.error(err); }
         }
 
@@ -614,7 +639,6 @@
                 await updateDoc(doc(db, "beats_reports", id), { adminResponse: responseText });
                 alert("Response sent to reporter!");
                 await renderReports();
-                updateNotificationBadges();
             } catch(err) { alert("Send operation failed."); }
         }
 
@@ -623,7 +647,6 @@
                 await deleteDoc(doc(db, "beats_reports", id));
                 alert("Equipment report deleted.");
                 await renderReports(); 
-                updateNotificationBadges();
             }
         }
 
@@ -670,11 +693,23 @@
                 e.preventDefault();
                 const targetId = trigger.getAttribute('data-target');
 
+                // Save current timestamp to storage upon viewing a specific section
+                if (targetId === 'contiBookingsSection') {
+                    localStorage.setItem('lastViewedBookings', Date.now().toString());
+                } else if (targetId === 'contiLogsSection') {
+                    localStorage.setItem('lastViewedLogs', Date.now().toString());
+                } else if (targetId === 'equipmentReportsSection') {
+                    localStorage.setItem('lastViewedReports', Date.now().toString());
+                }
+
                 viewTriggers.forEach(btn => btn.classList.remove('active'));
                 trigger.classList.add('active');
 
                 dashboardSections.forEach(section => section.classList.remove('active-view'));
                 document.getElementById(targetId).classList.add('active-view');
+
+                // Recalculate badges immediately to hide the count
+                updateNotificationBadges();
 
                 window.toggleSidebarDrawer(false);
             });
