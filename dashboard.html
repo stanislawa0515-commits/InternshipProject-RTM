@@ -25,40 +25,13 @@
             border: 2px solid var(--bg-container);
         }
 
-        /* Sidebar Item Counts */
-        .sidebar-link-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            text-decoration: none;
-            margin-bottom: 5px;
-        }
-        .sidebar-link-row a {
-            margin: 0;
-            flex: 1;
-        }
-        .sidebar-count-badge {
-            background-color: #dc2b5c;
-            color: #ffffff;
-            font-size: 0.75rem;
-            font-weight: bold;
-            padding: 2px 8px;
-            border-radius: 12px;
-            min-width: 20px;
-            text-align: center;
-            display: none;
-            font-family: 'Kanit', sans-serif;
-            border: 1px solid var(--stroke-dark);
-        }
-
         /* Dynamic Main Dashboard Card Alert System */
         .feature-card {
             position: relative;
             user-select: none;
         }
         
-        /* Circular red notification dot positioned explicitly on top-right corners */
+        /* Circular red notification dot positioned explicitly on top-right corners of the box cards */
         .card-alert-badge {
             position: absolute;
             top: 15px;
@@ -70,7 +43,7 @@
             border: 2px solid var(--bg-container);
             box-shadow: 0 0 8px rgba(255, 51, 102, 0.8);
             display: none; 
-            pointer-events: none; /* Clicks pass straight through to the card */
+            pointer-events: none; /* Clicks pass straight through to the card elements */
         }
     </style>
 </head>
@@ -89,7 +62,6 @@
         <button class="close-menu-btn" id="closeMenuToggle">✕</button>
         <div class="sidebar-links">
             <a href="dashboard.html" class="sidebar-view-trigger active">Dashboard</a>
-            
             <a href="AboutMe.html">About me</a>
             <a href="SignIn.html" id="logoutActionLink" style="color: #ff4d4d; margin-top: 20px;">Logout</a>
         </div>
@@ -203,7 +175,7 @@
                 let totalUnreadBookingsReplies = 0;
                 let totalUnreadReportsReplies = 0;
 
-                // 1. Check for Admin Remarks updates in Conti Sheets
+                // 1. Check for Admin Updates in Conti Sheets
                 const sheetsSnapshot = await getDocs(collection(db, "beats_conti_sheets"));
                 sheetsSnapshot.forEach(docSnap => {
                     const data = docSnap.data();
@@ -246,45 +218,34 @@
                     }
                 });
 
-                // Get UI components securely
-                const logsBadge = document.getElementById('count-logs');
-                const bookingsBadge = document.getElementById('count-bookings');
-                const reportsBadge = document.getElementById('count-reports');
-                
+                // Fetch Flash Card Badge DOM elements securely
                 const cardLogsBadge = document.getElementById('card-count-logs');
                 const cardBookingsBadge = document.getElementById('card-count-bookings');
                 const cardReportsBadge = document.getElementById('card-count-reports');
-                
                 const hamburgerBtn = document.getElementById('openMenuToggle');
 
-                // Toggle Conti Logs Red Dots
+                // Toggle Conti Logs card alert dot
                 if (totalUnreadLogsReplies > 0) {
-                    if (logsBadge) { logsBadge.innerText = totalUnreadLogsReplies; logsBadge.style.display = 'block'; }
                     if (cardLogsBadge) cardLogsBadge.style.display = 'block';
                 } else {
-                    if (logsBadge) logsBadge.style.display = 'none';
                     if (cardLogsBadge) cardLogsBadge.style.display = 'none';
                 }
 
-                // Toggle Conti Bookings Red Dots
+                // Toggle Conti Bookings card alert dot
                 if (totalUnreadBookingsReplies > 0) {
-                    if (bookingsBadge) { bookingsBadge.innerText = totalUnreadBookingsReplies; bookingsBadge.style.display = 'block'; }
                     if (cardBookingsBadge) cardBookingsBadge.style.display = 'block';
                 } else {
-                    if (bookingsBadge) bookingsBadge.style.display = 'none';
                     if (cardBookingsBadge) cardBookingsBadge.style.display = 'none';
                 }
 
-                // Toggle Equipment Reports Red Dots
+                // Toggle Equipment Reports card alert dot
                 if (totalUnreadReportsReplies > 0) {
-                    if (reportsBadge) { reportsBadge.innerText = totalUnreadReportsReplies; reportsBadge.style.display = 'block'; }
                     if (cardReportsBadge) cardReportsBadge.style.display = 'block';
                 } else {
-                    if (reportsBadge) reportsBadge.style.display = 'none';
                     if (cardReportsBadge) cardReportsBadge.style.display = 'none';
                 }
 
-                // Manage global header hamburger notification badge
+                // Global hamburger button alert accent management
                 if (totalUnreadLogsReplies > 0 || totalUnreadBookingsReplies > 0 || totalUnreadReportsReplies > 0) {
                     hamburgerBtn.classList.add('has-alert');
                 } else {
@@ -296,7 +257,7 @@
             }
         }
 
-        // Expose navigation rules to global context
+        // Expose navigation rules to global scope
         window.handleSectionNavigation = function(type, targetUrl) {
             if (type === 'logs') {
                 localStorage.setItem('lastCheckedUserLogs', Date.now().toString());
@@ -307,10 +268,6 @@
             }
             window.location.href = targetUrl;
         };
-
-        document.getElementById('navLinkLogs')?.addEventListener('click', (e) => { e.preventDefault(); handleSectionNavigation('logs', 'contiLog1.html'); });
-        document.getElementById('navLinkBookings')?.addEventListener('click', (e) => { e.preventDefault(); handleSectionNavigation('bookings', 'contiBook.html'); });
-        document.getElementById('navLinkReports')?.addEventListener('click', (e) => { e.preventDefault(); handleSectionNavigation('reports', 'Ereport.html'); });
 
         window.addEventListener('DOMContentLoaded', fetchUserRepliesAndAlert);
     </script>
