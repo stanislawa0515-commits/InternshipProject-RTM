@@ -309,7 +309,7 @@
                 }
             }
 
-            // 2. Conti Logs Count Badge: Rule configured for 1 notification per unique user account
+            // 2. Conti Logs Count Badge (1 notification per unique user account)
             const logsCount = sessionClearedBadges.logs ? 0 : uniqueLogUserCount;
             const badgeLogs = document.getElementById('badgeLogs');
             if (badgeLogs) {
@@ -491,12 +491,8 @@
             const container = document.getElementById('adminContiSheetsBody');
             container.innerHTML = '';
             
-            // Filter set setup to handle unique account entries
             const uniqueUsersSet = new Set();
             let totalRowsDisplayed = 0;
-            
-            const now = Date.now();
-            const twentyFourHours = 24 * 60 * 60 * 1000; 
 
             try {
                 const snapshot = await getDocs(collection(db, "beats_conti_sheets"));
@@ -505,17 +501,12 @@
                     const sheetId = docSnapshot.id;
                     const sheetData = docSnapshot.data();
                     const rowsArray = sheetData.rows || [];
-                    
-                    const lastUpdated = sheetData.updatedAt || now;
-                    if (now - lastUpdated > twentyFourHours) {
-                        return; 
-                    }
 
                     if (rowsArray.length === 0) {
                         return;
                     }
 
-                    // Register username into Set to drop secondary accounts duplication records
+                    // Register username into Set to maintain unique notifications count
                     const userKey = (sheetData.metaPerson || 'UnknownDJ').trim().toLowerCase();
                     uniqueUsersSet.add(userKey);
 
@@ -580,10 +571,9 @@
                 });
 
                 if (totalRowsDisplayed === 0) {
-                    container.innerHTML = `<tr><td colspan="6" style="text-align:center; font-style:italic;">No active sheet logs found from the last 24 hours.</td></tr>`;
+                    container.innerHTML = `<tr><td colspan="6" style="text-align:center; font-style:italic;">No active sheet logs found.</td></tr>`;
                 }
                 
-                // Expose unique set dimension to clear alert framework counts
                 uniqueLogUserCount = uniqueUsersSet.size;
                 updateNotificationBadges();
 
