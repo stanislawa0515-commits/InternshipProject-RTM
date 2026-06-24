@@ -645,7 +645,7 @@
         const themeSwitchTrigger = document.getElementById('themeSwitchTrigger');
         const logoutActionLink = document.getElementById('logoutActionLink');
 
-        loop: function toggleSidebar(open) {
+        function toggleSidebar(open) {
             if(open) { 
                 sidebarDrawer.classList.add('open'); 
                 menuOverlay.classList.add('show');
