@@ -279,13 +279,13 @@
         let cachedReportsLocalArray = [];
         let globalBookingsArray = [];
         let calendarCurrentDate = new Date();
-        let selectedDateFilterString = null; // Keeps track of active calendar date selection
+        let selectedDateFilterString = null; 
 
-        // Tracks whether user has viewed sections to reset badges during the session
+        // Load permanent cleared state indicators from localStorage on boot
         let sessionClearedBadges = {
-            bookings: false,
-            logs: false,
-            reports: false
+            bookings: localStorage.getItem('badge_cleared_bookings') === 'true',
+            logs: localStorage.getItem('badge_cleared_logs') === 'true',
+            reports: localStorage.getItem('badge_cleared_reports') === 'true'
         };
 
         async function loadAdminData() {
@@ -450,7 +450,6 @@
                     badgesStack.appendChild(pillNode);
                 });
 
-                // Attach Calendar click action to filter lists
                 cellNode.addEventListener('click', () => {
                     selectedDateFilterString = targetDateString;
                     populateUpcomingStackDOM();
@@ -473,6 +472,8 @@
         async function deleteBooking(id) {
             if(confirm("Admin Override: Delete this booking?")) {
                 await deleteDoc(doc(db, "beats_bookings", id));
+                localStorage.removeItem('badge_cleared_bookings');
+                sessionClearedBadges.bookings = false;
                 await renderBookings();
                 updateNotificationBadges();
             }
@@ -545,6 +546,10 @@
                                         payload.rows[rIdx].remarks = remarkVal;
                                         await setDoc(docRef, payload);
                                         alert("Remark text cell successfully pushed to user sheet!");
+                                        
+                                        localStorage.removeItem('badge_cleared_logs');
+                                        sessionClearedBadges.logs = false;
+
                                         await renderContiSheetsRows();
                                         updateNotificationBadges();
                                     }
@@ -616,6 +621,8 @@
             try {
                 await updateDoc(doc(db, "beats_reports", id), { adminResponse: responseText });
                 alert("Response sent to reporter!");
+                localStorage.removeItem('badge_cleared_reports');
+                sessionClearedBadges.reports = false;
                 await renderReports();
                 updateNotificationBadges();
             } catch(err) { alert("Send operation failed."); }
@@ -625,6 +632,8 @@
             if(confirm("Admin Master Override: Permanent data erase warning?")) {
                 await deleteDoc(doc(db, "beats_reports", id));
                 alert("Equipment report deleted.");
+                localStorage.removeItem('badge_cleared_reports');
+                sessionClearedBadges.reports = false;
                 await renderReports(); 
                 updateNotificationBadges();
             }
@@ -684,9 +693,14 @@
             }
         });
 
-        logoutActionLink.addEventListener('click', () => { localStorage.removeItem('currentUser'); });
+        logoutActionLink.addEventListener('click', () => { 
+            localStorage.removeItem('currentUser'); 
+            localStorage.removeItem('badge_cleared_bookings');
+            localStorage.removeItem('badge_cleared_logs');
+            localStorage.removeItem('badge_cleared_reports');
+        });
 
-        // View switching navigation routing & Badge clear rules
+        // View switching navigation routing & Permanent LocalStorage badge dismissal
         const viewTriggers = document.querySelectorAll('.sidebar-view-trigger');
         const dashboardSections = document.querySelectorAll('.admin-section');
 
@@ -695,10 +709,18 @@
                 e.preventDefault();
                 const targetId = trigger.getAttribute('data-target');
 
-                // Clear badges depending on targets selected
-                if (targetId === 'contiBookingsSection') sessionClearedBadges.bookings = true;
-                if (targetId === 'contiLogsSection') sessionClearedBadges.logs = true;
-                if (targetId === 'equipmentReportsSection') sessionClearedBadges.reports = true;
+                if (targetId === 'contiBookingsSection') {
+                    sessionClearedBadges.bookings = true;
+                    localStorage.setItem('badge_cleared_bookings', 'true');
+                }
+                if (targetId === 'contiLogsSection') {
+                    sessionClearedBadges.logs = true;
+                    localStorage.setItem('badge_cleared_logs', 'true');
+                }
+                if (targetId === 'equipmentReportsSection') {
+                    sessionClearedBadges.reports = true;
+                    localStorage.setItem('badge_cleared_reports', 'true');
+                }
 
                 viewTriggers.forEach(btn => btn.classList.remove('active'));
                 trigger.classList.add('active');
@@ -706,7 +728,6 @@
                 dashboardSections.forEach(section => section.classList.remove('active-view'));
                 document.getElementById(targetId).classList.add('active-view');
 
-                // Refresh badge displays instantly
                 updateNotificationBadges();
                 toggleSidebar(false);
             });
