@@ -71,14 +71,10 @@
             100% { transform: translateX(0%); }
         }
 
-        /* ======================================================
-            DYNAMIC NOTIFICATION BADGE CONFIGURATIONS
-        ====================================================== */
+        /* DYNAMIC NOTIFICATION BADGE SYSTEM CONFIGURATIONS */
         .hamburger-btn {
             position: relative;
         }
-        
-        /* Red notification dot element styled for the closed view configuration */
         .hamburger-btn .nav-alert-dot {
             position: absolute;
             top: 2px;
@@ -90,43 +86,11 @@
             border: 1px solid var(--bg-container);
             display: none;
         }
-
-        /* Fixed absolute position parameters to prevent the X close trigger from drifting down */
-        .close-menu-btn {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            background: none;
-            border: none;
-            font-size: 22px;
-            cursor: pointer;
-            color: var(--text-primary);
-            margin-bottom: 0;
-        }
-
-        .sidebar-links {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            margin-top: 30px; /* Structural padding separation below top close button layout space */
-        }
-
         .sidebar-links a {
-            text-decoration: none;
-            color: var(--text-primary);
-            font-size: 1.2rem;
-            font-weight: bold;
-            transition: color 0.2s;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            width: 100%;
         }
-
-        .sidebar-links a:hover {
-            color: var(--brand-magenta);
-        }
-
         .sidebar-badge {
             background-color: #ff4d4d;
             color: #fff;
@@ -159,19 +123,15 @@
         <button class="close-menu-btn" id="closeMenuToggle">✕</button>
         <div class="sidebar-links">
             <a href="#" class="sidebar-view-trigger active" data-target="adminHomeSection">Admin Home</a>
-            
             <a href="#" class="sidebar-view-trigger" data-target="contiBookingsSection">
                 Conti Bookings <span class="sidebar-badge" id="badgeBookings">0</span>
             </a>
-            
             <a href="#" class="sidebar-view-trigger" data-target="contiLogsSection">
                 Conti Logs <span class="sidebar-badge" id="badgeLogs">0</span>
             </a>
-            
             <a href="#" class="sidebar-view-trigger" data-target="equipmentReportsSection">
                 Equipment Reports <span class="sidebar-badge" id="badgeReports">0</span>
             </a>
-            
             <a href="SignIn.html" id="logoutActionLink" style="color: #ff4d4d; margin-top: 20px;">Logout</a>
         </div>
         <div class="theme-toggle-row">
@@ -292,12 +252,12 @@
             await renderContiSheetsRows();
             await renderReports();
             
-            // Trigger calculation for the sidebar counts after data load sequence finish paths
+            // Recalculate and render badge counts across the view layout
             updateNotificationBadges();
         }
 
         function updateNotificationBadges() {
-            // 1. Total Upcoming Booking Slots Count
+            // 1. Bookings Count Badge
             const bookingsCount = globalBookingsArray.length;
             const badgeBookings = document.getElementById('badgeBookings');
             if (bookingsCount > 0) {
@@ -307,7 +267,7 @@
                 badgeBookings.style.display = 'none';
             }
 
-            // 2. Active Logs Rows Count (excluding system layout feedback text cells)
+            // 2. Conti Logs Count Badge (Count existing rows excluding fallback message row)
             const logsRows = document.querySelectorAll('#adminContiSheetsBody tr:not(:has(td[colspan]))');
             const logsCount = logsRows.length;
             const badgeLogs = document.getElementById('badgeLogs');
@@ -318,7 +278,7 @@
                 badgeLogs.style.display = 'none';
             }
 
-            // 3. Pending Unresolved Equipment Reports Tracking
+            // 3. Equipment Reports Count Badge (Filter where response string is missing/empty)
             const pendingReportsCount = cachedReportsLocalArray.filter(report => !report.adminResponse || report.adminResponse.trim() === '').length;
             const badgeReports = document.getElementById('badgeReports');
             if (pendingReportsCount > 0) {
@@ -328,7 +288,7 @@
                 badgeReports.style.display = 'none';
             }
 
-            // 4. Outer Closed Hamburger Alert Control Node Switch
+            // 4. Global Outer Hamburger Accent Control Dot
             const hamburgerAlertDot = document.getElementById('hamburgerAlertDot');
             if (bookingsCount > 0 || logsCount > 0 || pendingReportsCount > 0) {
                 hamburgerAlertDot.style.display = 'block';
