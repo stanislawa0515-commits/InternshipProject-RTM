@@ -289,11 +289,12 @@
         };
 
         async function loadAdminData() {
+            // Await data collections to complete downloading
             await renderBookings();
             await renderContiSheetsRows();
             await renderReports();
             
-            // Recalculate and render badge counts across the view layout
+            // Recalculate once everything is fully present in the DOM
             updateNotificationBadges();
         }
 
@@ -351,6 +352,9 @@
                 globalBookingsArray.sort((a, b) => new Date(a.date) - new Date(b.date));
                 populateUpcomingStackDOM();
                 buildLiveCalendarGrid();
+                
+                // Refresh badges once global list is populated
+                updateNotificationBadges();
 
             } catch (err) { console.error(err); }
         }
@@ -567,6 +571,10 @@
                 if (displayedRowsCount === 0) {
                     container.innerHTML = `<tr><td colspan="6" style="text-align:center; font-style:italic;">No active sheet logs found from the last 24 hours.</td></tr>`;
                 }
+                
+                // Refresh badges once table structure generates
+                updateNotificationBadges();
+
             } catch(err) { console.error(err); }
         }
 
@@ -700,7 +708,6 @@
             localStorage.removeItem('badge_cleared_reports');
         });
 
-        // View switching navigation routing & Permanent LocalStorage badge dismissal
         const viewTriggers = document.querySelectorAll('.sidebar-view-trigger');
         const dashboardSections = document.querySelectorAll('.admin-section');
 
