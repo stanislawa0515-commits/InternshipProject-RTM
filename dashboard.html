@@ -162,6 +162,15 @@
             localStorage.removeItem('lastCheckedUserReports');
         });
 
+        // Helper function to extract time formatting reliably across variations
+        function getTimeValue(field) {
+            if (!field) return 0;
+            if (typeof field === 'number') return field;
+            if (field.seconds) return field.seconds * 1000; // Handles default Firebase timestamps
+            if (typeof field === 'string') return parseInt(field) || new Date(field).getTime() || 0;
+            return 0;
+        }
+
         // ==========================================
         //  DYNAMIC NOTIFICATION HANDLING ENGINE
         // ==========================================
@@ -175,19 +184,21 @@
                 let totalUnreadBookingsReplies = 0;
                 let totalUnreadReportsReplies = 0;
 
-                // 1. Check for Admin Updates in Conti Sheets
+                // 1. Check for Admin Remarks updates in Conti Sheets
                 const sheetsSnapshot = await getDocs(collection(db, "beats_conti_sheets"));
                 sheetsSnapshot.forEach(docSnap => {
                     const data = docSnap.data();
+                    const sheetOwner = (data.metaPerson || "").trim().toLowerCase();
+                    const activeClean = activeUser.trim().toLowerCase();
                     
-                    if (data.metaPerson === activeUser || activeUser === "Master" || activeUser === "Admin") {
-                        const lastUpdated = data.updatedAt || 0;
-                        if (lastUpdated > lastCheckedUserLogs) {
-                            const rows = data.rows || [];
-                            const hasAdminRemark = rows.some(row => row.remarks && row.remarks.trim() !== "");
-                            if (hasAdminRemark) {
-                                totalUnreadLogsReplies++;
-                            }
+                    if (sheetOwner === activeClean || activeClean === "master" || activeClean === "admin") {
+                        const lastUpdated = getTimeValue(data.updatedAt);
+                        const rows = data.rows || [];
+                        const hasAdminRemark = rows.some(row => row.remarks && row.remarks.trim() !== "");
+                        
+                        // Show badge if there is a remark and it hasn't been checked yet, or fallback if it's brand new
+                        if (hasAdminRemark && (lastUpdated > lastCheckedUserLogs || lastCheckedUserLogs === 0)) {
+                            totalUnreadLogsReplies++;
                         }
                     }
                 });
@@ -196,10 +207,14 @@
                 const bookingsSnapshot = await getDocs(collection(db, "beats_bookings"));
                 bookingsSnapshot.forEach(docSnap => {
                     const data = docSnap.data();
-                    const lastUpdated = data.updatedAt || 0;
+                    const lastUpdated = getTimeValue(data.updatedAt);
+                    const bookerClean = (data.bookedBy || "").trim().toLowerCase();
+                    const activeClean = activeUser.trim().toLowerCase();
                     
-                    if (lastUpdated > lastCheckedUserBookings && (data.bookedBy === activeUser || activeUser === "Master")) {
-                        totalUnreadBookingsReplies++;
+                    if (bookerClean === activeClean || activeClean === "master") {
+                        if (lastUpdated > lastCheckedUserBookings || lastCheckedUserBookings === 0) {
+                            totalUnreadBookingsReplies++;
+                        }
                     }
                 });
 
@@ -207,11 +222,14 @@
                 const reportsSnapshot = await getDocs(collection(db, "beats_reports"));
                 reportsSnapshot.forEach(docSnap => {
                     const data = docSnap.data();
+                    const reporterClean = (data.reporter || "").trim().toLowerCase();
+                    const activeClean = activeUser.trim().toLowerCase();
                     
-                    if (data.reporter === activeUser || activeUser === "Master" || activeUser === "Admin") {
+                    if (reporterClean === activeClean || activeClean === "master" || activeClean === "admin") {
                         if (data.adminResponse && data.adminResponse.trim() !== "") {
-                            const replyTime = data.updatedAt || (data.createdAt?.seconds ? data.createdAt.seconds * 1000 : lastCheckedUserReports + 1);
-                            if (replyTime > lastCheckedUserReports) {
+                            const replyTime = getTimeValue(data.updatedAt);
+                            
+                            if (replyTime > lastCheckedUserReports || lastCheckedUserReports === 0) {
                                 totalUnreadReportsReplies++;
                             }
                         }
@@ -225,25 +243,13 @@
                 const hamburgerBtn = document.getElementById('openMenuToggle');
 
                 // Toggle Conti Logs card alert dot
-                if (totalUnreadLogsReplies > 0) {
-                    if (cardLogsBadge) cardLogsBadge.style.display = 'block';
-                } else {
-                    if (cardLogsBadge) cardLogsBadge.style.display = 'none';
-                }
+                if (cardLogsBadge) cardLogsBadge.style.display = totalUnreadLogsReplies > 0 ? 'block' : 'none';
 
                 // Toggle Conti Bookings card alert dot
-                if (totalUnreadBookingsReplies > 0) {
-                    if (cardBookingsBadge) cardBookingsBadge.style.display = 'block';
-                } else {
-                    if (cardBookingsBadge) cardBookingsBadge.style.display = 'none';
-                }
+                if (cardBookingsBadge) cardBookingsBadge.style.display = totalUnreadBookingsReplies > 0 ? 'block' : 'none';
 
                 // Toggle Equipment Reports card alert dot
-                if (totalUnreadReportsReplies > 0) {
-                    if (cardReportsBadge) cardReportsBadge.style.display = 'block';
-                } else {
-                    if (cardReportsBadge) cardReportsBadge.style.display = 'none';
-                }
+                if (cardReportsBadge) cardReportsBadge.style.display = totalUnreadReportsReplies > 0 ? 'block' : 'none';
 
                 // Global hamburger button alert accent management
                 if (totalUnreadLogsReplies > 0 || totalUnreadBookingsReplies > 0 || totalUnreadReportsReplies > 0) {
