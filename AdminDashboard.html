@@ -278,7 +278,7 @@
 
         let cachedReportsLocalArray = [];
         let globalBookingsArray = [];
-        let totalActiveLogRowsCount = 0; // Fixed tracking metric for dynamic row items
+        let uniqueLogUserCount = 0; 
         let calendarCurrentDate = new Date();
         let selectedDateFilterString = null; 
 
@@ -294,48 +294,53 @@
             await renderBookings();
             await renderContiSheetsRows();
             await renderReports();
-            
-            // Recalculate once everything has completely loaded
-            updateNotificationBadges();
         }
 
         function updateNotificationBadges() {
             // 1. Bookings Count Badge
             const bookingsCount = sessionClearedBadges.bookings ? 0 : globalBookingsArray.length;
             const badgeBookings = document.getElementById('badgeBookings');
-            if (bookingsCount > 0) {
-                badgeBookings.innerText = bookingsCount;
-                badgeBookings.style.display = 'inline-block';
-            } else {
-                badgeBookings.style.display = 'none';
+            if (badgeBookings) {
+                if (bookingsCount > 0) {
+                    badgeBookings.innerText = bookingsCount;
+                    badgeBookings.style.display = 'inline-block';
+                } else {
+                    badgeBookings.style.display = 'none';
+                }
             }
 
-            // 2. Conti Logs Count Badge
-            const logsCount = sessionClearedBadges.logs ? 0 : totalActiveLogRowsCount;
+            // 2. Conti Logs Count Badge: Rule configured for 1 notification per unique user account
+            const logsCount = sessionClearedBadges.logs ? 0 : uniqueLogUserCount;
             const badgeLogs = document.getElementById('badgeLogs');
-            if (logsCount > 0) {
-                badgeLogs.innerText = logsCount;
-                badgeLogs.style.display = 'inline-block';
-            } else {
-                badgeLogs.style.display = 'none';
+            if (badgeLogs) {
+                if (logsCount > 0) {
+                    badgeLogs.innerText = logsCount;
+                    badgeLogs.style.display = 'inline-block';
+                } else {
+                    badgeLogs.style.display = 'none';
+                }
             }
 
-            // 3. Equipment Reports Count Badge (Filters items with completely clean/empty responses)
+            // 3. Equipment Reports Count Badge
             const pendingReportsCount = sessionClearedBadges.reports ? 0 : cachedReportsLocalArray.filter(report => !report.adminResponse || report.adminResponse.trim() === '').length;
             const badgeReports = document.getElementById('badgeReports');
-            if (pendingReportsCount > 0) {
-                badgeReports.innerText = pendingReportsCount;
-                badgeReports.style.display = 'inline-block';
-            } else {
-                badgeReports.style.display = 'none';
+            if (badgeReports) {
+                if (pendingReportsCount > 0) {
+                    badgeReports.innerText = pendingReportsCount;
+                    badgeReports.style.display = 'inline-block';
+                } else {
+                    badgeReports.style.display = 'none';
+                }
             }
 
             // 4. Global Outer Hamburger Accent Control Dot
             const hamburgerAlertDot = document.getElementById('hamburgerAlertDot');
-            if (bookingsCount > 0 || logsCount > 0 || pendingReportsCount > 0) {
-                hamburgerAlertDot.style.display = 'block';
-            } else {
-                hamburgerAlertDot.style.display = 'none';
+            if (hamburgerAlertDot) {
+                if (bookingsCount > 0 || logsCount > 0 || pendingReportsCount > 0) {
+                    hamburgerAlertDot.style.display = 'block';
+                } else {
+                    hamburgerAlertDot.style.display = 'none';
+                }
             }
         }
 
@@ -485,7 +490,10 @@
         async function renderContiSheetsRows() {
             const container = document.getElementById('adminContiSheetsBody');
             container.innerHTML = '';
-            totalActiveLogRowsCount = 0; 
+            
+            // Filter set setup to handle unique account entries
+            const uniqueUsersSet = new Set();
+            let totalRowsDisplayed = 0;
             
             const now = Date.now();
             const twentyFourHours = 24 * 60 * 60 * 1000; 
@@ -498,7 +506,6 @@
                     const sheetData = docSnapshot.data();
                     const rowsArray = sheetData.rows || [];
                     
-                    // Fixed: Fallback protection logic if updatedAt stamp property is not configured inside Firestore doc
                     const lastUpdated = sheetData.updatedAt || now;
                     if (now - lastUpdated > twentyFourHours) {
                         return; 
@@ -508,8 +515,12 @@
                         return;
                     }
 
+                    // Register username into Set to drop secondary accounts duplication records
+                    const userKey = (sheetData.metaPerson || 'UnknownDJ').trim().toLowerCase();
+                    uniqueUsersSet.add(userKey);
+
                     rowsArray.forEach((rowItem, rowIndex) => {
-                        totalActiveLogRowsCount++;
+                        totalRowsDisplayed++;
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
                             <td>
@@ -568,10 +579,12 @@
                     });
                 });
 
-                if (totalActiveLogRowsCount === 0) {
+                if (totalRowsDisplayed === 0) {
                     container.innerHTML = `<tr><td colspan="6" style="text-align:center; font-style:italic;">No active sheet logs found from the last 24 hours.</td></tr>`;
                 }
                 
+                // Expose unique set dimension to clear alert framework counts
+                uniqueLogUserCount = uniqueUsersSet.size;
                 updateNotificationBadges();
 
             } catch(err) { console.error(err); }
