@@ -161,8 +161,14 @@
                     </select>
                 </td>
                 <td><div contenteditable="true" class="table-text-editable row-producer" data-placeholder="Enter broadcaster">${producerVal}</div></td>
-                <td><div contenteditable="true" class="table-text-editable row-netia" data-placeholder="">${netiaVal}</div></td>
-                <td><div contenteditable="false" class="table-text-editable row-remarks" style="border-color:transparent; background-color:transparent;" data-placeholder="">${remarksVal}</div></td>
+                <td>
+                    <select class="table-dropdown row-netia">
+                        <option value="" ${netiaVal===''?'selected':''}>--</option>
+                        <option value="Netia" ${netiaVal==='Netia'?'selected':''}>Netia</option>
+                        <option value="CD" ${netiaVal==='CD'?'selected':''}>CD</option>
+                    </select>
+                </td>
+                <td><div contenteditable="true" class="table-text-editable row-remarks" data-placeholder="Enter remarks">${remarksVal}</div></td>
                 <td>
                     <div class="actions-cell-wrapper">
                         <button type="button" class="row-btn row-btn-save">Save</button>
@@ -183,7 +189,7 @@
  
         function toggleRowInputState(trRow, enabled) {
             const selectElements = trRow.querySelectorAll('select');
-            const editableDivs = trRow.querySelectorAll('.table-text-editable:not(.row-remarks)');
+            const editableDivs = trRow.querySelectorAll('.table-text-editable');
             
             selectElements.forEach(el => el.disabled = !enabled);
             editableDivs.forEach(el => el.setAttribute('contenteditable', enabled ? 'true' : 'false'));
@@ -235,7 +241,7 @@
                             title: titleText,
                             lr: row.querySelector('.row-lr').value,
                             producer: row.querySelector('.row-producer').textContent.trim(),
-                            netia: row.querySelector('.row-netia').textContent.trim(),
+                            netia: row.querySelector('.row-netia').value,
                             remarks: row.querySelector('.row-remarks').textContent.trim()
                         });
                     }
@@ -243,7 +249,6 @@
 
                 try {
                     const docRef = doc(db, "beats_conti_sheets", storageKeyPointer);
-                    // We write the updated rows list to the document. If it is empty, the list is [] (permanent history remains intact)
                     await setDoc(docRef, {
                         metaPerson: activePerson,
                         metaDate: activeDate,
@@ -304,7 +309,7 @@
                     title: row.querySelector('.row-title').textContent.trim(),
                     lr: row.querySelector('.row-lr').value,
                     producer: row.querySelector('.row-producer').textContent.trim(),
-                    netia: row.querySelector('.row-netia').textContent.trim(),
+                    netia: row.querySelector('.row-netia').value,
                     remarks: row.querySelector('.row-remarks').textContent.trim()
                 });
             });
