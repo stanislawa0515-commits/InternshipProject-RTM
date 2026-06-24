@@ -165,7 +165,7 @@
         // ==========================================
         async function fetchUserRepliesAndAlert() {
             try {
-                // Read persistence configuration markers
+                // Read local storage data tracking if alerts were cleared for this current session view
                 const isLogsCleared = localStorage.getItem('read_logs_badge') === 'true';
                 const isReportsCleared = localStorage.getItem('read_reports_badge') === 'true';
 
@@ -174,15 +174,17 @@
 
                 const activeClean = activeUser.trim().toLowerCase();
 
-                // 1. Scan Admin Remarks updates inside Conti Sheets
+                // 1. Scan Admin Remarks inside Conti Sheets
                 if (!isLogsCleared) {
                     const sheetsSnapshot = await getDocs(collection(db, "beats_conti_sheets"));
                     sheetsSnapshot.forEach(docSnap => {
                         const data = docSnap.data();
                         const sheetOwner = (data.metaPerson || "").trim().toLowerCase();
                         
+                        // Check ownership context
                         if (sheetOwner === activeClean || activeClean === "master" || activeClean === "admin") {
                             const rows = data.rows || [];
+                            // Ensure the row actually contains text context input from an Admin
                             const hasAdminRemark = rows.some(row => row.remarks && row.remarks.trim() !== "");
                             if (hasAdminRemark) {
                                 triggerLogsAlert = true;
@@ -198,7 +200,9 @@
                         const data = docSnap.data();
                         const reporterClean = (data.reporter || "").trim().toLowerCase();
                         
+                        // Check ownership context
                         if (reporterClean === activeClean || activeClean === "master" || activeClean === "admin") {
+                            // Ensure an Admin Response text block has been saved
                             if (data.adminResponse && data.adminResponse.trim() !== "") {
                                 triggerReportsAlert = true;
                             }
@@ -237,6 +241,7 @@
             window.location.href = targetUrl;
         };
 
+        // Initialize when page elements are fully ready
         window.addEventListener('DOMContentLoaded', fetchUserRepliesAndAlert);
     </script>
 </body>
