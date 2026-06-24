@@ -282,15 +282,14 @@
         let calendarCurrentDate = new Date();
         let selectedDateFilterString = null; 
 
-        // Load permanent cleared state indicators from localStorage on boot
-        let sessionClearedBadges = {
-            bookings: localStorage.getItem('badge_cleared_bookings') === 'true',
-            logs: localStorage.getItem('badge_cleared_logs') === 'true',
-            reports: localStorage.getItem('badge_cleared_reports') === 'true'
+        // CRUCIAL PIECE: High-water mark identifiers preserved to verify what was previously cleared
+        let badgeCheckpoints = {
+            bookingsLastSeenId: localStorage.getItem('checkpoint_bookings_id') || '',
+            logsLastSeenCount: parseInt(localStorage.getItem('checkpoint_logs_count') || '0', 10),
+            reportsLastSeenId: localStorage.getItem('checkpoint_reports_id') || ''
         };
 
         async function loadAdminData() {
-            // Await data collections to complete downloading sequentially
             await renderBookings();
             await renderContiSheetsRows();
             await renderReports();
@@ -298,23 +297,32 @@
 
         function updateNotificationBadges() {
             // 1. Bookings Count Badge
-            const bookingsCount = sessionClearedBadges.bookings ? 0 : globalBookingsArray.length;
+            let unreadBookingsCount = 0;
+            if (globalBookingsArray.length > 0) {
+                if (badgeCheckpoints.bookingsLastSeenId) {
+                    const targetIdx = globalBookingsArray.findIndex(b => b.id === badgeCheckpoints.bookingsLastSeenId);
+                    unreadBookingsCount = targetIdx === -1 ? globalBookingsArray.length : globalBookingsArray.length - (targetIdx + 1);
+                } else {
+                    unreadBookingsCount = globalBookingsArray.length;
+                }
+            }
+            
             const badgeBookings = document.getElementById('badgeBookings');
             if (badgeBookings) {
-                if (bookingsCount > 0) {
-                    badgeBookings.innerText = bookingsCount;
+                if (unreadBookingsCount > 0) {
+                    badgeBookings.innerText = unreadBookingsCount;
                     badgeBookings.style.display = 'inline-block';
                 } else {
                     badgeBookings.style.display = 'none';
                 }
             }
 
-            // 2. Conti Logs Count Badge (1 notification per unique user account)
-            const logsCount = sessionClearedBadges.logs ? 0 : uniqueLogUserCount;
+            // 2. Conti Logs Count Badge
+            const unreadLogsCount = Math.max(0, uniqueLogUserCount - badgeCheckpoints.logsLastSeenCount);
             const badgeLogs = document.getElementById('badgeLogs');
             if (badgeLogs) {
-                if (logsCount > 0) {
-                    badgeLogs.innerText = logsCount;
+                if (unreadLogsCount > 0) {
+                    badgeLogs.innerText = unreadLogsCount;
                     badgeLogs.style.display = 'inline-block';
                 } else {
                     badgeLogs.style.display = 'none';
@@ -322,11 +330,22 @@
             }
 
             // 3. Equipment Reports Count Badge
-            const pendingReportsCount = sessionClearedBadges.reports ? 0 : cachedReportsLocalArray.filter(report => !report.adminResponse || report.adminResponse.trim() === '').length;
+            let unreadReportsCount = 0;
+            const totalPendingReports = cachedReportsLocalArray.filter(report => !report.adminResponse || report.adminResponse.trim() === '');
+            
+            if (totalPendingReports.length > 0) {
+                if (badgeCheckpoints.reportsLastSeenId) {
+                    const targetIdx = totalPendingReports.findIndex(r => r.docId === badgeCheckpoints.reportsLastSeenId);
+                    unreadReportsCount = targetIdx === -1 ? totalPendingReports.length : totalPendingReports.length - (targetIdx + 1);
+                } else {
+                    unreadReportsCount = totalPendingReports.length;
+                }
+            }
+
             const badgeReports = document.getElementById('badgeReports');
             if (badgeReports) {
-                if (pendingReportsCount > 0) {
-                    badgeReports.innerText = pendingReportsCount;
+                if (unreadReportsCount > 0) {
+                    badgeReports.innerText = unreadReportsCount;
                     badgeReports.style.display = 'inline-block';
                 } else {
                     badgeReports.style.display = 'none';
@@ -336,7 +355,7 @@
             // 4. Global Outer Hamburger Accent Control Dot
             const hamburgerAlertDot = document.getElementById('hamburgerAlertDot');
             if (hamburgerAlertDot) {
-                if (bookingsCount > 0 || logsCount > 0 || pendingReportsCount > 0) {
+                if (unreadBookingsCount > 0 || unreadLogsCount > 0 || unreadReportsCount > 0) {
                     hamburgerAlertDot.style.display = 'block';
                 } else {
                     hamburgerAlertDot.style.display = 'none';
@@ -359,7 +378,6 @@
                 buildLiveCalendarGrid();
                 
                 updateNotificationBadges();
-
             } catch (err) { console.error(err); }
         }
 
@@ -480,10 +498,7 @@
         async function deleteBooking(id) {
             if(confirm("Admin Override: Delete this booking?")) {
                 await deleteDoc(doc(db, "beats_bookings", id));
-                localStorage.removeItem('badge_cleared_bookings');
-                sessionClearedBadges.bookings = false;
                 await renderBookings();
-                updateNotificationBadges();
             }
         }
 
@@ -502,11 +517,8 @@
                     const sheetData = docSnapshot.data();
                     const rowsArray = sheetData.rows || [];
 
-                    if (rowsArray.length === 0) {
-                        return;
-                    }
+                    if (rowsArray.length === 0) { return; }
 
-                    // Register username into Set to maintain unique notifications count
                     const userKey = (sheetData.metaPerson || 'UnknownDJ').trim().toLowerCase();
                     uniqueUsersSet.add(userKey);
 
@@ -552,12 +564,7 @@
                                         payload.rows[rIdx].remarks = remarkVal;
                                         await setDoc(docRef, payload);
                                         alert("Remark text cell successfully pushed to user sheet!");
-                                        
-                                        localStorage.removeItem('badge_cleared_logs');
-                                        sessionClearedBadges.logs = false;
-
                                         await renderContiSheetsRows();
-                                        updateNotificationBadges();
                                     }
                                 }
                             } catch(err) {
@@ -634,10 +641,7 @@
             try {
                 await updateDoc(doc(db, "beats_reports", id), { adminResponse: responseText });
                 alert("Response sent to reporter!");
-                localStorage.removeItem('badge_cleared_reports');
-                sessionClearedBadges.reports = false;
                 await renderReports();
-                updateNotificationBadges();
             } catch(err) { alert("Send operation failed."); }
         }
 
@@ -645,10 +649,7 @@
             if(confirm("Admin Master Override: Permanent data erase warning?")) {
                 await deleteDoc(doc(db, "beats_reports", id));
                 alert("Equipment report deleted.");
-                localStorage.removeItem('badge_cleared_reports');
-                sessionClearedBadges.reports = false;
                 await renderReports(); 
-                updateNotificationBadges();
             }
         }
 
@@ -706,11 +707,9 @@
             }
         });
 
+        // FIXED: Only clear user details, preserving verification marks in localStorage on logout
         logoutActionLink.addEventListener('click', () => { 
             localStorage.removeItem('currentUser'); 
-            localStorage.removeItem('badge_cleared_bookings');
-            localStorage.removeItem('badge_cleared_logs');
-            localStorage.removeItem('badge_cleared_reports');
         });
 
         const viewTriggers = document.querySelectorAll('.sidebar-view-trigger');
@@ -721,17 +720,23 @@
                 e.preventDefault();
                 const targetId = trigger.getAttribute('data-target');
 
-                if (targetId === 'contiBookingsSection') {
-                    sessionClearedBadges.bookings = true;
-                    localStorage.setItem('badge_cleared_bookings', 'true');
+                // Advance boundary references when an admin opens a category view
+                if (targetId === 'contiBookingsSection' && globalBookingsArray.length > 0) {
+                    const absoluteLastId = globalBookingsArray[globalBookingsArray.length - 1].id;
+                    badgeCheckpoints.bookingsLastSeenId = absoluteLastId;
+                    localStorage.setItem('checkpoint_bookings_id', absoluteLastId);
                 }
                 if (targetId === 'contiLogsSection') {
-                    sessionClearedBadges.logs = true;
-                    localStorage.setItem('badge_cleared_logs', 'true');
+                    badgeCheckpoints.logsLastSeenCount = uniqueLogUserCount;
+                    localStorage.setItem('checkpoint_logs_count', uniqueLogUserCount.toString());
                 }
                 if (targetId === 'equipmentReportsSection') {
-                    sessionClearedBadges.reports = true;
-                    localStorage.setItem('badge_cleared_reports', 'true');
+                    const totalPendingReports = cachedReportsLocalArray.filter(report => !report.adminResponse || report.adminResponse.trim() === '');
+                    if (totalPendingReports.length > 0) {
+                        const absoluteLastId = totalPendingReports[totalPendingReports.length - 1].docId;
+                        badgeCheckpoints.reportsLastSeenId = absoluteLastId;
+                        localStorage.setItem('checkpoint_reports_id', absoluteLastId);
+                    }
                 }
 
                 viewTriggers.forEach(btn => btn.classList.remove('active'));
