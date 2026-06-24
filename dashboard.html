@@ -31,7 +31,7 @@
             user-select: none;
         }
         
-        /* Circular red notification dot positioned explicitly on top-right corners of the box cards */
+        /* Circular red notification dot positioned explicitly on top-right corners of targeted cards */
         .card-alert-badge {
             position: absolute;
             top: 15px;
@@ -93,8 +93,7 @@
                 <p>Track daily on-air activities and programme updates.</p>
             </div>
  
-            <div class="feature-card" onclick="handleSectionNavigation('bookings', 'contiBook.html')">
-                <span class="card-alert-badge" id="card-count-bookings"></span>
+            <div class="feature-card" onclick="window.location.href='contiBook.html'">
                 <span class="card-icon">📅</span>
                 <h3>Conti Booking</h3>
                 <p>Manage bookings for recordings and guest interviews.</p>
@@ -158,7 +157,6 @@
         logoutActionLink.addEventListener('click', () => {
             localStorage.removeItem('currentUser');
             localStorage.removeItem('read_logs_badge');
-            localStorage.removeItem('read_bookings_badge');
             localStorage.removeItem('read_reports_badge');
         });
 
@@ -167,13 +165,11 @@
         // ==========================================
         async function fetchUserRepliesAndAlert() {
             try {
-                // Read clear states from user workspace
+                // Read persistence configuration markers
                 const isLogsCleared = localStorage.getItem('read_logs_badge') === 'true';
-                const isBookingsCleared = localStorage.getItem('read_bookings_badge') === 'true';
                 const isReportsCleared = localStorage.getItem('read_reports_badge') === 'true';
 
                 let triggerLogsAlert = false;
-                let triggerBookingsAlert = false;
                 let triggerReportsAlert = false;
 
                 const activeClean = activeUser.trim().toLowerCase();
@@ -195,21 +191,7 @@
                     });
                 }
 
-                // 2. Scan updates inside Conti Bookings
-                if (!isBookingsCleared) {
-                    const bookingsSnapshot = await getDocs(collection(db, "beats_bookings"));
-                    bookingsSnapshot.forEach(docSnap => {
-                        const data = docSnap.data();
-                        const bookerClean = (data.bookedBy || "").trim().toLowerCase();
-                        
-                        // If booking entry exists for the user, signify system updates present
-                        if (bookerClean === activeClean || activeClean === "master") {
-                            triggerBookingsAlert = true;
-                        }
-                    });
-                }
-
-                // 3. Scan Admin Responses inside Equipment Reports
+                // 2. Scan Admin Responses inside Equipment Reports
                 if (!isReportsCleared) {
                     const reportsSnapshot = await getDocs(collection(db, "beats_reports"));
                     reportsSnapshot.forEach(docSnap => {
@@ -224,19 +206,17 @@
                     });
                 }
 
-                // Fetch Flash Card Badge DOM elements
+                // Fetch Flash Card Badge DOM references safely
                 const cardLogsBadge = document.getElementById('card-count-logs');
-                const cardBookingsBadge = document.getElementById('card-count-bookings');
                 const cardReportsBadge = document.getElementById('card-count-reports');
                 const hamburgerBtn = document.getElementById('openMenuToggle');
 
-                // Apply Top-Right Circular Dots dynamically
+                // Toggle target card components display configurations
                 if (cardLogsBadge) cardLogsBadge.style.display = triggerLogsAlert ? 'block' : 'none';
-                if (cardBookingsBadge) cardBookingsBadge.style.display = triggerBookingsAlert ? 'block' : 'none';
                 if (cardReportsBadge) cardReportsBadge.style.display = triggerReportsAlert ? 'block' : 'none';
 
-                // Manage global left sidebar trigger button alert
-                if (triggerLogsAlert || triggerBookingsAlert || triggerReportsAlert) {
+                // Manage global header action hamburger dot state alignment
+                if (triggerLogsAlert || triggerReportsAlert) {
                     hamburgerBtn.classList.add('has-alert');
                 } else {
                     hamburgerBtn.classList.remove('has-alert');
@@ -247,12 +227,10 @@
             }
         }
 
-        // Commits permanent data view flags to clear out alerts upon selection
+        // Commits viewing state markers to localStorage to dissolve alerts upon click
         window.handleSectionNavigation = function(type, targetUrl) {
             if (type === 'logs') {
                 localStorage.setItem('read_logs_badge', 'true');
-            } else if (type === 'bookings') {
-                localStorage.setItem('read_bookings_badge', 'true');
             } else if (type === 'reports') {
                 localStorage.setItem('read_reports_badge', 'true');
             }
