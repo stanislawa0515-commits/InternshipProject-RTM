@@ -3,694 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BEATS - Admin Panel</title>
+    <title>BEATS - Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:ital,wght@1,900&family=Kanit:ital,wght@1,900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Modern hidden toggle configuration for separated views */
-        .admin-section { margin-bottom: 40px; width: 100%; display: none; }
-        .admin-section.active-view { display: block; }
-        
-        /* Make Admin Home act as a full bleed relative container for the background slider */
-        #adminHomeSection.active-view {
-            display: block;
-            position: fixed;
-            top: 60px; /* Adjust based on your menu-header-bar height */
-            left: 0;
-            width: 100vw;
-            height: calc(100vh - 60px);
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            z-index: 1;
-        }
-
-        .admin-table { width: 100%; border-collapse: collapse; background: var(--bg-container); border-radius: 12px; overflow: hidden; border: 2px solid var(--stroke-dark); margin-top: 15px; }
-        .admin-table th, .admin-table td { padding: 12px; border: 1px solid var(--border-color); text-align: left; font-size: 0.9rem; vertical-align: middle; }
-        .admin-table th { background: var(--stroke-dark); color: white; font-family: 'Kanit'; font-style: italic; }
-        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
-        .status-pending { background: #ffc107; color: #000; }
-        .status-replied { background: #28a745; color: #fff; }
-        .response-box { display: flex; gap: 8px; margin-top: 5px; align-items: center; }
-        .response-input { flex: 1; padding: 8px; border-radius: 6px; border: 2px solid var(--border-color); background-color: var(--bg-input); color: var(--text-primary); outline: none; }
-        .response-input:focus { border-color: var(--brand-cyan); }
-        .attachment-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background-color: var(--brand-cyan); color: #fff; border: 1px solid var(--stroke-dark); border-radius: 6px; font-size: 0.75rem; cursor: pointer; text-decoration: none; font-weight: bold; }
-        .no-attachment { font-size: 0.8rem; color: var(--text-secondary); font-style: italic; }
-        .modal-mask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 200; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
-        .modal-mask.active { opacity: 1; pointer-events: auto; }
-        .modal-window { background: var(--bg-container); border: 3px solid var(--stroke-dark); border-radius: 16px; width: 90%; max-width: 480px; padding: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); transform: scale(0.8); transition: transform 0.2s ease; }
-        .modal-mask.active .modal-window { transform: scale(1); }
-        .modal-preview-container { width: 100%; max-height: 350px; border: 2px dashed var(--border-color); border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--bg-input); margin: 15px 0; }
-        .modal-preview-container img { width: 100%; height: auto; max-height: 345px; object-fit: contain; display: block; }
-        
-        .actions-cell-inline-wrapper { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; }
-
-        /* CSS Automatic Slider Configured as Fullscreen Background */
-        .slider-box { 
-            width: 100%; 
-            height: 100%; 
-            margin: 0; 
-            overflow: hidden; 
-            border-radius: 0; 
-            border: none; 
-            box-shadow: none; 
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-        .slider-track { display: flex; width: 400%; height: 100%; animation: slideAnimation 12s infinite ease-in-out; }
-        .slider-track img { width: 25%; height: 100%; object-fit: cover; display: block; }
-        
-        @keyframes slideAnimation {
-            0%, 20% { transform: translateX(0%); }
-            25%, 45% { transform: translateX(-25%); }
-            50%, 70% { transform: translateX(-50%); }
-            75%, 95% { transform: translateX(-75%); }
-            100% { transform: translateX(0%); }
-        }
-
-        /* DYNAMIC NOTIFICATION BADGE SYSTEM CONFIGURATIONS */
-        .hamburger-btn {
+        /* Red Notification Badge Dot over User Dashboard Menu Trigger Button */
+        .hamburger-btn.has-alert {
             position: relative;
         }
-        .hamburger-btn .nav-alert-dot {
+        .hamburger-btn.has-alert::after {
+            content: '';
             position: absolute;
-            top: 2px;
-            right: 2px;
-            width: 8px;
-            height: 8px;
-            background-color: #ff4d4d;
+            top: -2px;
+            right: -4px;
+            width: 10px;
+            height: 10px;
+            background-color: #ff3366;
             border-radius: 50%;
-            border: 1px solid var(--bg-container);
-            display: none;
+            border: 2px solid var(--bg-container);
         }
-        .sidebar-links a {
+
+        /* Sidebar Item Counts */
+        .sidebar-link-row {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            text-decoration: none;
+            margin-bottom: 10px;
         }
-        .sidebar-badge {
-            background-color: #ff4d4d;
-            color: #fff;
+        .sidebar-link-row a {
+            margin: 0;
+            flex: 1;
+        }
+        .sidebar-count-badge {
+            background-color: #dc2b5c;
+            color: #ffffff;
             font-size: 0.75rem;
             font-weight: bold;
             padding: 2px 8px;
             border-radius: 12px;
-            min-width: 18px;
+            min-width: 20px;
             text-align: center;
-            font-family: Arial, sans-serif;
             display: none;
+            font-family: 'Kanit', sans-serif;
+            border: 1px solid var(--stroke-dark);
         }
 
-        /* Interactive Calendar Additions */
-        .calendar-day-node {
-            cursor: pointer;
-            transition: background-color 0.2s, border-color 0.2s;
+        /* Dynamic Main Dashboard Card Alert System */
+        .feature-card {
+            position: relative;
+            user-select: none;
         }
-        .calendar-day-node:not(.empty-node):hover {
-            background-color: rgba(0, 188, 212, 0.15);
-        }
-        .calendar-day-node.selected-node {
-            border: 2px solid var(--brand-cyan, #00bcd4) !important;
-            background-color: rgba(0, 188, 212, 0.25) !important;
-        }
-        .filter-reset-banner {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--stroke-dark, #222);
-            color: #fff;
-            padding: 6px 12px;
-            border-radius: 6px;
-            margin-bottom: 10px;
-            font-size: 0.8rem;
-        }
-        .filter-reset-banner button {
-            background: var(--brand-cyan, #00bcd4);
-            border: none;
-            color: #fff;
-            padding: 2px 8px;
-            border-radius: 4px;
-            cursor: pointer;
+        
+        .card-alert-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: #dc2b5c;
+            color: #ffffff;
+            font-size: 0.85rem;
             font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 12px;
+            min-width: 24px;
+            text-align: center;
+            display: none; 
+            font-family: 'Kanit', sans-serif;
+            border: 1px solid var(--stroke-dark);
+            box-shadow: 2px 2px 0px var(--stroke-dark);
+            pointer-events: none; /* Clicks pass straight through to the parent card */
         }
     </style>
 </head>
 <body class="page-body-layout">
-
+ 
     <div class="menu-header-bar">
         <div class="left-nav-group">
-            <button class="hamburger-btn" id="openMenuToggle">
-                ☰
-                <span class="nav-alert-dot" id="hamburgerAlertDot"></span>
-            </button>
-            <div class="user-greeting">Admin: <span id="displayUsername">Master</span></div>
+            <button class="hamburger-btn" id="openMenuToggle">☰</button>
+            <div class="user-greeting">Hi, <span id="displayUsername">User</span></div>
         </div>
-        <div style="font-family: 'Kanit', sans-serif; font-weight: 900; color: #dc2b5c; font-size: 1.5rem; font-style: italic;">BEATS ADMIN</div>
+        <div style="font-family: 'Kanit', sans-serif; font-weight: 900; color: #dc2b5c; font-size: 1.5rem; font-style: italic;">BEATS</div>
     </div>
-
+ 
     <div class="overlay-screen" id="menuOverlay"></div>
     <div class="nav-sidebar" id="sidebarDrawer">
         <button class="close-menu-btn" id="closeMenuToggle">✕</button>
         <div class="sidebar-links">
-            <a href="#" class="sidebar-view-trigger active" data-target="adminHomeSection">Admin Home</a>
-            <a href="#" class="sidebar-view-trigger" data-target="contiBookingsSection" id="linkBookings">
-                Conti Bookings <span class="sidebar-badge" id="badgeBookings">0</span>
-            </a>
-            <a href="#" class="sidebar-view-trigger" data-target="contiLogsSection" id="linkLogs">
-                Conti Logs <span class="sidebar-badge" id="badgeLogs">0</span>
-            </a>
-            <a href="#" class="sidebar-view-trigger" data-target="equipmentReportsSection" id="linkReports">
-                Equipment Reports <span class="sidebar-badge" id="badgeReports">0</span>
-            </a>
+            <a href="dashboard.html" class="sidebar-view-trigger active">Dashboard</a>
+            
+            <div class="sidebar-link-row">
+                <a href="contiLog1.html" id="navLinkLogs">Conti Logs</a>
+                <span class="sidebar-count-badge" id="count-logs">0</span>
+            </div>
+            <div class="sidebar-link-row">
+                <a href="Ereport.html" id="navLinkReports">Equipment Reports</a>
+                <span class="sidebar-count-badge" id="count-reports">0</span>
+            </div>
+            
+            <a href="AboutMe.html">About me</a>
             <a href="SignIn.html" id="logoutActionLink" style="color: #ff4d4d; margin-top: 20px;">Logout</a>
         </div>
+        
         <div class="theme-toggle-row">
             <span>Theme Mode</span>
             <button class="theme-switch-btn" id="themeSwitchTrigger">☀️ / 🌙</button>
         </div>
     </div>
-
+ 
     <div class="dashboard-view-wrapper">
-        <h1 class="brand-header">Management</h1>
-
-        <section class="admin-section active-view" id="adminHomeSection">
-            <div class="slider-box">
-                <div class="slider-track">
-                    <img src="image1.png" alt="Featured Space 1">
-                    <img src="image2.png" alt="Featured Space 2">
-                    <img src="image3.png" alt="Featured Space 3">
-                    <img src="image4.png" alt="Featured Space 4">
-                </div>
-            </div>
-        </section>
-
-        <section class="admin-section" id="contiBookingsSection">
-            <div class="booking-dashboard-grid">
-                
-                <div class="calendar-card">
-                    <div class="calendar-header">
-                        <h3 id="calendarMonthYearDisplay">August 2026</h3>
-                        <div class="calendar-nav-buttons">
-                            <button type="button" id="prevMonthAction">‹</button>
-                            <button type="button" id="nextMonthAction">›</button>
-                        </div>
-                    </div>
-                    <div class="calendar-weekdays-row">
-                        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
-                    </div>
-                    <div class="calendar-days-grid" id="calendarDaysContainer"></div>
-                    <div class="calendar-footer-legend">
-                        <span><span class="legend-indicator-dot" style="background:#dc2b5c"></span>Interviews</span>
-                        <span><span class="legend-indicator-dot" style="background:#00bcd4"></span>Events</span>
-                    </div>
-                </div>
-
-                <div class="upcoming-feed-container">
-                    <h3 class="upcoming-headline-text">Upcoming Events</h3>
-                    <div id="calendarFilterStatus"></div>
-                    <div class="events-list" id="upcomingEventsCardStack"></div>
-                </div>
-
-            </div>
-        </section>
-
-        <section class="admin-section" id="contiLogsSection">
-            <h2 class="core-functions-headline">Conti Logs</h2>
-            <div class="table-responsive-container">
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>Conti Sheet Sheet-Key</th>
-                            <th>Time Slot</th>
-                            <th>Program / Segment Title</th>
-                            <th>Broadcaster Crew</th>
-                            <th>Remarks</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="adminContiSheetsBody"></tbody>
-                </table>
-            </div>
-        </section>
-
-        <section class="admin-section" id="equipmentReportsSection">
-            <h2 class="core-functions-headline">Equipment Reports</h2>
-            <div class="table-responsive-container">
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>ID / Date</th>
-                            <th>Reporter</th>
-                            <th>Equipment</th>
-                            <th>Issue</th>
-                            <th>Photo</th>
-                            <th>Status</th>
-                            <th>Response / Control</th>
-                        </tr>
-                    </thead>
-                    <tbody id="adminReportBody"></tbody>
-                </table>
-            </div>
-        </section>
-    </div>
-
-    <div class="modal-mask" id="photoModalMask">
-        <div class="modal-window">
-            <h3 style="font-family: 'Kanit'; font-style: italic; color: var(--brand-cyan); text-transform: uppercase;">Evidence Attachment</h3>
-            <div class="modal-preview-container" id="modalImageHolder"></div>
-            <button type="button" class="btn" id="closeModalBtn">Close Window</button>
-        </div>
-    </div>
-
-    <script type="module">
-        import { db, collection, doc, getDocs, getDoc, updateDoc, deleteDoc, setDoc } from "./firebase-config.js";
-
-        const currentActiveUser = localStorage.getItem('currentUser');
-        if (currentActiveUser !== 'Admin' && currentActiveUser !== 'admin@beats.com') {
-            alert("Unauthorized access.");
-            window.location.href = 'dashboard.html';
-        }
-
-        if(localStorage.getItem('theme') === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); }
-
-        let cachedReportsLocalArray = [];
-        let globalBookingsArray = [];
-        let calendarCurrentDate = new Date();
-        let selectedDateFilterString = null; 
-
-        // Load permanent cleared state indicators from localStorage on boot
-        let sessionClearedBadges = {
-            bookings: localStorage.getItem('badge_cleared_bookings') === 'true',
-            logs: localStorage.getItem('badge_cleared_logs') === 'true',
-            reports: localStorage.getItem('badge_cleared_reports') === 'true'
-        };
-
-        async function loadAdminData() {
-            // Await data collections to complete downloading
-            await renderBookings();
-            await renderContiSheetsRows();
-            await renderReports();
-            
-            // Recalculate once everything is fully present in the DOM
-            updateNotificationBadges();
-        }
-
-        function updateNotificationBadges() {
-            // 1. Bookings Count Badge
-            const bookingsCount = sessionClearedBadges.bookings ? 0 : globalBookingsArray.length;
-            const badgeBookings = document.getElementById('badgeBookings');
-            if (bookingsCount > 0) {
-                badgeBookings.innerText = bookingsCount;
-                badgeBookings.style.display = 'inline-block';
-            } else {
-                badgeBookings.style.display = 'none';
-            }
-
-            // 2. Conti Logs Count Badge
-            const logsRows = document.querySelectorAll('#adminContiSheetsBody tr:not(:has(td[colspan]))');
-            const logsCount = sessionClearedBadges.logs ? 0 : logsRows.length;
-            const badgeLogs = document.getElementById('badgeLogs');
-            if (logsCount > 0) {
-                badgeLogs.innerText = logsCount;
-                badgeLogs.style.display = 'inline-block';
-            } else {
-                badgeLogs.style.display = 'none';
-            }
-
-            // 3. Equipment Reports Count Badge
-            const pendingReportsCount = sessionClearedBadges.reports ? 0 : cachedReportsLocalArray.filter(report => !report.adminResponse || report.adminResponse.trim() === '').length;
-            const badgeReports = document.getElementById('badgeReports');
-            if (pendingReportsCount > 0) {
-                badgeReports.innerText = pendingReportsCount;
-                badgeReports.style.display = 'inline-block';
-            } else {
-                badgeReports.style.display = 'none';
-            }
-
-            // 4. Global Outer Hamburger Accent Control Dot
-            const hamburgerAlertDot = document.getElementById('hamburgerAlertDot');
-            if (bookingsCount > 0 || logsCount > 0 || pendingReportsCount > 0) {
-                hamburgerAlertDot.style.display = 'block';
-            } else {
-                hamburgerAlertDot.style.display = 'none';
-            }
-        }
-
-        async function renderBookings() {
-            globalBookingsArray = [];
-            try {
-                const snapshot = await getDocs(collection(db, "beats_bookings"));
-                snapshot.forEach(docSnapshot => {
-                    const item = docSnapshot.data();
-                    const id = docSnapshot.id;
-                    globalBookingsArray.push({ id, ...item });
-                });
-
-                globalBookingsArray.sort((a, b) => new Date(a.date) - new Date(b.date));
-                populateUpcomingStackDOM();
-                buildLiveCalendarGrid();
-                
-                // Refresh badges once global list is populated
-                updateNotificationBadges();
-
-            } catch (err) { console.error(err); }
-        }
-
-        function populateUpcomingStackDOM() {
-            const cardStack = document.getElementById('upcomingEventsCardStack');
-            const filterStatus = document.getElementById('calendarFilterStatus');
-            cardStack.innerHTML = '';
-
-            let filteredArray = globalBookingsArray;
-            if (selectedDateFilterString) {
-                filteredArray = globalBookingsArray.filter(b => b.date === selectedDateFilterString);
-                filterStatus.innerHTML = `
-                    <div class="filter-reset-banner">
-                        <span>Viewing: <strong>${selectedDateFilterString}</strong></span>
-                        <button type="button" id="clearCalendarFilterBtn">Show All</button>
-                    </div>`;
-                document.getElementById('clearCalendarFilterBtn').addEventListener('click', () => {
-                    selectedDateFilterString = null;
-                    populateUpcomingStackDOM();
-                    buildLiveCalendarGrid();
-                });
-            } else {
-                filterStatus.innerHTML = '';
-            }
-
-            if(filteredArray.length === 0) {
-                cardStack.innerHTML = `<div style="text-align:center; font-style:italic; padding:20px; color:#666;">No bookings found for this scope.</div>`;
-            } else {
-                filteredArray.forEach(item => {
-                    const isInterview = item.type && item.type.toLowerCase().includes('interview');
-                    const iconSymbol = isInterview ? '🎙️' : '💿';
-                    const styleClass = isInterview ? 'circle-interview' : 'circle-show';
-
-                    const cardNode = document.createElement('div');
-                    cardNode.className = 'event-item-card';
-                    cardNode.innerHTML = `
-                        <div class="event-icon-circle ${styleClass}">${iconSymbol}</div>
-                        <div class="event-main-details">
-                            <div class="event-meta-date">${item.date}</div>
-                            <h4 class="event-display-title">${item.dj || 'Unknown DJ'} - ${item.timeSlot || 'Session'}</h4>
-                            <div class="event-sub-label">by: ${item.bookedBy || 'Admin'} ${item.remarks ? `• "${item.remarks}"` : ''}</div>
-                            <span class="event-card-type-badge">${item.type || 'Show'}</span>
-                        </div>
-                        <button type="button" class="card-action-bin-btn">DELETE</button>
-                    `;
-
-                    cardNode.querySelector('.card-action-bin-btn').addEventListener('click', () => deleteBooking(item.id));
-                    cardStack.appendChild(cardNode);
-                });
-            }
-        }
-
-        function buildLiveCalendarGrid() {
-            const container = document.getElementById('calendarDaysContainer');
-            const displayTitle = document.getElementById('calendarMonthYearDisplay');
-            container.innerHTML = '';
-
-            const year = calendarCurrentDate.getFullYear();
-            const month = calendarCurrentDate.getMonth();
-
-            const monthsList = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            displayTitle.innerText = `${monthsList[month]} ${year}`;
-
-            const firstDayIndex = new Date(year, month, 1).getDay();
-            const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
-
-            for(let i = 0; i < firstDayIndex; i++) {
-                const emptyCell = document.createElement('div');
-                emptyCell.className = 'calendar-day-node empty-node';
-                container.appendChild(emptyCell);
-            }
-
-            const todayObj = new Date();
-            for(let day = 1; day <= totalDaysInMonth; day++) {
-                const cellNode = document.createElement('div');
-                cellNode.className = 'calendar-day-node';
-                
-                const targetDateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-
-                if(day === todayObj.getDate() && month === todayObj.getMonth() && year === todayObj.getFullYear()) {
-                    cellNode.classList.add('today-node');
-                }
-                if(selectedDateFilterString === targetDateString) {
-                    cellNode.classList.add('selected-node');
-                }
-
-                cellNode.innerHTML = `<span class="day-label-num">${day}</span><div class="day-badges-stack"></div>`;
-                const badgesStack = cellNode.querySelector('.day-badges-stack');
-                
-                const dayMatches = globalBookingsArray.filter(b => b.date === targetDateString);
-                dayMatches.forEach(match => {
-                    const pillNode = document.createElement('span');
-                    const isInt = match.type && match.type.toLowerCase().includes('interview');
-                    pillNode.className = `mini-event-pill ${isInt ? 'pill-interview' : 'pill-show'}`;
-                    pillNode.innerText = isInt ? 'Interviews' : 'Events';
-                    badgesStack.appendChild(pillNode);
-                });
-
-                cellNode.addEventListener('click', () => {
-                    selectedDateFilterString = targetDateString;
-                    populateUpcomingStackDOM();
-                    buildLiveCalendarGrid();
-                });
-
-                container.appendChild(cellNode);
-            }
-        }
-
-        document.getElementById('prevMonthAction').addEventListener('click', () => {
-            calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() - 1);
-            buildLiveCalendarGrid();
-        });
-        document.getElementById('nextMonthAction').addEventListener('click', () => {
-            calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + 1);
-            buildLiveCalendarGrid();
-        });
-
-        async function deleteBooking(id) {
-            if(confirm("Admin Override: Delete this booking?")) {
-                await deleteDoc(doc(db, "beats_bookings", id));
-                localStorage.removeItem('badge_cleared_bookings');
-                sessionClearedBadges.bookings = false;
-                await renderBookings();
-                updateNotificationBadges();
-            }
-        }
-
-        async function renderContiSheetsRows() {
-            const container = document.getElementById('adminContiSheetsBody');
-            container.innerHTML = '';
-            
-            const now = Date.now();
-            const twentyFourHours = 24 * 60 * 60 * 1000; 
-            let displayedRowsCount = 0;
-
-            try {
-                const snapshot = await getDocs(collection(db, "beats_conti_sheets"));
-                
-                snapshot.forEach(docSnapshot => {
-                    const sheetId = docSnapshot.id;
-                    const sheetData = docSnapshot.data();
-                    const rowsArray = sheetData.rows || [];
-                    
-                    const lastUpdated = sheetData.updatedAt || 0;
-                    if (now - lastUpdated > twentyFourHours) {
-                        return; 
-                    }
-
-                    if (rowsArray.length === 0) {
-                        return;
-                    }
-
-                    rowsArray.forEach((rowItem, rowIndex) => {
-                        displayedRowsCount++;
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>
-                                <strong>${sheetData.metaPerson || 'DJ'}</strong><br>
-                                <small>${sheetData.metaDate || ''}</small><br>
-                                <small style="color:var(--brand-cyan)">${sheetData.metaInterval || ''}</small>
-                            </td>
-                            <td>${rowItem.hour}:${rowItem.minute} ${rowItem.ampm}</td>
-                            <td><strong>${rowItem.title || 'Untitled'}</strong><br><small>Deck: ${rowItem.lr || 'L'}</small></td>
-                            <td>${rowItem.producer || '--'}<br><small>Netia: ${rowItem.netia || '--'}</small></td>
-                            <td>
-                                <input type="text" class="response-input text-remark-field" 
-                                    id="cell-remark-${sheetId}-${rowIndex}" 
-                                    value="${rowItem.remarks || ''}" 
-                                    placeholder="Write table remark reply...">
-                            </td>
-                            <td>
-                                <div class="actions-cell-inline-wrapper">
-                                    <button type="button" class="row-btn row-btn-save btn-sync-remark" 
-                                        style="background-color: #28a745; color: white;"
-                                        data-sheetid="${sheetId}" 
-                                        data-rowidx="${rowIndex}">Update Remark</button>
-                                </div>
-                            </td>
-                        `;
-
-                        tr.querySelector('.btn-sync-remark').addEventListener('click', async (e) => {
-                            const sId = e.target.dataset.sheetid;
-                            const rIdx = parseInt(e.target.dataset.rowidx);
-                            const remarkVal = document.getElementById(`cell-remark-${sId}-${rIdx}`).value;
-
-                            try {
-                                const docRef = doc(db, "beats_conti_sheets", sId);
-                                const currentSnap = await getDoc(docRef);
-                                if(currentSnap.exists()) {
-                                    const payload = currentSnap.data();
-                                    if(payload.rows && payload.rows[rIdx]) {
-                                        payload.rows[rIdx].remarks = remarkVal;
-                                        await setDoc(docRef, payload);
-                                        alert("Remark text cell successfully pushed to user sheet!");
-                                        
-                                        localStorage.removeItem('badge_cleared_logs');
-                                        sessionClearedBadges.logs = false;
-
-                                        await renderContiSheetsRows();
-                                        updateNotificationBadges();
-                                    }
-                                }
-                            } catch(err) {
-                                console.error(err);
-                                alert("Failed to modify remark value.");
-                            }
-                        });
-
-                        container.appendChild(tr);
-                    });
-                });
-
-                if (displayedRowsCount === 0) {
-                    container.innerHTML = `<tr><td colspan="6" style="text-align:center; font-style:italic;">No active sheet logs found from the last 24 hours.</td></tr>`;
-                }
-                
-                // Refresh badges once table structure generates
-                updateNotificationBadges();
-
-            } catch(err) { console.error(err); }
-        }
-
-        async function renderReports() {
-            const container = document.getElementById('adminReportBody');
-            container.innerHTML = '';
-            cachedReportsLocalArray = [];
-            
-            try {
-                const snapshot = await getDocs(collection(db, "beats_reports"));
-                let trackingIdx = 0;
-                
-                snapshot.forEach(docSnapshot => {
-                    const item = docSnapshot.data();
-                    const id = docSnapshot.id;
-                    cachedReportsLocalArray.push({ docId: id, ...item });
-
-                    const tr = document.createElement('tr');
-                    const statusClass = item.adminResponse ? 'status-replied' : 'status-pending';
-                    const statusText = item.adminResponse ? 'Replied' : 'Pending';
-                    
-                    let attachmentHTML = item.imageAttachment ? `<button type="button" class="attachment-badge btn-view-photo" data-idx="${trackingIdx}">📎 View File</button>` : `<span class="no-attachment">None</span>`;
-                    
-                    tr.innerHTML = `
-                        <td>${item.id}<br><small>${item.date}</small></td>
-                        <td>${item.reporter}<br><small>${item.department}</small></td>
-                        <td>${item.eqModel}</td>
-                        <td><strong>${item.issueType}</strong>: ${item.description}</td>
-                        <td>${attachmentHTML}</td>
-                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                        <td>
-                            <div class="response-box">
-                                <input type="text" id="resp-${id}" class="response-input" placeholder="Type reply..." value="${item.adminResponse || ''}">
-                                <button type="button" class="row-btn row-btn-save btn-send-resp" data-id="${id}">Send</button>
-                                <button type="button" class="row-delete-btn btn-del-report" data-id="${id}">Delete</button>
-                            </div>
-                        </td>
-                    `;
-
-                    tr.querySelector('.btn-view-photo')?.addEventListener('click', (e) => openPhotoViewerModal(e.target.dataset.idx));
-                    tr.querySelector('.btn-send-resp').addEventListener('click', (e) => sendResponse(e.target.dataset.id));
-                    tr.querySelector('.btn-del-report').addEventListener('click', (e) => deleteEquipmentReport(e.target.dataset.id));
-
-                    container.appendChild(tr);
-                    trackingIdx++;
-                });
-            } catch(err) { console.error(err); }
-        }
-
-        async function sendResponse(id) {
-            const responseText = document.getElementById(`resp-${id}`).value;
-            try {
-                await updateDoc(doc(db, "beats_reports", id), { adminResponse: responseText });
-                alert("Response sent to reporter!");
-                localStorage.removeItem('badge_cleared_reports');
-                sessionClearedBadges.reports = false;
-                await renderReports();
-                updateNotificationBadges();
-            } catch(err) { alert("Send operation failed."); }
-        }
-
-        async function deleteEquipmentReport(id) {
-            if(confirm("Admin Master Override: Permanent data erase warning?")) {
-                await deleteDoc(doc(db, "beats_reports", id));
-                alert("Equipment report deleted.");
-                localStorage.removeItem('badge_cleared_reports');
-                sessionClearedBadges.reports = false;
-                await renderReports(); 
-                updateNotificationBadges();
-            }
-        }
-
-        const photoModalMask = document.getElementById('photoModalMask');
-        const modalImageHolder = document.getElementById('modalImageHolder');
-
-        function openPhotoViewerModal(index) {
-            const targetedItem = cachedReportsLocalArray[index];
-            if(targetedItem && targetedItem.imageAttachment) {
-                modalImageHolder.innerHTML = `<img src="${targetedItem.imageAttachment}" alt="Evidence View Summary">`;
-                photoModalMask.classList.add('active');
-            }
-        }
-
-        function closePhotoViewerModal() {
-            photoModalMask.classList.remove('active');
-            modalImageHolder.innerHTML = ''; 
-        }
         
-        document.getElementById('closeModalBtn').addEventListener('click', closePhotoViewerModal);
-        photoModalMask.addEventListener('click', closePhotoViewerModal);
-        modalImageHolder.parentNode.addEventListener('click', (e) => e.stopPropagation());
+        <div class="slider-container">
+            <div class="slider-track">
+                <img src="image1.png" alt="Studio Space 1">
+                <img src="image2.png" alt="Recording Equipment 2">
+                <img src="image3.png" alt="Conti Live Room 3">
+                <img src="image4.png" alt="Office Desk 4">
+            </div>
+        </div>
+ 
+        <h2 class="core-functions-headline">System Core Functions</h2>
+ 
+        <div class="functions-grid">
+            <div class="feature-card" onclick="handleSectionNavigation('logs', 'contiLog1.html')">
+                <span class="card-alert-badge" id="card-count-logs">0</span>
+                <span class="card-icon">📻</span>
+                <h3>Conti Log</h3>
+                <p>Track daily on-air activities and programme updates.</p>
+            </div>
+ 
+            <div class="feature-card" onclick="window.location.href='contiBook.html'">
+                <h3>Conti Booking</h3>
+                <span class="card-icon">📅</span>
+                <p>Manage bookings for recordings and guest interviews.</p>
+            </div>
+ 
+            <div class="feature-card" onclick="handleSectionNavigation('reports', 'Ereport.html')">
+                <span class="card-alert-badge" id="card-count-reports">0</span>
+                <span class="card-icon">🔧</span>
+                <h3>E-Equipment Report</h3>
+                <p>Report equipment issues, damage, or loss.</p>
+            </div>
+        </div>
+ 
+        <footer>
+            <p>© 2026 Stanislawa Stephen. All rights reserved.</p>
+        </footer>
+    </div>
+ 
+    <script type="module">
+        import { db, collection, getDocs } from "./firebase-config.js";
 
+        const openMenuToggle = document.getElementById('openMenuToggle');
+        const closeMenuToggle = document.getElementById('closeMenuToggle');
         const sidebarDrawer = document.getElementById('sidebarDrawer');
         const menuOverlay = document.getElementById('menuOverlay');
         const themeSwitchTrigger = document.getElementById('themeSwitchTrigger');
+        const displayUsername = document.getElementById('displayUsername');
         const logoutActionLink = document.getElementById('logoutActionLink');
-
+ 
+        const activeUser = localStorage.getItem('currentUser') || 'Guest';
+        displayUsername.textContent = activeUser;
+ 
+        if(localStorage.getItem('theme') === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+ 
         function toggleSidebar(open) {
-            if(open) { 
-                sidebarDrawer.classList.add('open'); 
+            if(open) {
+                sidebarDrawer.classList.add('open');
                 menuOverlay.classList.add('show');
-                sidebarDrawer.style.pointerEvents = "auto";
-            }
-            else { 
-                sidebarDrawer.classList.remove('open'); 
+            } else {
+                sidebarDrawer.classList.remove('open');
                 menuOverlay.classList.remove('show');
-                sidebarDrawer.style.pointerEvents = "none";
             }
         }
-
-        sidebarDrawer.style.pointerEvents = "none";
-
-        document.getElementById('openMenuToggle').addEventListener('click', () => toggleSidebar(true));
-        document.getElementById('closeMenuToggle').addEventListener('click', () => toggleSidebar(false));
+ 
+        openMenuToggle.addEventListener('click', () => toggleSidebar(true));
+        closeMenuToggle.addEventListener('click', () => toggleSidebar(false));
         menuOverlay.addEventListener('click', () => toggleSidebar(false));
-
+ 
         themeSwitchTrigger.addEventListener('click', () => {
             if(document.documentElement.hasAttribute('data-theme')) {
                 document.documentElement.removeAttribute('data-theme');
@@ -700,47 +194,104 @@
                 localStorage.setItem('theme', 'dark');
             }
         });
-
-        logoutActionLink.addEventListener('click', () => { 
-            localStorage.removeItem('currentUser'); 
-            localStorage.removeItem('badge_cleared_bookings');
-            localStorage.removeItem('badge_cleared_logs');
-            localStorage.removeItem('badge_cleared_reports');
+ 
+        logoutActionLink.addEventListener('click', () => {
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('lastCheckedUserLogs');
+            localStorage.removeItem('lastCheckedUserReports');
         });
 
-        const viewTriggers = document.querySelectorAll('.sidebar-view-trigger');
-        const dashboardSections = document.querySelectorAll('.admin-section');
+        // ==========================================
+        //  DYNAMIC NOTIFICATION HANDLING ENGINE
+        // ==========================================
+        async function fetchUserRepliesAndAlert() {
+            try {
+                const lastCheckedUserLogs = parseInt(localStorage.getItem('lastCheckedUserLogs') || '0');
+                const lastCheckedUserReports = parseInt(localStorage.getItem('lastCheckedUserReports') || '0');
 
-        viewTriggers.forEach(trigger => {
-            trigger.addEventListener('click', (e) => {
-                e.preventDefault();
-                const targetId = trigger.getAttribute('data-target');
+                let totalUnreadLogsReplies = 0;
+                let totalUnreadReportsReplies = 0;
 
-                if (targetId === 'contiBookingsSection') {
-                    sessionClearedBadges.bookings = true;
-                    localStorage.setItem('badge_cleared_bookings', 'true');
+                // 1. Check for Admin Updates in Conti Sheets
+                const sheetsSnapshot = await getDocs(collection(db, "beats_conti_sheets"));
+                sheetsSnapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const lastUpdated = data.updatedAt || 0;
+                    
+                    if (lastUpdated > lastCheckedUserLogs) {
+                        const rows = data.rows || [];
+                        const hasAdminRemark = rows.some(row => row.remarks && row.remarks.trim() !== "");
+                        if (hasAdminRemark) {
+                            totalUnreadLogsReplies++;
+                        }
+                    }
+                });
+
+                // 2. Check for Admin Updates in Equipment Reports
+                const reportsSnapshot = await getDocs(collection(db, "beats_reports"));
+                reportsSnapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    
+                    // FIXED: Expanded comparison check to catch both personalized usernames and master indicators
+                    if (data.reporter === activeUser || activeUser === "Master" || activeUser === "Admin") {
+                        if (data.adminResponse && data.adminResponse.trim() !== "") {
+                            const replyTime = data.updatedAt || (data.createdAt?.seconds ? data.createdAt.seconds * 1000 : lastCheckedUserReports + 1);
+                            if (replyTime > lastCheckedUserReports) {
+                                totalUnreadReportsReplies++;
+                            }
+                        }
+                    }
+                });
+
+                // Update UI Element Badges safely with optional chaining (?.)
+                const logsBadge = document.getElementById('count-logs');
+                const reportsBadge = document.getElementById('count-reports');
+                const cardLogsBadge = document.getElementById('card-count-logs');
+                const cardReportsBadge = document.getElementById('card-count-reports');
+                const hamburgerBtn = document.getElementById('openMenuToggle');
+
+                if (totalUnreadLogsReplies > 0) {
+                    if (logsBadge) { logsBadge.innerText = totalUnreadLogsReplies; logsBadge.style.display = 'block'; }
+                    if (cardLogsBadge) { cardLogsBadge.innerText = totalUnreadLogsReplies; cardLogsBadge.style.display = 'block'; }
+                } else {
+                    if (logsBadge) logsBadge.style.display = 'none';
+                    if (cardLogsBadge) cardLogsBadge.style.display = 'none';
                 }
-                if (targetId === 'contiLogsSection') {
-                    sessionClearedBadges.logs = true;
-                    localStorage.setItem('badge_cleared_logs', 'true');
+
+                if (totalUnreadReportsReplies > 0) {
+                    if (reportsBadge) { reportsBadge.innerText = totalUnreadReportsReplies; reportsBadge.style.display = 'block'; }
+                    if (cardReportsBadge) { cardReportsBadge.innerText = totalUnreadReportsReplies; cardReportsBadge.style.display = 'block'; }
+                } else {
+                    if (reportsBadge) reportsBadge.style.display = 'none';
+                    if (cardReportsBadge) cardReportsBadge.style.display = 'none';
                 }
-                if (targetId === 'equipmentReportsSection') {
-                    sessionClearedBadges.reports = true;
-                    localStorage.setItem('badge_cleared_reports', 'true');
+
+                if (totalUnreadLogsReplies > 0 || totalUnreadReportsReplies > 0) {
+                    hamburgerBtn.classList.add('has-alert');
+                } else {
+                    hamburgerBtn.classList.remove('has-alert');
                 }
 
-                viewTriggers.forEach(btn => btn.classList.remove('active'));
-                trigger.classList.add('active');
+            } catch (err) {
+                console.error("Error managing notifications framework layout: ", err);
+            }
+        }
 
-                dashboardSections.forEach(section => section.classList.remove('active-view'));
-                document.getElementById(targetId).classList.add('active-view');
+        // Expose navigation rules to the global window scope for inline HTML handlers
+        window.handleSectionNavigation = function(type, targetUrl) {
+            if (type === 'logs') {
+                localStorage.setItem('lastCheckedUserLogs', Date.now().toString());
+            } else if (type === 'reports') {
+                localStorage.setItem('lastCheckedUserReports', Date.now().toString());
+            }
+            window.location.href = targetUrl;
+        };
 
-                updateNotificationBadges();
-                toggleSidebar(false);
-            });
-        });
+        // FIXED: Added defensive code checks to prevent element reference failures
+        document.getElementById('navLinkLogs')?.addEventListener('click', (e) => { e.preventDefault(); handleSectionNavigation('logs', 'contiLog1.html'); });
+        document.getElementById('navLinkReports')?.addEventListener('click', (e) => { e.preventDefault(); handleSectionNavigation('reports', 'Ereport.html'); });
 
-        window.addEventListener('DOMContentLoaded', loadAdminData);
+        window.addEventListener('DOMContentLoaded', fetchUserRepliesAndAlert);
     </script>
 </body>
 </html>
