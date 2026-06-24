@@ -83,6 +83,23 @@ body {
     pointer-events: auto !important;
 }
 
+.hamburger-btn {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    font-size: 24px !important;
+    cursor: pointer !important;
+    color: var(--text-primary) !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    position: static !important;
+}
+
 .user-greeting {
     font-weight: bold;
     font-size: 1.1rem;
@@ -111,7 +128,6 @@ body {
 }
 
 .close-menu-btn {
-    align-self: flex-end;
     background: none;
     border: none;
     font-size: 22px;
@@ -1310,7 +1326,7 @@ footer p {
     .calendar-day-node { padding: 2px !important; justify-content: flex-start !important; gap: 2px !important; }
     .day-label-num { font-size: 0.75rem !important; margin-left: 0 !important; }
     
-    .hamburger-btn { top: 10px !important; left: 10px !important; width: 38px !important; height: 38px !important; font-size: 20px !important; }
+    .hamburger-btn { top: auto !important; left: auto !important; width: auto !important; height: auto !important; font-size: 24px !important; }
     
     .mini-event-pill {
         font-size: 0 !important;
