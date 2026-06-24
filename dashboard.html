@@ -50,6 +50,31 @@
             font-family: 'Kanit', sans-serif;
             border: 1px solid var(--stroke-dark);
         }
+
+        /* Dynamic Main Dashboard Card Alert System */
+        .feature-card {
+            position: relative;
+            user-select: none;
+        }
+        
+        .card-alert-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: #dc2b5c;
+            color: #ffffff;
+            font-size: 0.85rem;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 12px;
+            min-width: 24px;
+            text-align: center;
+            display: none; 
+            font-family: 'Kanit', sans-serif;
+            border: 1px solid var(--stroke-dark);
+            box-shadow: 2px 2px 0px var(--stroke-dark);
+            pointer-events: none; /* Clicks pass straight through to the parent card */
+        }
     </style>
 </head>
 <body class="page-body-layout">
@@ -67,6 +92,16 @@
         <button class="close-menu-btn" id="closeMenuToggle">✕</button>
         <div class="sidebar-links">
             <a href="dashboard.html" class="sidebar-view-trigger active">Dashboard</a>
+            
+            <div class="sidebar-link-row">
+                <a href="contiLog1.html" class="sidebar-view-trigger" id="navLinkLogs">Conti Log</a>
+                <span class="sidebar-count-badge" id="count-logs">0</span>
+            </div>
+
+            <div class="sidebar-link-row">
+                <a href="Ereport.html" class="sidebar-view-trigger" id="navLinkReports">Equipment Reports</a>
+                <span class="sidebar-count-badge" id="count-reports">0</span>
+            </div>
 
             <a href="AboutMe.html">About me</a>
             <a href="SignIn.html" id="logoutActionLink" style="color: #ff4d4d; margin-top: 20px;">Logout</a>
@@ -92,7 +127,8 @@
         <h2 class="core-functions-headline">System Core Functions</h2>
  
         <div class="functions-grid">
-            <div class="feature-card" id="cardLinkLogs">
+            <div class="feature-card" onclick="handleSectionNavigation('logs', 'contiLog1.html')">
+                <span class="card-alert-badge" id="card-count-logs">0</span>
                 <span class="card-icon">📻</span>
                 <h3>Conti Log</h3>
                 <p>Track daily on-air activities and programme updates.</p>
@@ -104,7 +140,8 @@
                 <p>Manage bookings for recordings and guest interviews.</p>
             </div>
  
-            <div class="feature-card" id="cardLinkReports">
+            <div class="feature-card" onclick="handleSectionNavigation('reports', 'Ereport.html')">
+                <span class="card-alert-badge" id="card-count-reports">0</span>
                 <span class="card-icon">🔧</span>
                 <h3>E-Equipment Report</h3>
                 <p>Report equipment issues, damage, or loss.</p>
@@ -167,7 +204,6 @@
         // ==========================================
         async function fetchUserRepliesAndAlert() {
             try {
-                // Read historical verification stamps
                 const lastCheckedUserLogs = parseInt(localStorage.getItem('lastCheckedUserLogs') || '0');
                 const lastCheckedUserReports = parseInt(localStorage.getItem('lastCheckedUserReports') || '0');
 
@@ -180,10 +216,8 @@
                     const data = docSnap.data();
                     const lastUpdated = data.updatedAt || 0;
                     
-                    // Only flag if updated after the user last opened the logs page
                     if (lastUpdated > lastCheckedUserLogs) {
                         const rows = data.rows || [];
-                        // Check if admin wrote a remark
                         const hasAdminRemark = rows.some(row => row.remarks && row.remarks.trim() !== "");
                         if (hasAdminRemark) {
                             totalUnreadLogsReplies++;
@@ -196,10 +230,8 @@
                 reportsSnapshot.forEach(docSnap => {
                     const data = docSnap.data();
                     
-                    // Match only reports submitted by or accessible to this specific user profile
                     if (data.reporter === activeUser || activeUser === "Master") {
                         if (data.adminResponse && data.adminResponse.trim() !== "") {
-                            // Fetch creation timestamp fallback sequence
                             const replyTime = data.updatedAt || (data.createdAt?.seconds ? data.createdAt.seconds * 1000 : lastCheckedUserReports + 1);
                             if (replyTime > lastCheckedUserReports) {
                                 totalUnreadReportsReplies++;
@@ -208,26 +240,33 @@
                     }
                 });
 
-                // Update UI elements dynamically
+                // Update UI Element Badges
                 const logsBadge = document.getElementById('count-logs');
                 const reportsBadge = document.getElementById('count-reports');
+                const cardLogsBadge = document.getElementById('card-count-logs');
+                const cardReportsBadge = document.getElementById('card-count-reports');
                 const hamburgerBtn = document.getElementById('openMenuToggle');
 
                 if (totalUnreadLogsReplies > 0) {
                     logsBadge.innerText = totalUnreadLogsReplies;
                     logsBadge.style.display = 'block';
+                    cardLogsBadge.innerText = totalUnreadLogsReplies;
+                    cardLogsBadge.style.display = 'block';
                 } else {
                     logsBadge.style.display = 'none';
+                    cardLogsBadge.style.display = 'none';
                 }
 
                 if (totalUnreadReportsReplies > 0) {
                     reportsBadge.innerText = totalUnreadReportsReplies;
                     reportsBadge.style.display = 'block';
+                    cardReportsBadge.innerText = totalUnreadReportsReplies;
+                    cardReportsBadge.style.display = 'block';
                 } else {
                     reportsBadge.style.display = 'none';
+                    cardReportsBadge.style.display = 'none';
                 }
 
-                // If any unread replies exist, show the alert badge over the menu icon
                 if (totalUnreadLogsReplies > 0 || totalUnreadReportsReplies > 0) {
                     hamburgerBtn.classList.add('has-alert');
                 } else {
@@ -239,23 +278,19 @@
             }
         }
 
-        // Event handler actions resetting values immediately on selection click points
-        function handleSectionNavigation(type, targetUrl) {
+        // Expose navigation rules to the global window scope for inline HTML handlers
+        window.handleSectionNavigation = function(type, targetUrl) {
             if (type === 'logs') {
                 localStorage.setItem('lastCheckedUserLogs', Date.now().toString());
             } else if (type === 'reports') {
                 localStorage.setItem('lastCheckedUserReports', Date.now().toString());
             }
             window.location.href = targetUrl;
-        }
+        };
 
         document.getElementById('navLinkLogs').addEventListener('click', (e) => { e.preventDefault(); handleSectionNavigation('logs', 'contiLog1.html'); });
-        document.getElementById('cardLinkLogs').addEventListener('click', () => handleSectionNavigation('logs', 'contiLog1.html'));
-        
         document.getElementById('navLinkReports').addEventListener('click', (e) => { e.preventDefault(); handleSectionNavigation('reports', 'Ereport.html'); });
-        document.getElementById('cardLinkReports').addEventListener('click', () => handleSectionNavigation('reports', 'Ereport.html'));
 
-        // Initialize Runtime Engine checks when DOM elements load up completely
         window.addEventListener('DOMContentLoaded', fetchUserRepliesAndAlert);
     </script>
 </body>
