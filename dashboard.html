@@ -96,72 +96,114 @@
         </footer>
     </div>
  
-    <script type="module">
-        import { db, collection, onSnapshot } from "./firebase-config.js";
-
-        const openMenuToggle = document.getElementById('openMenuToggle');
-        const closeMenuToggle = document.getElementById('closeMenuToggle');
-        const sidebarDrawer = document.getElementById('sidebarDrawer');
-        const menuOverlay = document.getElementById('menuOverlay');
-        const themeSwitchTrigger = document.getElementById('themeSwitchTrigger');
-        const displayUsername = document.getElementById('displayUsername');
-        const logoutActionLink = document.getElementById('logoutActionLink');
-        
-        const cardContiLogs = document.getElementById('cardContiLogs');
-        const cardContiBooking = document.getElementById('cardContiBooking');
-        const cardEquipmentReport = document.getElementById('cardEquipmentReport');
- 
-        // FIX: Check both 'username' and 'currentUser' so that your registration key is pulled correctly
-        const activeUser = localStorage.getItem('username') || localStorage.getItem('currentUser') || 'User';
-        displayUsername.textContent = activeUser;
- 
-        if(localStorage.getItem('theme') === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
-        }
- 
-        function toggleSidebar(open) {
-            if(open) {
-                sidebarDrawer.classList.add('open');
-                menuOverlay.classList.add('show');
-            } else {
-                sidebarDrawer.classList.remove('open');
-                menuOverlay.classList.remove('show');
-            }
-        }
- 
-        openMenuToggle.addEventListener('click', () => toggleSidebar(true));
-        closeMenuToggle.addEventListener('click', () => toggleSidebar(false));
-        menuOverlay.addEventListener('click', () => toggleSidebar(false));
- 
-        themeSwitchTrigger.addEventListener('click', () => {
-            if(document.documentElement.hasAttribute('data-theme')) {
-                document.documentElement.removeAttribute('data-theme');
-                localStorage.setItem('theme', 'light');
-            } else {
+    <!-- BLOCK 1: Standard Fallproof Javascript (Guarantees Menu & Clicks always work) -->
+    <script>
+        (function() {
+            const openMenuToggle = document.getElementById('openMenuToggle');
+            const closeMenuToggle = document.getElementById('closeMenuToggle');
+            const sidebarDrawer = document.getElementById('sidebarDrawer');
+            const menuOverlay = document.getElementById('menuOverlay');
+            const themeSwitchTrigger = document.getElementById('themeSwitchTrigger');
+            const displayUsername = document.getElementById('displayUsername');
+            const logoutActionLink = document.getElementById('logoutActionLink');
+            
+            const cardContiLogs = document.getElementById('cardContiLogs');
+            const cardContiBooking = document.getElementById('cardContiBooking');
+            const cardEquipmentReport = document.getElementById('cardEquipmentReport');
+     
+            // Pull registered user session details safely
+            const activeUser = localStorage.getItem('username') || localStorage.getItem('currentUser') || 'User';
+            if (displayUsername) displayUsername.textContent = activeUser;
+     
+            if(localStorage.getItem('theme') === 'dark') {
                 document.documentElement.setAttribute('data-theme', 'dark');
-                localStorage.setItem('theme', 'dark');
             }
-        });
- 
-        logoutActionLink.addEventListener('click', () => {
-            const savedLogsBadge = localStorage.getItem('last_seen_logs_content');
-            const savedReportsBadge = localStorage.getItem('last_seen_reports_content');
-            const savedTheme = localStorage.getItem('theme');
-            
-            localStorage.clear();
-            
-            if(savedLogsBadge) localStorage.setItem('last_seen_logs_content', savedLogsBadge);
-            if(savedReportsBadge) localStorage.setItem('last_seen_reports_content', savedReportsBadge);
-            if(savedTheme) localStorage.setItem('theme', savedTheme);
-        });
+     
+            function toggleSidebar(open) {
+                if(open) {
+                    sidebarDrawer.classList.add('open');
+                    menuOverlay.classList.add('show');
+                } else {
+                    sidebarDrawer.classList.remove('open');
+                    menuOverlay.classList.remove('show');
+                }
+            }
+     
+            if(openMenuToggle) openMenuToggle.addEventListener('click', () => toggleSidebar(true));
+            if(closeMenuToggle) closeMenuToggle.addEventListener('click', () => toggleSidebar(false));
+            if(menuOverlay) menuOverlay.addEventListener('click', () => toggleSidebar(false));
+     
+            if(themeSwitchTrigger) {
+                themeSwitchTrigger.addEventListener('click', () => {
+                    if(document.documentElement.hasAttribute('data-theme')) {
+                        document.documentElement.removeAttribute('data-theme');
+                        localStorage.setItem('theme', 'light');
+                    } else {
+                        document.documentElement.setAttribute('data-theme', 'dark');
+                        localStorage.setItem('theme', 'dark');
+                    }
+                });
+            }
+     
+            if(logoutActionLink) {
+                logoutActionLink.addEventListener('click', () => {
+                    const savedLogsBadge = localStorage.getItem('last_seen_logs_content');
+                    const savedReportsBadge = localStorage.getItem('last_seen_reports_content');
+                    const savedTheme = localStorage.getItem('theme');
+                    localStorage.clear();
+                    if(savedLogsBadge) localStorage.setItem('last_seen_logs_content', savedLogsBadge);
+                    if(savedReportsBadge) localStorage.setItem('last_seen_reports_content', savedReportsBadge);
+                    if(savedTheme) localStorage.setItem('theme', savedTheme);
+                });
+            }
 
-        let dynamicCurrentLogsStringPool = "";
-        let dynamicCurrentReportsStringPool = "";
+            // Fallback base navigation routing setup
+            if (cardContiLogs) {
+                cardContiLogs.addEventListener('click', () => window.location.href = 'contiLog1.html');
+            }
+            if (cardContiBooking) {
+                cardContiBooking.addEventListener('click', () => window.location.href = 'contiBook.html');
+            }
+            if (cardEquipmentReport) {
+                cardEquipmentReport.addEventListener('click', () => window.location.href = 'Ereport.html');
+            }
+        })();
+    </script>
 
-        function structureRealtimeAlertEngine() {
+    <!-- BLOCK 2: Firebase Real-Time Update Engine Modules -->
+    <script type="module">
+        let db, collection, onSnapshot;
+        
+        try {
+            // Attempt to import configurations from config layout modules
+            const firebaseModule = await import("./firebase-config.js");
+            db = firebaseModule.db;
+            collection = firebaseModule.collection;
+            onSnapshot = firebaseModule.onSnapshot;
+            
+            if (db && collection && onSnapshot) {
+                initializeFirebaseAlertSystem();
+            }
+        } catch (moduleLoadError) {
+            console.warn("Firebase config module import bypassed or unaccessible. Running dashboard in fallback mode.", moduleLoadError);
+        }
+
+        function initializeFirebaseAlertSystem() {
+            const activeUser = localStorage.getItem('username') || localStorage.getItem('currentUser') || 'User';
             const activeClean = activeUser.trim().toLowerCase();
-            console.log("--- BEATS Realtime Alert Engine Initialized ---");
+            
+            let dynamicCurrentLogsStringPool = "";
+            let dynamicCurrentReportsStringPool = "";
 
+            // Intercept standard click routes to safely layer dynamic notification cache string pooling tracking rules
+            document.getElementById('cardContiLogs')?.addEventListener('click', (e) => {
+                localStorage.setItem('last_seen_logs_content', dynamicCurrentLogsStringPool);
+            });
+            document.getElementById('cardEquipmentReport')?.addEventListener('click', (e) => {
+                localStorage.setItem('last_seen_reports_content', dynamicCurrentReportsStringPool);
+            });
+
+            // Live Alert Dot Engine Tracking via cloud collection state monitoring hook structures
             onSnapshot(collection(db, "beats_conti_sheets"), (sheetsSnapshot) => {
                 let logsContentSignature = "";
                 let triggerLogsAlert = false;
@@ -187,11 +229,7 @@
                 }
 
                 const cardLogsBadge = document.getElementById('card-count-logs');
-                if (cardLogsBadge) {
-                    cardLogsBadge.style.display = triggerLogsAlert ? 'block' : 'none';
-                }
-            }, (err) => {
-                console.error("Live syncing failed for logs snapshot: ", err);
+                if (cardLogsBadge) cardLogsBadge.style.display = triggerLogsAlert ? 'block' : 'none';
             });
 
             onSnapshot(collection(db, "beats_reports"), (reportsSnapshot) => {
@@ -216,37 +254,9 @@
                 }
 
                 const cardReportsBadge = document.getElementById('card-count-reports');
-                if (cardReportsBadge) {
-                    cardReportsBadge.style.display = triggerReportsAlert ? 'block' : 'none';
-                }
-            }, (err) => {
-                console.error("Live syncing failed for reports snapshot: ", err);
+                if (cardReportsBadge) cardReportsBadge.style.display = triggerReportsAlert ? 'block' : 'none';
             });
         }
-
-        function handleSectionNavigation(type, targetUrl) {
-            if (type === 'logs') {
-                localStorage.setItem('last_seen_logs_content', dynamicCurrentLogsStringPool);
-            } else if (type === 'reports') {
-                localStorage.setItem('last_seen_reports_content', dynamicCurrentReportsStringPool);
-            }
-            window.location.href = targetUrl;
-        }
-
-        // Setup the modern event listeners to bypass the module isolation block
-        if (cardContiLogs) {
-            cardContiLogs.addEventListener('click', () => handleSectionNavigation('logs', 'contiLog1.html'));
-        }
-        if (cardContiBooking) {
-            cardContiBooking.addEventListener('click', () => {
-                window.location.href = 'contiBook.html';
-            });
-        }
-        if (cardEquipmentReport) {
-            cardEquipmentReport.addEventListener('click', () => handleSectionNavigation('reports', 'Ereport.html'));
-        }
-
-        structureRealtimeAlertEngine();
     </script>
 </body>
 </html>
