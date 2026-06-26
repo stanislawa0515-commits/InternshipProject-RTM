@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:ital,wght@1,900&family=Kanit:ital,wght@1,900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
+        /* Strict alignment of form typography variables */
         .form-box input, 
         .form-box select, 
         .form-box textarea,
@@ -22,6 +23,7 @@
             font-style: italic;
         }
 
+        /* Checkbox Layout Architecture Modifications */
         .checkbox-group-row {
             display: flex;
             align-items: center;
@@ -46,6 +48,7 @@
             accent-color: var(--brand-cyan);
         }
 
+        /* Custom File Upload Button Styling Layer */
         .file-upload-wrapper {
             display: flex;
             flex-direction: column;
@@ -82,6 +85,7 @@
             word-break: break-all;
         }
 
+        /* Admin Response History Deck Layout styles */
         .history-deck-container {
             margin-top: 25px;
             border-top: 2px dashed var(--border-color);
@@ -108,6 +112,7 @@
             color: var(--text-primary);
         }
 
+        /* User history view image thumbnail frame */
         .report-preview-img {
             width: 80px;
             height: 80px;
@@ -148,6 +153,7 @@
             <h2>E-Equipment Report</h2>
             
             <form id="eEquipmentReportForm">
+                
                 <h3 style="font-family: 'Kanit', sans-serif; font-style: italic; font-size: 1.2rem; color: var(--brand-magenta); margin-bottom: 12px; border-bottom: 2px dashed var(--border-color); padding-bottom: 4px; text-transform: uppercase;">Reporter Information</h3>
                 
                 <div class="input-group">
@@ -230,8 +236,7 @@
     </div>
 
     <script type="module">
-        // CHANGED: Added onSnapshot socket listener architecture hook
-        import { db, collection, doc, setDoc, query, where, onSnapshot } from "./firebase-config.js";
+        import { db, collection, doc, setDoc, onSnapshot, query, where } from "./firebase-config.js";
 
         const openMenuToggle = document.getElementById('openMenuToggle');
         const closeMenuToggle = document.getElementById('closeMenuToggle');
@@ -293,6 +298,7 @@
 
             clockHoursRaw = clockHoursRaw % 12;
             clockHoursRaw = clockHoursRaw ? clockHoursRaw : 12; 
+            
             const stringHoursNormalized = clockHoursRaw < 10 ? '0' + clockHoursRaw : clockHoursRaw;
             const stringMinutesNormalized = clockMinutesRaw < 10 ? '0' + clockMinutesRaw : clockMinutesRaw;
 
@@ -323,8 +329,8 @@
             }
         });
 
-        // CHANGED: Converted into an open continuous listening channel block
-        function startLiveFeedbackListener() {
+        // FIXED: Transitioned into dynamic onSnapshot stream mapping framework for real-time deck synchronization
+        function setupLiveFeedbackDeckListener() {
             const q = query(collection(db, "beats_reports"), where("submittedBy", "==", currentActiveIdentity));
             
             onSnapshot(q, (querySnapshot) => {
@@ -335,7 +341,8 @@
                     return;
                 }
 
-                let reportsSignatureBuilder = "";
+                let currentRepliedIds = [];
+                const activeClean = currentActiveIdentity.trim().toLowerCase();
 
                 querySnapshot.forEach((docSnapshot) => {
                     const item = docSnapshot.data();
@@ -344,7 +351,11 @@
                     
                     const statusBadgeClass = item.adminResponse ? 'status-replied' : 'status-pending';
                     const statusText = item.adminResponse ? 'Replied' : 'Pending';
-     
+       
+                    if (item.adminResponse && item.adminResponse.trim() !== "") {
+                        currentRepliedIds.push(docSnapshot.id);
+                    }
+
                     let responseSectionHTML = `
                         <div class="reply-text-wrapper" style="color: var(--text-secondary);">
                             ⏳ Awaiting feedback reply instructions from administration nodes...
@@ -354,15 +365,13 @@
                         responseSectionHTML = `
                             <div style="margin-top:10px; font-weight:bold; color:var(--brand-magenta);">💬 Admin Official Reply:</div>
                             <div class="reply-text-wrapper">${item.adminResponse}</div>`;
-                        
-                        reportsSignatureBuilder += `${docSnapshot.id}_${item.adminResponse.trim()}|`;
                     }
-     
+       
                     let imageThumbnailHTML = "";
                     if(item.imageAttachment) {
                         imageThumbnailHTML = `<br><img src="${item.imageAttachment}" class="report-preview-img" alt="Attachment Thumbnail">`;
                     }
-     
+       
                     bubble.innerHTML = `
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <strong>${item.eqModel}</strong>
@@ -380,12 +389,17 @@
                     userReportsFeedbackDeck.appendChild(bubble);
                 });
 
-                // Auto-save read footprints cleanly on live changes inside the open feedback view panel
-                if(reportsSignatureBuilder !== "") {
-                    localStorage.setItem('last_seen_reports_content', reportsSignatureBuilder);
-                }
+                // Auto-sync viewed states while the user reads feedback inside the active workspace container
+                const localHistoryCache = JSON.parse(localStorage.getItem(`read_reports_ids_${activeClean}`) || "[]");
+                currentRepliedIds.forEach(id => {
+                    if (!localHistoryCache.includes(id)) {
+                        localHistoryCache.push(id);
+                    }
+                });
+                localStorage.setItem(`read_reports_ids_${activeClean}`, JSON.stringify(localHistoryCache));
+
             }, (err) => {
-                console.error("Live Feedback Deck Error: ", err);
+                console.error("Firebase live feedback listener error:", err);
                 userReportsFeedbackDeck.innerHTML = `<p style="font-size:0.85rem; color:red; text-align:center; padding:10px;">Error syncing with cloud history module.</p>`;
             });
         }
@@ -431,20 +445,10 @@
             }
         });
 
+        // Initialization Routine Lifecycles
         configureRealtimeClockParameters();
-        startLiveFeedbackListener();
-        
-        logoutActionLink.addEventListener('click', () => {
-            const savedLogsBadge = localStorage.getItem('last_seen_logs_content');
-            const savedReportsBadge = localStorage.getItem('last_seen_reports_content');
-            const savedTheme = localStorage.getItem('theme');
-            
-            localStorage.clear();
-            
-            if(savedLogsBadge) localStorage.setItem('last_seen_logs_content', savedLogsBadge);
-            if(savedReportsBadge) localStorage.setItem('last_seen_reports_content', savedReportsBadge);
-            if(savedTheme) localStorage.setItem('theme', savedTheme);
-        });
+        setupLiveFeedbackDeckListener();
+        logoutActionLink.addEventListener('click', () => localStorage.removeItem('currentUser'));
     </script>
 </body>
 </html>
