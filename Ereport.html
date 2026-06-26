@@ -230,7 +230,8 @@
     </div>
 
     <script type="module">
-        import { db, collection, doc, setDoc, getDocs, query, where } from "./firebase-config.js";
+        // CHANGED: Added onSnapshot socket listener architecture hook
+        import { db, collection, doc, setDoc, query, where, onSnapshot } from "./firebase-config.js";
 
         const openMenuToggle = document.getElementById('openMenuToggle');
         const closeMenuToggle = document.getElementById('closeMenuToggle');
@@ -322,11 +323,12 @@
             }
         });
 
-        async function refreshFeedbackDeckDisplay() {
-            userReportsFeedbackDeck.innerHTML = '';
-            try {
-                const q = query(collection(db, "beats_reports"), where("submittedBy", "==", currentActiveIdentity));
-                const querySnapshot = await getDocs(q);
+        // CHANGED: Converted into an open continuous listening channel block
+        function startLiveFeedbackListener() {
+            const q = query(collection(db, "beats_reports"), where("submittedBy", "==", currentActiveIdentity));
+            
+            onSnapshot(q, (querySnapshot) => {
+                userReportsFeedbackDeck.innerHTML = '';
                 
                 if(querySnapshot.empty) {
                     userReportsFeedbackDeck.innerHTML = `<p style="font-size:0.85rem; color:var(--text-secondary); text-align:center; padding:10px;">No filed reports located for this account.</p>`;
@@ -378,14 +380,14 @@
                     userReportsFeedbackDeck.appendChild(bubble);
                 });
 
+                // Auto-save read footprints cleanly on live changes inside the open feedback view panel
                 if(reportsSignatureBuilder !== "") {
                     localStorage.setItem('last_seen_reports_content', reportsSignatureBuilder);
                 }
-
-            } catch (err) {
-                console.error("Firebase collection fetch failure:", err);
+            }, (err) => {
+                console.error("Live Feedback Deck Error: ", err);
                 userReportsFeedbackDeck.innerHTML = `<p style="font-size:0.85rem; color:red; text-align:center; padding:10px;">Error syncing with cloud history module.</p>`;
-            }
+            });
         }
 
         eEquipmentReportForm.addEventListener('submit', async (event) => {
@@ -422,7 +424,6 @@
                 base64ImageString = ""; 
                 configureRealtimeClockParameters();
                 fileNameDisplay.textContent = "No asset photo attached";
-                await refreshFeedbackDeckDisplay();
                 
             } catch (err) {
                 console.error("Cloud registration submission error:", err);
@@ -431,7 +432,7 @@
         });
 
         configureRealtimeClockParameters();
-        refreshFeedbackDeckDisplay();
+        startLiveFeedbackListener();
         
         logoutActionLink.addEventListener('click', () => {
             const savedLogsBadge = localStorage.getItem('last_seen_logs_content');
