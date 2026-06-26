@@ -1,503 +1,236 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>BEATS - Dashboard</title>
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
-
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:ital,wght@1,900&family=Kanit:ital,wght@1,900&display=swap" rel="stylesheet">
-
     <link rel="stylesheet" href="style.css">
-
     <style>
-
-        /* Red Notification Badge Dot over User Dashboard Menu Trigger Button */
-
-        .hamburger-btn.has-alert {
-
-            position: relative;
-
-        }
-
-        .hamburger-btn.has-alert::after {
-
-            content: '';
-
-            position: absolute;
-
-            top: -2px;
-
-            right: -4px;
-
-            width: 10px;
-
-            height: 10px;
-
-            background-color: #ff3366;
-
-            border-radius: 50%;
-
-            border: 2px solid var(--bg-container);
-
-        }
-
-
-
         /* Dynamic Main Dashboard Card Alert System */
-
         .feature-card {
-
             position: relative;
-
             user-select: none;
-
         }
-
         
-
         /* Circular red notification dot positioned explicitly on top-right corners of targeted cards */
-
         .card-alert-badge {
-
             position: absolute;
-
             top: 15px;
-
             right: 15px;
-
             width: 14px;
-
             height: 14px;
-
             background-color: #ff3366;
-
             border-radius: 50%;
-
             border: 2px solid #fff;
-
             box-shadow: 0 0 8px rgba(255, 51, 102, 0.8);
-
             display: none; 
-
             pointer-events: none; /* Clicks pass straight through to the card elements */
-
         }
-
     </style>
-
 </head>
-
 <body class="page-body-layout">
-
  
-
     <div class="menu-header-bar">
-
         <div class="left-nav-group">
-
             <button class="hamburger-btn" id="openMenuToggle">☰</button>
-
             <div class="user-greeting">Hi, <span id="displayUsername">User</span></div>
-
         </div>
-
         <div style="font-family: 'Kanit', sans-serif; font-weight: 900; color: #dc2b5c; font-size: 1.5rem; font-style: italic;">BEATS</div>
-
     </div>
-
  
-
     <div class="overlay-screen" id="menuOverlay"></div>
-
     <div class="nav-sidebar" id="sidebarDrawer">
-
         <button class="close-menu-btn" id="closeMenuToggle">✕</button>
-
         <div class="sidebar-links">
-
             <a href="dashboard.html" class="sidebar-view-trigger active">Dashboard</a>
-
             <a href="AboutMe.html">About me</a>
-
             <a href="SignIn.html" id="logoutActionLink" style="color: #ff4d4d; margin-top: 20px;">Logout</a>
-
         </div>
-
         
-
         <div class="theme-toggle-row">
-
             <span>Theme Mode</span>
-
             <button class="theme-switch-btn" id="themeSwitchTrigger">☀️ / 🌙</button>
-
         </div>
-
     </div>
-
  
-
     <div class="dashboard-view-wrapper">
-
         
-
         <div class="slider-container">
-
             <div class="slider-track">
-
                 <img src="image1.png" alt="Studio Space 1">
-
                 <img src="image2.png" alt="Recording Equipment 2">
-
                 <img src="image3.png" alt="Conti Live Room 3">
-
                 <img src="image4.png" alt="Office Desk 4">
-
             </div>
-
         </div>
-
  
-
         <h2 class="core-functions-headline">System Core Functions</h2>
-
  
-
         <div class="functions-grid">
-
             <div class="feature-card" onclick="handleSectionNavigation('logs', 'contiLog1.html')">
-
                 <span class="card-alert-badge" id="card-count-logs"></span>
-
                 <span class="card-icon">📻</span>
-
                 <h3>Conti Log</h3>
-
                 <p>Track daily on-air activities and programme updates.</p>
-
             </div>
-
  
-
             <div class="feature-card" onclick="window.location.href='contiBook.html'">
-
                 <span class="card-icon">📅</span>
-
                 <h3>Conti Booking</h3>
-
                 <p>Manage bookings for recordings and guest interviews.</p>
-
             </div>
-
  
-
             <div class="feature-card" onclick="handleSectionNavigation('reports', 'Ereport.html')">
-
                 <span class="card-alert-badge" id="card-count-reports"></span>
-
                 <span class="card-icon">🔧</span>
-
                 <h3>E-Equipment Report</h3>
-
                 <p>Report equipment issues, damage, or loss.</p>
-
             </div>
-
         </div>
-
  
-
         <footer>
-
             <p>© 2026 Stanislawa Stephen. All rights reserved.</p>
-
         </footer>
-
     </div>
-
  
-
     <script type="module">
-
         import { db, collection, getDocs } from "./firebase-config.js";
 
-
-
         const openMenuToggle = document.getElementById('openMenuToggle');
-
         const closeMenuToggle = document.getElementById('closeMenuToggle');
-
         const sidebarDrawer = document.getElementById('sidebarDrawer');
-
         const menuOverlay = document.getElementById('menuOverlay');
-
         const themeSwitchTrigger = document.getElementById('themeSwitchTrigger');
-
         const displayUsername = document.getElementById('displayUsername');
-
         const logoutActionLink = document.getElementById('logoutActionLink');
-
  
-
-        // Fallback user defaults if localStorage isn't populated
-
         const activeUser = localStorage.getItem('currentUser') || 'KLENG';
-
         displayUsername.textContent = activeUser;
-
  
-
         if(localStorage.getItem('theme') === 'dark') {
-
             document.documentElement.setAttribute('data-theme', 'dark');
-
         }
-
  
-
         function toggleSidebar(open) {
-
             if(open) {
-
                 sidebarDrawer.classList.add('open');
-
                 menuOverlay.classList.add('show');
-
             } else {
-
                 sidebarDrawer.classList.remove('open');
-
                 menuOverlay.classList.remove('show');
-
             }
-
         }
-
  
-
         openMenuToggle.addEventListener('click', () => toggleSidebar(true));
-
         closeMenuToggle.addEventListener('click', () => toggleSidebar(false));
-
         menuOverlay.addEventListener('click', () => toggleSidebar(false));
-
  
-
         themeSwitchTrigger.addEventListener('click', () => {
-
             if(document.documentElement.hasAttribute('data-theme')) {
-
                 document.documentElement.removeAttribute('data-theme');
-
                 localStorage.setItem('theme', 'light');
-
             } else {
-
                 document.documentElement.setAttribute('data-theme', 'dark');
-
                 localStorage.setItem('theme', 'dark');
-
             }
-
         });
-
  
-
         logoutActionLink.addEventListener('click', () => {
-
+            const savedLogsBadge = localStorage.getItem('last_seen_logs_content');
+            const savedReportsBadge = localStorage.getItem('last_seen_reports_content');
+            const savedTheme = localStorage.getItem('theme');
+            
             localStorage.clear();
-
+            
+            if(savedLogsBadge) localStorage.setItem('last_seen_logs_content', savedLogsBadge);
+            if(savedReportsBadge) localStorage.setItem('last_seen_reports_content', savedReportsBadge);
+            if(savedTheme) localStorage.setItem('theme', savedTheme);
         });
 
-
-
-        // ==========================================
-
-        //  DYNAMIC NOTIFICATION HANDLING ENGINE
-
-        // ==========================================
+        let dynamicCurrentLogsStringPool = "";
+        let dynamicCurrentReportsStringPool = "";
 
         async function fetchUserRepliesAndAlert() {
-
             try {
-
-                // Get clear states
-
-                const isLogsCleared = localStorage.getItem('read_logs_badge') === 'true';
-
-                const isReportsCleared = localStorage.getItem('read_reports_badge') === 'true';
-
-
-
                 let triggerLogsAlert = false;
-
                 let triggerReportsAlert = false;
 
-
-
                 const activeClean = activeUser.trim().toLowerCase();
-
                 console.log("--- BEATS Alert Engine Active ---");
 
-                console.log("Logged In User Key:", activeClean);
-
-
-
                 // 1. SCAN FOR ADMIN REMARKS IN CONTI LOGS
-
-                if (!isLogsCleared) {
-
-                    const sheetsSnapshot = await getDocs(collection(db, "beats_conti_sheets"));
-
-                    sheetsSnapshot.forEach(docSnap => {
-
-                        const data = docSnap.data();
-
-                        const sheetOwner = (data.metaPerson || "").trim().toLowerCase();
-
-                        
-
-                        if (sheetOwner === activeClean || activeClean === "master" || activeClean === "admin") {
-
-                            const rows = data.rows || [];
-
-                            const hasAdminRemark = rows.some(row => row.remarks && row.remarks.trim() !== "");
-
-                            
-
-                            if (hasAdminRemark) {
-
-                                triggerLogsAlert = true;
-
-                                console.log("Match Found in Conti Logs! Doc ID:", docSnap.id);
-
+                const sheetsSnapshot = await getDocs(collection(db, "beats_conti_sheets"));
+                let logsContentSignature = "";
+                
+                sheetsSnapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const sheetOwner = (data.metaPerson || "").trim().toLowerCase();
+                    
+                    if (sheetOwner === activeClean || activeClean === "master" || activeClean === "admin") {
+                        const rows = data.rows || [];
+                        rows.forEach(row => {
+                            if(row.remarks && row.remarks.trim() !== "") {
+                                logsContentSignature += `${docSnap.id}_${row.remarks.trim()}|`;
                             }
-
-                        }
-
-                    });
-
+                        });
+                    }
+                });
+                dynamicCurrentLogsStringPool = logsContentSignature;
+                
+                const lastSeenLogs = localStorage.getItem('last_seen_logs_content') || "";
+                if (dynamicCurrentLogsStringPool !== "" && dynamicCurrentLogsStringPool !== lastSeenLogs) {
+                    triggerLogsAlert = true;
                 }
-
-
 
                 // 2. SCAN FOR ADMIN RESPONSES IN EQUIPMENT REPORTS
-
-                if (!isReportsCleared) {
-
-                    const reportsSnapshot = await getDocs(collection(db, "beats_reports"));
-
-                    reportsSnapshot.forEach(docSnap => {
-
-                        const data = docSnap.data();
-
-                        const reporterClean = (data.reporter || "").trim().toLowerCase();
-
-                        
-
-                        if (reporterClean === activeClean || activeClean === "master" || activeClean === "admin") {
-
-                            if (data.adminResponse && data.adminResponse.trim() !== "") {
-
-                                triggerReportsAlert = true;
-
-                                console.log("Match Found in Equipment Reports! Doc ID:", docSnap.id);
-
-                            }
-
+                const reportsSnapshot = await getDocs(collection(db, "beats_reports"));
+                let reportsContentSignature = "";
+                
+                reportsSnapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const reporterClean = (data.submittedBy || data.reporter || "").trim().toLowerCase();
+                    
+                    if (reporterClean === activeClean || activeClean === "master" || activeClean === "admin") {
+                        if (data.adminResponse && data.adminResponse.trim() !== "") {
+                            reportsContentSignature += `${docSnap.id}_${data.adminResponse.trim()}|`;
                         }
-
-                    });
-
+                    }
+                });
+                dynamicCurrentReportsStringPool = reportsContentSignature;
+                
+                const lastSeenReports = localStorage.getItem('last_seen_reports_content') || "";
+                if (dynamicCurrentReportsStringPool !== "" && dynamicCurrentReportsStringPool !== lastSeenReports) {
+                    triggerReportsAlert = true;
                 }
-
-
-
-                // UI Elements Reference Mapping
 
                 const cardLogsBadge = document.getElementById('card-count-logs');
-
                 const cardReportsBadge = document.getElementById('card-count-reports');
 
-                const hamburgerBtn = document.getElementById('openMenuToggle');
-
-
-
-                // Render Changes to UI
-
                 if (cardLogsBadge) {
-
                     cardLogsBadge.style.display = triggerLogsAlert ? 'block' : 'none';
-
                 }
-
                 if (cardReportsBadge) {
-
                     cardReportsBadge.style.display = triggerReportsAlert ? 'block' : 'none';
-
                 }
-
-
-
-                // Top Hamburger Menu Alert Sync
-
-                if (triggerLogsAlert || triggerReportsAlert) {
-
-                    hamburgerBtn.classList.add('has-alert');
-
-                } else {
-
-                    hamburgerBtn.classList.remove('has-alert');
-
-                }
-
-
 
             } catch (err) {
-
                 console.error("Error running notification script processing loops: ", err);
-
             }
-
         }
 
-
-
-        // Action when standard interactive options are triggered by clicks
-
         window.handleSectionNavigation = function(type, targetUrl) {
-
             if (type === 'logs') {
-
-                localStorage.setItem('read_logs_badge', 'true');
-
+                localStorage.setItem('last_seen_logs_content', dynamicCurrentLogsStringPool);
             } else if (type === 'reports') {
-
-                localStorage.setItem('read_reports_badge', 'true');
-
+                localStorage.setItem('last_seen_reports_content', dynamicCurrentReportsStringPool);
             }
-
             window.location.href = targetUrl;
-
         };
 
-
-
-        // Initialize Engine
-
         window.addEventListener('DOMContentLoaded', fetchUserRepliesAndAlert);
-
     </script>
-
 </body>
-
 </html>
