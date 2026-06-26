@@ -97,7 +97,6 @@
     </div>
  
     <script type="module">
-        // CHANGED: Added onSnapshot for real-time live connection pipelines
         import { db, collection, onSnapshot } from "./firebase-config.js";
 
         const openMenuToggle = document.getElementById('openMenuToggle');
@@ -153,6 +152,16 @@
 
         let dynamicCurrentLogsStringPool = "";
         let dynamicCurrentReportsStringPool = "";
+
+        // FIXED: Explicitly attached navigation handling directly to global window reference inside module runtime
+        window.handleSectionNavigation = function(type, targetUrl) {
+            if (type === 'logs') {
+                localStorage.setItem('last_seen_logs_content', dynamicCurrentLogsStringPool);
+            } else if (type === 'reports') {
+                localStorage.setItem('last_seen_reports_content', dynamicCurrentReportsStringPool);
+            }
+            window.location.href = targetUrl;
+        };
 
         // ==========================================
         //  REAL-TIME AUTOMATED NOTIFICATION ENGINES
@@ -213,15 +222,6 @@
                 }
             }, (err) => console.error("Reports socket crash:", err));
         }
-
-        window.handleSectionNavigation = function(type, targetUrl) {
-            if (type === 'logs') {
-                localStorage.setItem('last_seen_logs_content', dynamicCurrentLogsStringPool);
-            } else if (type === 'reports') {
-                localStorage.setItem('last_seen_reports_content', dynamicCurrentReportsStringPool);
-            }
-            window.location.href = targetUrl;
-        };
 
         window.addEventListener('DOMContentLoaded', initRealtimeAlertListeners);
     </script>
