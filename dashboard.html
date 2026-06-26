@@ -97,7 +97,7 @@
     </div>
  
     <script type="module">
-        import { db, collection, getDocs } from "./firebase-config.js";
+        import { db, collection, onSnapshot } from "./firebase-config.js";
 
         const openMenuToggle = document.getElementById('openMenuToggle');
         const closeMenuToggle = document.getElementById('closeMenuToggle');
@@ -153,18 +153,16 @@
         let dynamicCurrentLogsStringPool = "";
         let dynamicCurrentReportsStringPool = "";
 
-        async function fetchUserRepliesAndAlert() {
-            try {
-                let triggerLogsAlert = false;
-                let triggerReportsAlert = false;
+        // Realtime sync handling function via Firebase Subscriptions
+        function structureRealtimeAlertEngine() {
+            const activeClean = activeUser.trim().toLowerCase();
+            console.log("--- BEATS Realtime Alert Engine Initialized ---");
 
-                const activeClean = activeUser.trim().toLowerCase();
-                console.log("--- BEATS Alert Engine Active ---");
-
-                // 1. SCAN FOR ADMIN REMARKS IN CONTI LOGS
-                const sheetsSnapshot = await getDocs(collection(db, "beats_conti_sheets"));
+            // Live Snapshot Tracking for Conti Log Sheets
+            onSnapshot(collection(db, "beats_conti_sheets"), (sheetsSnapshot) => {
                 let logsContentSignature = "";
-                
+                let triggerLogsAlert = false;
+
                 sheetsSnapshot.forEach(docSnap => {
                     const data = docSnap.data();
                     const sheetOwner = (data.metaPerson || "").trim().toLowerCase();
@@ -178,17 +176,26 @@
                         });
                     }
                 });
+
                 dynamicCurrentLogsStringPool = logsContentSignature;
-                
                 const lastSeenLogs = localStorage.getItem('last_seen_logs_content') || "";
                 if (dynamicCurrentLogsStringPool !== "" && dynamicCurrentLogsStringPool !== lastSeenLogs) {
                     triggerLogsAlert = true;
                 }
 
-                // 2. SCAN FOR ADMIN RESPONSES IN EQUIPMENT REPORTS
-                const reportsSnapshot = await getDocs(collection(db, "beats_reports"));
+                const cardLogsBadge = document.getElementById('card-count-logs');
+                if (cardLogsBadge) {
+                    cardLogsBadge.style.display = triggerLogsAlert ? 'block' : 'none';
+                }
+            }, (err) => {
+                console.error("Live syncing failed for logs snapshot: ", err);
+            });
+
+            // Live Snapshot Tracking for Equipment Reports
+            onSnapshot(collection(db, "beats_reports"), (reportsSnapshot) => {
                 let reportsContentSignature = "";
-                
+                let triggerReportsAlert = false;
+
                 reportsSnapshot.forEach(docSnap => {
                     const data = docSnap.data();
                     const reporterClean = (data.submittedBy || data.reporter || "").trim().toLowerCase();
@@ -199,26 +206,20 @@
                         }
                     }
                 });
+
                 dynamicCurrentReportsStringPool = reportsContentSignature;
-                
                 const lastSeenReports = localStorage.getItem('last_seen_reports_content') || "";
                 if (dynamicCurrentReportsStringPool !== "" && dynamicCurrentReportsStringPool !== lastSeenReports) {
                     triggerReportsAlert = true;
                 }
 
-                const cardLogsBadge = document.getElementById('card-count-logs');
                 const cardReportsBadge = document.getElementById('card-count-reports');
-
-                if (cardLogsBadge) {
-                    cardLogsBadge.style.display = triggerLogsAlert ? 'block' : 'none';
-                }
                 if (cardReportsBadge) {
                     cardReportsBadge.style.display = triggerReportsAlert ? 'block' : 'none';
                 }
-
-            } catch (err) {
-                console.error("Error running notification script processing loops: ", err);
-            }
+            }, (err) => {
+                console.error("Live syncing failed for reports snapshot: ", err);
+            });
         }
 
         window.handleSectionNavigation = function(type, targetUrl) {
@@ -230,7 +231,7 @@
             window.location.href = targetUrl;
         };
 
-        window.addEventListener('DOMContentLoaded', fetchUserRepliesAndAlert);
+        window.addEventListener('DOMContentLoaded', structureRealtimeAlertEngine);
     </script>
 </body>
 </html>
