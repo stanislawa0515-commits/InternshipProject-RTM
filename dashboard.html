@@ -70,7 +70,6 @@
         <h2 class="core-functions-headline">System Core Functions</h2>
  
         <div class="functions-grid">
-            <!-- Removed the inline onclick handlers to let modern event listeners handle navigation safely -->
             <div class="feature-card" id="cardContiLogs">
                 <span class="card-alert-badge" id="card-count-logs"></span>
                 <span class="card-icon">📻</span>
@@ -108,13 +107,12 @@
         const displayUsername = document.getElementById('displayUsername');
         const logoutActionLink = document.getElementById('logoutActionLink');
         
-        // Element references for your dashboard system function cards
         const cardContiLogs = document.getElementById('cardContiLogs');
         const cardContiBooking = document.getElementById('cardContiBooking');
         const cardEquipmentReport = document.getElementById('cardEquipmentReport');
  
-        // Fallback checks for pulling the active logged-in identifier
-        const activeUser = localStorage.getItem('currentUser') || 'Guest';
+        // FIX: Check both 'username' and 'currentUser' so that your registration key is pulled correctly
+        const activeUser = localStorage.getItem('username') || localStorage.getItem('currentUser') || 'User';
         displayUsername.textContent = activeUser;
  
         if(localStorage.getItem('theme') === 'dark') {
@@ -160,12 +158,10 @@
         let dynamicCurrentLogsStringPool = "";
         let dynamicCurrentReportsStringPool = "";
 
-        // Realtime sync handling function via Firebase Subscriptions
         function structureRealtimeAlertEngine() {
             const activeClean = activeUser.trim().toLowerCase();
             console.log("--- BEATS Realtime Alert Engine Initialized ---");
 
-            // Live Snapshot Tracking for Conti Log Sheets
             onSnapshot(collection(db, "beats_conti_sheets"), (sheetsSnapshot) => {
                 let logsContentSignature = "";
                 let triggerLogsAlert = false;
@@ -198,7 +194,6 @@
                 console.error("Live syncing failed for logs snapshot: ", err);
             });
 
-            // Live Snapshot Tracking for Equipment Reports
             onSnapshot(collection(db, "beats_reports"), (reportsSnapshot) => {
                 let reportsContentSignature = "";
                 let triggerReportsAlert = false;
@@ -229,7 +224,6 @@
             });
         }
 
-        // Clean internal helper for page transitions and persistent badge syncing
         function handleSectionNavigation(type, targetUrl) {
             if (type === 'logs') {
                 localStorage.setItem('last_seen_logs_content', dynamicCurrentLogsStringPool);
@@ -239,7 +233,7 @@
             window.location.href = targetUrl;
         }
 
-        // Explicit JavaScript Event Listeners mapped to clear module isolation problems
+        // Setup the modern event listeners to bypass the module isolation block
         if (cardContiLogs) {
             cardContiLogs.addEventListener('click', () => handleSectionNavigation('logs', 'contiLog1.html'));
         }
@@ -252,7 +246,7 @@
             cardEquipmentReport.addEventListener('click', () => handleSectionNavigation('reports', 'Ereport.html'));
         }
 
-        window.addEventListener('DOMContentLoaded', structureRealtimeAlertEngine);
+        structureRealtimeAlertEngine();
     </script>
 </body>
 </html>
