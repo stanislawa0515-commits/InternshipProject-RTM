@@ -98,9 +98,22 @@
     </div>
  
     <script type="module">
-        // Global variables attached safely to window straight away so clicks never freeze
+        // 1. MUST BE FIRST: Import Firebase configuration elements cleanly via static targets
+        import { db, collection, onSnapshot } from "./firebase-config.js";
+
+        // 2. Set up global session parameters and identity values immediately
+        const activeUser = localStorage.getItem('currentUser') || 'KLENG';
+        const displayUsername = document.getElementById('displayUsername');
+        
+        if (displayUsername) {
+            displayUsername.textContent = activeUser;
+        }
+
+        // Global array memory tracking for active unread administrative updates
+        let currentRepliedReportIds = [];
+
+        // 3. Bind UI routing commands explicitly onto global window scope
         window.handleSectionNavigation = function(type, targetUrl) {
-            const activeUser = localStorage.getItem('currentUser') || 'KLENG';
             const activeClean = activeUser.trim().toLowerCase();
             if (type === 'reports') {
                 localStorage.setItem(`read_reports_ids_${activeClean}`, JSON.stringify(currentRepliedReportIds));
@@ -108,32 +121,13 @@
             window.location.href = targetUrl;
         };
 
-        let currentRepliedReportIds = [];
-
-        // Safe import structure to catch missing database configs cleanly
-        let db, collection, onSnapshot;
-        try {
-            const firebaseModule = await import("./firebase-config.js");
-            db = firebaseModule.db;
-            collection = firebaseModule.collection;
-            onSnapshot = firebaseModule.onSnapshot;
-        } catch (e) {
-            console.error("Critical: Could not load firebase-config.js paths context wrapper.", e);
-        }
-
+        // 4. Initialize standard layout elements
         const openMenuToggle = document.getElementById('openMenuToggle');
         const closeMenuToggle = document.getElementById('closeMenuToggle');
         const sidebarDrawer = document.getElementById('sidebarDrawer');
         const menuOverlay = document.getElementById('menuOverlay');
         const themeSwitchTrigger = document.getElementById('themeSwitchTrigger');
-        const displayUsername = document.getElementById('displayUsername');
         const logoutActionLink = document.getElementById('logoutActionLink');
- 
-        // Sync Identity Framework parameters immediately
-        const activeUser = localStorage.getItem('currentUser') || 'KLENG';
-        if (displayUsername) {
-            displayUsername.textContent = activeUser;
-        }
  
         if(localStorage.getItem('theme') === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
@@ -167,15 +161,12 @@
             localStorage.removeItem('currentUser');
         });
 
-        // Safe isolated invocation loop for database subscriptions
+        // 5. Setup automated background update syncing system nodes
         function setupRealtimeNotificationEngine() {
-            if (!db || !collection || !onSnapshot) {
-                console.warn("Notification Engine Aborted: Firebase parameters are unavailable.");
-                return;
-            }
-
             const activeClean = activeUser.trim().toLowerCase();
             const cardReportsBadge = document.getElementById('card-count-reports');
+
+            console.log("--- BEATS Dynamic Notification Engine Online ---");
 
             onSnapshot(collection(db, "beats_reports"), (snapshot) => {
                 let triggerReportsAlert = false;
@@ -194,6 +185,7 @@
                 });
 
                 currentRepliedReportIds = activeRepliedList;
+
                 const readReportsCache = JSON.parse(localStorage.getItem(`read_reports_ids_${activeClean}`) || "[]");
                 const hasNewUnreadReplies = activeRepliedList.some(id => !readReportsCache.includes(id));
 
