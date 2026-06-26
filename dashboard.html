@@ -98,21 +98,19 @@
     </div>
  
     <script type="module">
-        // 1. MUST BE FIRST: Import Firebase configuration elements cleanly via static targets
+        // 1. Static imports resolve the MIME-type security blockages on GitHub Pages
         import { db, collection, onSnapshot } from "./firebase-config.js";
 
-        // 2. Set up global session parameters and identity values immediately
+        // 2. Set username straight away so fallback values update immediately
         const activeUser = localStorage.getItem('currentUser') || 'KLENG';
         const displayUsername = document.getElementById('displayUsername');
-        
         if (displayUsername) {
             displayUsername.textContent = activeUser;
         }
 
-        // Global array memory tracking for active unread administrative updates
         let currentRepliedReportIds = [];
 
-        // 3. Bind UI routing commands explicitly onto global window scope
+        // 3. Bind navigation commands to the window object explicitly
         window.handleSectionNavigation = function(type, targetUrl) {
             const activeClean = activeUser.trim().toLowerCase();
             if (type === 'reports') {
@@ -121,7 +119,7 @@
             window.location.href = targetUrl;
         };
 
-        // 4. Initialize standard layout elements
+        // 4. Attach standard interactive UI DOM listeners
         const openMenuToggle = document.getElementById('openMenuToggle');
         const closeMenuToggle = document.getElementById('closeMenuToggle');
         const sidebarDrawer = document.getElementById('sidebarDrawer');
@@ -161,7 +159,7 @@
             localStorage.removeItem('currentUser');
         });
 
-        // 5. Setup automated background update syncing system nodes
+        // 5. Run the background update scanning processes
         function setupRealtimeNotificationEngine() {
             const activeClean = activeUser.trim().toLowerCase();
             const cardReportsBadge = document.getElementById('card-count-reports');
