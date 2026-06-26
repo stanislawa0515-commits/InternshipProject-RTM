@@ -114,6 +114,7 @@
             document.documentElement.setAttribute('data-theme', 'dark');
         }
  
+        // Sidebar Canvas Interaction Logic
         function toggleSidebar(open) {
             if(open) {
                 sidebarDrawer.classList.add('open');
@@ -153,7 +154,7 @@
         let dynamicCurrentLogsStringPool = "";
         let dynamicCurrentReportsStringPool = "";
 
-        // FIXED: Explicitly attached navigation handling directly to global window reference inside module runtime
+        // FIXED: Exposed navigation controls securely to window element from module pipeline mapping
         window.handleSectionNavigation = function(type, targetUrl) {
             if (type === 'logs') {
                 localStorage.setItem('last_seen_logs_content', dynamicCurrentLogsStringPool);
