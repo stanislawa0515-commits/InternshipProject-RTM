@@ -1,454 +1,2351 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>BEATS - E-Equipment Report</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
+
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:ital,wght@1,900&family=Kanit:ital,wght@1,900&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="style.css">
+
     <style>
+
         /* Strict alignment of form typography variables */
+
         .form-box input, 
+
         .form-box select, 
+
         .form-box textarea,
+
         .form-box label,
+
         .checkbox-container span {
+
             font-family: 'Fredoka', sans-serif !important;
+
         }
+
         
+
         .form-box h2 {
+
             font-family: 'Kanit', sans-serif !important;
+
             font-style: italic;
+
         }
+
+
 
         /* Checkbox Layout Architecture Modifications */
+
         .checkbox-group-row {
+
             display: flex;
+
             align-items: center;
+
             gap: 24px;
+
             margin-top: 8px;
+
             margin-bottom: 4px;
+
         }
+
+
 
         .checkbox-container {
+
             display: flex;
+
             align-items: center;
+
             gap: 8px;
+
             cursor: pointer;
+
             font-size: 1rem;
+
             font-weight: bold;
+
         }
+
+
 
         .checkbox-container input[type="checkbox"] {
+
             width: 20px;
+
             height: 20px;
+
             cursor: pointer;
+
             accent-color: var(--brand-cyan);
+
         }
+
+
 
         /* Custom File Upload Button Styling Layer */
+
         .file-upload-wrapper {
+
             display: flex;
+
             flex-direction: column;
+
             gap: 8px;
+
             margin-bottom: 18px;
+
         }
+
+
 
         .file-upload-btn-label {
+
             display: inline-block;
+
             width: fit-content;
+
             background-color: var(--bg-input);
+
             color: var(--text-primary);
+
             border: 2px dashed var(--stroke-dark);
+
             padding: 10px 20px;
+
             border-radius: 8px;
+
             font-weight: bold;
+
             cursor: pointer;
+
             transition: background-color 0.2s, transform 0.1s;
+
             text-align: center;
+
         }
+
+
 
         .file-upload-btn-label:hover {
+
             background-color: var(--border-color);
+
         }
+
+
 
         .file-upload-wrapper input[type="file"] {
+
             display: none;
+
         }
+
+
 
         .file-name-span {
+
             font-size: 0.85rem;
+
             color: var(--brand-cyan);
+
             font-weight: bold;
+
             word-break: break-all;
+
         }
+
+
 
         /* Admin Response History Deck Layout styles */
+
         .history-deck-container {
+
             margin-top: 25px;
+
             border-top: 2px dashed var(--border-color);
+
             padding-top: 20px;
+
             width: 100%;
+
         }
+
+
 
         .admin-reply-bubble {
+
             background-color: var(--bg-container);
+
             border: 2px solid var(--stroke-dark);
+
             border-radius: 8px;
+
             padding: 12px;
+
             margin-top: 8px;
+
             font-size: 0.9rem;
+
         }
+
+
 
         .reply-text-wrapper {
+
             margin-top: 8px;
+
             padding: 8px 12px;
+
             background-color: var(--bg-input);
+
             border-left: 4px solid var(--brand-cyan);
+
             border-radius: 4px;
+
             font-style: italic;
+
             color: var(--text-primary);
+
         }
+
+
 
         /* User history view image thumbnail frame */
+
         .report-preview-img {
+
             width: 80px;
+
             height: 80px;
+
             object-fit: cover;
+
             border-radius: 6px;
+
             border: 2px solid var(--stroke-dark);
+
             margin-top: 8px;
+
             display: block;
+
         }
+
     </style>
+
 </head>
+
 <body class="page-body-layout">
 
+
+
     <div class="menu-header-bar">
+
         <div class="left-nav-group">
+
             <button class="hamburger-btn" id="openMenuToggle">☰</button>
+
             <div class="user-greeting">Hi, <span id="displayUsername">User</span></div>
+
         </div>
+
         <div style="font-family: 'Kanit', sans-serif; font-weight: 900; color: #dc2b5c; font-size: 1.5rem; font-style: italic;">BEATS</div>
+
     </div>
+
+
 
     <div class="overlay-screen" id="menuOverlay"></div>
+
     <div class="nav-sidebar" id="sidebarDrawer">
+
         <button class="close-menu-btn" id="closeMenuToggle">✕</button>
+
         <div class="sidebar-links">
+
             <a href="dashboard.html">Dashboard</a>
+
             <a href="AboutMe.html">About me</a>
+
             <a href="SignIn.html" id="logoutActionLink" style="color: #ff4d4d; margin-top: 20px;">Logout</a>
+
         </div>
+
         <div class="theme-toggle-row">
+
             <span>Theme Mode</span>
+
             <button class="theme-switch-btn" id="themeSwitchTrigger">☀️ / 🌙</button>
+
         </div>
+
     </div>
 
+
+
     <div class="app-container" style="max-width: 550px; margin-top: 20px;">
+
         <div class="form-box">
+
             <h2>E-Equipment Report</h2>
+
             
+
             <form id="eEquipmentReportForm">
+
                 
+
                 <h3 style="font-family: 'Kanit', sans-serif; font-style: italic; font-size: 1.2rem; color: var(--brand-magenta); margin-bottom: 12px; border-bottom: 2px dashed var(--border-color); padding-bottom: 4px; text-transform: uppercase;">Reporter Information</h3>
+
                 
+
                 <div class="input-group">
+
                     <label for="reporterName">Name of Reporter :</label>
+
                     <input type="text" id="reporterName" placeholder="Enter your full name" required>
+
                 </div>
 
+
+
                 <div class="input-group">
+
                     <label for="reporterDepartment">Department :</label>
+
                     <input type="text" id="reporterDepartment" placeholder="Enter department name" required>
+
                 </div>
 
+
+
                 <div class="input-group">
+
                     <label for="reportDate">Date :</label>
+
                     <input type="date" id="reportDate" required>
+
                 </div>
 
+
+
                 <div class="input-group">
+
                     <label for="reportTime">Time :</label>
+
                     <input type="text" id="reportTime" readonly style="background-color: var(--border-color); cursor: not-allowed; font-weight: bold;">
+
                 </div>
+
+
 
                 <h3 style="font-family: 'Kanit', sans-serif; font-style: italic; font-size: 1.2rem; color: var(--brand-magenta); margin-top: 24px; margin-bottom: 12px; border-bottom: 2px dashed var(--border-color); padding-bottom: 4px; text-transform: uppercase;">Equipment Details</h3>
 
+
+
                 <div class="input-group">
+
                     <label for="equipmentType">Equipment Type :</label>
+
                     <input type="text" id="equipmentType" placeholder="e.g., Audio Mixer, Microphone" required>
+
                 </div>
 
+
+
                 <div class="input-group">
+
                     <label for="equipmentModel">Equipment Name / Model :</label>
+
                     <input type="text" id="equipmentModel" placeholder="e.g., Shure SM58" required>
+
                 </div>
 
+
+
                 <div class="input-group">
+
                     <label for="serialNumber">Serial Number / Asset Tag :</label>
+
                     <input type="text" id="serialNumber" placeholder="Enter asset tag code" required>
+
                 </div>
+
+
 
                 <h3 style="font-family: 'Kanit', sans-serif; font-style: italic; font-size: 1.2rem; color: var(--brand-magenta); margin-top: 24px; margin-bottom: 12px; border-bottom: 2px dashed var(--border-color); padding-bottom: 4px; text-transform: uppercase;">Issue Description</h3>
 
-                <div class="input-group">
-                    <label>Reporting Type :</label>
-                    <div class="checkbox-group-row">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="typeDamage" class="report-type-checkbox" value="Damage">
-                            <span>Damage</span>
-                        </label>
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="typeLoss" class="report-type-checkbox" value="Loss">
-                            <span>Loss</span>
-                        </label>
-                    </div>
-                </div>
+
 
                 <div class="input-group">
-                    <label for="detailedDescription">Detailed Description :</label>
-                    <textarea id="detailedDescription" rows="5" placeholder="Provide complete structural mapping observations regarding the hardware failure or missing conditions..." required></textarea>
+
+                    <label>Reporting Type :</label>
+
+                    <div class="checkbox-group-row">
+
+                        <label class="checkbox-container">
+
+                            <input type="checkbox" id="typeDamage" class="report-type-checkbox" value="Damage">
+
+                            <span>Damage</span>
+
+                        </label>
+
+                        <label class="checkbox-container">
+
+                            <input type="checkbox" id="typeLoss" class="report-type-checkbox" value="Loss">
+
+                            <span>Loss</span>
+
+                        </label>
+
+                    </div>
+
                 </div>
+
+
+
+                <div class="input-group">
+
+                    <label for="detailedDescription">Detailed Description :</label>
+
+                    <textarea id="detailedDescription" rows="5" placeholder="Provide complete structural mapping observations regarding the hardware failure or missing conditions..." required></textarea>
+
+                </div>
+
+
 
                 <div class="file-upload-wrapper">
+
                     <label>Attachment Photo :</label>
+
                     <label for="fileUploadInput" class="file-upload-btn-label">File upload</label>
+
                     <input type="file" id="fileUploadInput" accept="image/*">
+
                     <span class="file-name-span" id="fileNameDisplay">No asset photo attached</span>
+
                 </div>
 
+
+
                 <button type="submit" class="btn" style="margin-top: 15px;">Submit Report</button>
+
             </form>
 
+
+
             <div class="history-deck-container">
+
                 <div class="widget-title" style="color: var(--brand-cyan);">My Reports Feedback History</div>
+
                 <div id="userReportsFeedbackDeck"></div>
+
             </div>
+
         </div>
 
+
+
         <footer>
+
             <p>© 2026 Stanislawa Stephen. All rights reserved.</p>
+
         </footer>
+
     </div>
 
+
+
     <script type="module">
-        import { db, collection, doc, setDoc, onSnapshot, query, where } from "./firebase-config.js";
+
+        import { db, collection, doc, setDoc, getDocs, query, where } from "./firebase-config.js";
+
+
 
         const openMenuToggle = document.getElementById('openMenuToggle');
+
         const closeMenuToggle = document.getElementById('closeMenuToggle');
+
         const sidebarDrawer = document.getElementById('sidebarDrawer');
+
         const menuOverlay = document.getElementById('menuOverlay');
+
         const themeSwitchTrigger = document.getElementById('themeSwitchTrigger');
+
         const displayUsername = document.getElementById('displayUsername');
+
         const logoutActionLink = document.getElementById('logoutActionLink');
 
+
+
+        // Dynamic Input Form Reference Points
+
         const reportDateInput = document.getElementById('reportDate');
+
         const reportTimeInput = document.getElementById('reportTime');
+
         const fileUploadInput = document.getElementById('fileUploadInput');
+
         const fileNameDisplay = document.getElementById('fileNameDisplay');
+
         const typeDamageCheckbox = document.getElementById('typeDamage');
+
         const typeLossCheckbox = document.getElementById('typeLoss');
+
         const eEquipmentReportForm = document.getElementById('eEquipmentReportForm');
+
         const userReportsFeedbackDeck = document.getElementById('userReportsFeedbackDeck');
 
-        let base64ImageString = ""; 
+
+
+        let base64ImageString = ""; // Stores converted image string matrix
+
+
+
+        // Identity Configuration Setup
 
         const currentActiveIdentity = localStorage.getItem('currentUser') || 'Guest';
+
         displayUsername.textContent = currentActiveIdentity;
 
+
+
+        // Theme Initialization Context Syncing
+
         if(localStorage.getItem('theme') === 'dark') { 
+
             document.documentElement.setAttribute('data-theme', 'dark'); 
+
         }
+
+
+
+        // Global Sidebar Canvas Drawer Animation Routines
 
         function toggleSidebar(open) {
+
             if(open) { 
+
                 sidebarDrawer.classList.add('open'); 
+
                 menuOverlay.classList.add('show'); 
+
             } else { 
+
                 sidebarDrawer.classList.remove('open'); 
+
                 menuOverlay.classList.remove('show'); 
+
             }
+
         }
+
         openMenuToggle.addEventListener('click', () => toggleSidebar(true));
+
         closeMenuToggle.addEventListener('click', () => toggleSidebar(false));
+
         menuOverlay.addEventListener('click', () => toggleSidebar(false));
 
+
+
+        // Global Application Context Mode Mutator Switching Node Actions
+
         themeSwitchTrigger.addEventListener('click', () => {
+
             if(document.documentElement.hasAttribute('data-theme')) {
+
                 document.documentElement.removeAttribute('data-theme');
+
                 localStorage.setItem('theme', 'light');
+
             } else {
+
                 document.documentElement.setAttribute('data-theme', 'dark');
+
                 localStorage.setItem('theme', 'dark');
+
             }
+
         });
+
+
+
+        // Real-time Automated Time Evaluation Synchronization Subsystems
 
         function configureRealtimeClockParameters() {
+
             const dateInstance = new Date();
+
+            
+
             const formattedISODateString = dateInstance.toISOString().split('T')[0];
+
             reportDateInput.value = formattedISODateString;
 
+
+
             let clockHoursRaw = dateInstance.getHours();
+
             let clockMinutesRaw = dateInstance.getMinutes();
+
             const periodIndicatorAMPM = clockHoursRaw >= 12 ? 'p.m' : 'a.m';
 
+
+
             clockHoursRaw = clockHoursRaw % 12;
+
             clockHoursRaw = clockHoursRaw ? clockHoursRaw : 12; 
+
             
+
             const stringHoursNormalized = clockHoursRaw < 10 ? '0' + clockHoursRaw : clockHoursRaw;
+
             const stringMinutesNormalized = clockMinutesRaw < 10 ? '0' + clockMinutesRaw : clockMinutesRaw;
 
+
+
             reportTimeInput.value = `${stringHoursNormalized}:${stringMinutesNormalized} ${periodIndicatorAMPM}`;
+
         }
+
+
+
+        // Checkbox Enforced Validation: Mutual Exclusive Checkbox Selections Handling
 
         typeDamageCheckbox.addEventListener('change', () => {
+
             if(typeDamageCheckbox.checked) typeLossCheckbox.checked = false;
+
         });
+
+
 
         typeLossCheckbox.addEventListener('change', () => {
+
             if(typeLossCheckbox.checked) typeDamageCheckbox.checked = false;
+
         });
+
+
+
+        // Dynamic Attachment Conversion Engine Configuration Hook
 
         fileUploadInput.addEventListener('change', (e) => {
+
             if(e.target.files.length > 0) {
+
                 const targetFile = e.target.files[0];
+
                 fileNameDisplay.textContent = `📎 Attached: ${targetFile.name}`;
+
                 
+
+                // Read local file input matrix and serialize into text
+
                 const reader = new FileReader();
+
                 reader.onload = function(event) {
+
                     base64ImageString = event.target.result; 
+
                 };
+
                 reader.readAsDataURL(targetFile);
+
             } else {
+
                 fileNameDisplay.textContent = "No asset photo attached";
+
                 base64ImageString = "";
+
             }
+
         });
 
-        // FIXED: Transitioned into dynamic onSnapshot stream mapping framework for real-time deck synchronization
-        function setupLiveFeedbackDeckListener() {
-            const q = query(collection(db, "beats_reports"), where("submittedBy", "==", currentActiveIdentity));
-            
-            onSnapshot(q, (querySnapshot) => {
-                userReportsFeedbackDeck.innerHTML = '';
-                
-                if(querySnapshot.empty) {
-                    userReportsFeedbackDeck.innerHTML = `<p style="font-size:0.85rem; color:var(--text-secondary); text-align:center; padding:10px;">No filed reports located for this account.</p>`;
-                    return;
-                }
 
-                let currentRepliedIds = [];
-                const activeClean = currentActiveIdentity.trim().toLowerCase();
 
-                querySnapshot.forEach((docSnapshot) => {
-                    const item = docSnapshot.data();
-                    const bubble = document.createElement('div');
-                    bubble.className = "admin-reply-bubble";
-                    
-                    const statusBadgeClass = item.adminResponse ? 'status-replied' : 'status-pending';
-                    const statusText = item.adminResponse ? 'Replied' : 'Pending';
-       
-                    if (item.adminResponse && item.adminResponse.trim() !== "") {
-                        currentRepliedIds.push(docSnapshot.id);
-                    }
+        // READ & DISPLAY ADMIN REPLIES FILTERED BY ACTIVE USER (CLOUD INTERFACE)
 
-                    let responseSectionHTML = `
-                        <div class="reply-text-wrapper" style="color: var(--text-secondary);">
-                            ⏳ Awaiting feedback reply instructions from administration nodes...
-                        </div>`;
-                        
-                    if(item.adminResponse) {
-                        responseSectionHTML = `
-                            <div style="margin-top:10px; font-weight:bold; color:var(--brand-magenta);">💬 Admin Official Reply:</div>
-                            <div class="reply-text-wrapper">${item.adminResponse}</div>`;
-                    }
-       
-                    let imageThumbnailHTML = "";
-                    if(item.imageAttachment) {
-                        imageThumbnailHTML = `<br><img src="${item.imageAttachment}" class="report-preview-img" alt="Attachment Thumbnail">`;
-                    }
-       
-                    bubble.innerHTML = `
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <strong>${item.eqModel}</strong>
-                            <span class="status-badge ${statusBadgeClass}">${statusText}</span>
-                        </div>
-                        <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:2px;">
-                            Tag: ${item.serialNo} | Type: ${item.issueType} | Filed: ${item.date}
-                        </div>
-                        <div style="font-size:0.85rem; margin-top:6px; color: var(--text-primary);">
-                            <strong>Issue Detail:</strong> ${item.description}
-                        </div>
-                        ${imageThumbnailHTML}
-                        ${responseSectionHTML}
-                    `;
-                    userReportsFeedbackDeck.appendChild(bubble);
-                });
+        async function refreshFeedbackDeckDisplay() {
 
-                // Auto-sync viewed states while the user reads feedback inside the active workspace container
-                const localHistoryCache = JSON.parse(localStorage.getItem(`read_reports_ids_${activeClean}`) || "[]");
-                currentRepliedIds.forEach(id => {
-                    if (!localHistoryCache.includes(id)) {
-                        localHistoryCache.push(id);
-                    }
-                });
-                localStorage.setItem(`read_reports_ids_${activeClean}`, JSON.stringify(localHistoryCache));
-
-            }, (err) => {
-                console.error("Firebase live feedback listener error:", err);
-                userReportsFeedbackDeck.innerHTML = `<p style="font-size:0.85rem; color:red; text-align:center; padding:10px;">Error syncing with cloud history module.</p>`;
-            });
-        }
-
-        eEquipmentReportForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-
-            if(!typeDamageCheckbox.checked && !typeLossCheckbox.checked) {
-                alert("Validation Failure: Please flag the appropriate option within the Reporting Type section (Damage / Loss).");
-                return;
-            }
-
-            const chosenReportType = typeDamageCheckbox.checked ? 'Damage' : 'Loss';
-            const generatedId = 'REP_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+            userReportsFeedbackDeck.innerHTML = '';
 
             try {
-                await setDoc(doc(db, "beats_reports", generatedId), {
-                    id: generatedId,
-                    reporter: document.getElementById('reporterName').value.trim(),
-                    department: document.getElementById('reporterDepartment').value.trim(),
-                    date: reportDateInput.value,
-                    time: reportTimeInput.value,
-                    eqType: document.getElementById('equipmentType').value.trim(),
-                    eqModel: document.getElementById('equipmentModel').value.trim(),
-                    serialNo: document.getElementById('serialNumber').value.trim(),
-                    issueType: chosenReportType,
-                    description: document.getElementById('detailedDescription').value.trim(),
-                    submittedBy: currentActiveIdentity,
-                    adminResponse: "",
-                    imageAttachment: base64ImageString 
+
+                // Fetch reports explicitly scoped onto signed in profile identities
+
+                const q = query(collection(db, "beats_reports"), where("submittedBy", "==", currentActiveIdentity));
+
+                const querySnapshot = await getDocs(q);
+
+                
+
+                if(querySnapshot.empty) {
+
+                    userReportsFeedbackDeck.innerHTML = `<p style="font-size:0.85rem; color:var(--text-secondary); text-align:center; padding:10px;">No filed reports located for this account.</p>`;
+
+                    return;
+
+                }
+
+
+
+                querySnapshot.forEach((docSnapshot) => {
+
+                    const item = docSnapshot.data();
+
+                    const bubble = document.createElement('div');
+
+                    bubble.className = "admin-reply-bubble";
+
+                    
+
+                    const statusBadgeClass = item.adminResponse ? 'status-replied' : 'status-pending';
+
+                    const statusText = item.adminResponse ? 'Replied' : 'Pending';
+
+     
+
+                    let responseSectionHTML = `
+
+                        <div class="reply-text-wrapper" style="color: var(--text-secondary);">
+
+                            ⏳ Awaiting feedback reply instructions from administration nodes...
+
+                        </div>`;
+
+                        
+
+                    if(item.adminResponse) {
+
+                        responseSectionHTML = `
+
+                            <div style="margin-top:10px; font-weight:bold; color:var(--brand-magenta);">💬 Admin Official Reply:</div>
+
+                            <div class="reply-text-wrapper">${item.adminResponse}</div>`;
+
+                    }
+
+     
+
+                    let imageThumbnailHTML = "";
+
+                    if(item.imageAttachment) {
+
+                        imageThumbnailHTML = `<br><img src="${item.imageAttachment}" class="report-preview-img" alt="Attachment Thumbnail">`;
+
+                    }
+
+     
+
+                    bubble.innerHTML = `
+
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+
+                            <strong>${item.eqModel}</strong>
+
+                            <span class="status-badge ${statusBadgeClass}">${statusText}</span>
+
+                        </div>
+
+                        <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:2px;">
+
+                            Tag: ${item.serialNo} | Type: ${item.issueType} | Filed: ${item.date}
+
+                        </div>
+
+                        <div style="font-size:0.85rem; margin-top:6px; color: var(--text-primary);">
+
+                            <strong>Issue Detail:</strong> ${item.description}
+
+                        </div>
+
+                        ${imageThumbnailHTML}
+
+                        ${responseSectionHTML}
+
+                    `;
+
+                    userReportsFeedbackDeck.appendChild(bubble);
+
                 });
 
-                alert(`Success! E-Equipment report asset entry submitted successfully. Log Record Lock Identifier: ${generatedId}`);
-                
-                eEquipmentReportForm.reset();
-                base64ImageString = ""; 
-                configureRealtimeClockParameters();
-                fileNameDisplay.textContent = "No asset photo attached";
-                
             } catch (err) {
-                console.error("Cloud registration submission error:", err);
-                alert("Failed to deliver submission data payload to remote cluster nodes.");
+
+                console.error("Firebase collection fetch failure:", err);
+
+                userReportsFeedbackDeck.innerHTML = `<p style="font-size:0.85rem; color:red; text-align:center; padding:10px;">Error syncing with cloud history module.</p>`;
+
             }
+
+        }
+
+
+
+        // Submit Data Execution Serialization Lifecycle Sequence
+
+        eEquipmentReportForm.addEventListener('submit', async (event) => {
+
+            event.preventDefault();
+
+
+
+            if(!typeDamageCheckbox.checked && !typeLossCheckbox.checked) {
+
+                alert("Validation Failure: Please flag the appropriate option within the Reporting Type section (Damage / Loss).");
+
+                return;
+
+            }
+
+
+
+            const chosenReportType = typeDamageCheckbox.checked ? 'Damage' : 'Loss';
+
+            const generatedId = 'REP_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+
+
+
+            try {
+
+                // Directly pipe entry parameters to match beats_reports cloud targets
+
+                await setDoc(doc(db, "beats_reports", generatedId), {
+
+                    id: generatedId,
+
+                    reporter: document.getElementById('reporterName').value.trim(),
+
+                    department: document.getElementById('reporterDepartment').value.trim(),
+
+                    date: reportDateInput.value,
+
+                    time: reportTimeInput.value,
+
+                    eqType: document.getElementById('equipmentType').value.trim(),
+
+                    eqModel: document.getElementById('equipmentModel').value.trim(),
+
+                    serialNo: document.getElementById('serialNumber').value.trim(),
+
+                    issueType: chosenReportType,
+
+                    description: document.getElementById('detailedDescription').value.trim(),
+
+                    submittedBy: currentActiveIdentity,
+
+                    adminResponse: "",
+
+                    imageAttachment: base64ImageString // Port image parameters directly into global payload
+
+                });
+
+
+
+                alert(`Success! E-Equipment report asset entry submitted successfully. Log Record Lock Identifier: ${generatedId}`);
+
+                
+
+                eEquipmentReportForm.reset();
+
+                base64ImageString = ""; // Reset internal memory cache string parameters
+
+                configureRealtimeClockParameters();
+
+                fileNameDisplay.textContent = "No asset photo attached";
+
+                await refreshFeedbackDeckDisplay();
+
+                
+
+            } catch (err) {
+
+                console.error("Cloud registration submission error:", err);
+
+                alert("Failed to deliver submission data payload to remote cluster nodes.");
+
+            }
+
         });
 
+
+
         // Initialization Routine Lifecycles
+
         configureRealtimeClockParameters();
-        setupLiveFeedbackDeckListener();
+
+        refreshFeedbackDeckDisplay();
+
         logoutActionLink.addEventListener('click', () => localStorage.removeItem('currentUser'));
+
     </script>
+
 </body>
+
+</html>
+
+
+
+AdminDashboard.html
+
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>BEATS - Admin Panel</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:ital,wght@1,900&family=Kanit:ital,wght@1,900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+
+        /* Modern hidden toggle configuration for separated views */
+
+        .admin-section { margin-bottom: 40px; width: 100%; display: none; }
+
+        .admin-section.active-view { display: block; }
+
+        
+
+        /* Make Admin Home act as a full bleed relative container for the background slider */
+
+        #adminHomeSection.active-view {
+
+            display: block;
+
+            position: fixed;
+
+            top: 60px; /* Adjust based on your menu-header-bar height */
+
+            left: 0;
+
+            width: 100vw;
+
+            height: calc(100vh - 60px);
+
+            margin: 0;
+
+            padding: 0;
+
+            overflow: hidden;
+
+            z-index: 1;
+
+        }
+
+
+
+        .admin-table { width: 100%; border-collapse: collapse; background: var(--bg-container); border-radius: 12px; overflow: hidden; border: 2px solid var(--stroke-dark); margin-top: 15px; }
+
+        .admin-table th, .admin-table td { padding: 12px; border: 1px solid var(--border-color); text-align: left; font-size: 0.9rem; vertical-align: middle; }
+
+        .admin-table th { background: var(--stroke-dark); color: white; font-family: 'Kanit'; font-style: italic; }
+
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
+
+        .status-pending { background: #ffc107; color: #000; }
+
+        .status-replied { background: #28a745; color: #fff; }
+
+        .response-box { display: flex; gap: 8px; margin-top: 5px; align-items: center; }
+
+        .response-input { flex: 1; padding: 8px; border-radius: 6px; border: 2px solid var(--border-color); background-color: var(--bg-input); color: var(--text-primary); outline: none; }
+
+        .response-input:focus { border-color: var(--brand-cyan); }
+
+        .attachment-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background-color: var(--brand-cyan); color: #fff; border: 1px solid var(--stroke-dark); border-radius: 6px; font-size: 0.75rem; cursor: pointer; text-decoration: none; font-weight: bold; }
+
+        .no-attachment { font-size: 0.8rem; color: var(--text-secondary); font-style: italic; }
+
+        .modal-mask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 200; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+
+        .modal-mask.active { opacity: 1; pointer-events: auto; }
+
+        .modal-window { background: var(--bg-container); border: 3px solid var(--stroke-dark); border-radius: 16px; width: 90%; max-width: 480px; padding: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); transform: scale(0.8); transition: transform 0.2s ease; }
+
+        .modal-mask.active .modal-window { transform: scale(1); }
+
+        .modal-preview-container { width: 100%; max-height: 350px; border: 2px dashed var(--border-color); border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--bg-input); margin: 15px 0; }
+
+        .modal-preview-container img { width: 100%; height: auto; max-height: 345px; object-fit: contain; display: block; }
+
+        
+
+        .actions-cell-inline-wrapper { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; }
+
+
+
+        /* CSS Automatic Slider Configured as Fullscreen Background */
+
+        .slider-box { 
+
+            width: 100%; 
+
+            height: 100%; 
+
+            margin: 0; 
+
+            overflow: hidden; 
+
+            border-radius: 0; 
+
+            border: none; 
+
+            box-shadow: none; 
+
+            position: absolute;
+
+            top: 0;
+
+            left: 0;
+
+        }
+
+        .slider-track { display: flex; width: 400%; height: 100%; animation: slideAnimation 12s infinite ease-in-out; }
+
+        .slider-track img { width: 25%; height: 100%; object-fit: cover; display: block; }
+
+        
+
+        @keyframes slideAnimation {
+
+            0%, 20% { transform: translateX(0%); }
+
+            25%, 45% { transform: translateX(-25%); }
+
+            50%, 70% { transform: translateX(-50%); }
+
+            75%, 95% { transform: translateX(-75%); }
+
+            100% { transform: translateX(0%); }
+
+        }
+
+
+
+        /* DYNAMIC NOTIFICATION BADGE SYSTEM CONFIGURATIONS */
+
+        .hamburger-btn {
+
+            position: relative;
+
+        }
+
+        .hamburger-btn .nav-alert-dot {
+
+            position: absolute;
+
+            top: 2px;
+
+            right: 2px;
+
+            width: 8px;
+
+            height: 8px;
+
+            background-color: #ff4d4d;
+
+            border-radius: 50%;
+
+            border: 1px solid var(--bg-container);
+
+            display: none;
+
+        }
+
+        .sidebar-links a {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+        }
+
+        .sidebar-badge {
+
+            background-color: #ff4d4d;
+
+            color: #fff;
+
+            font-size: 0.75rem;
+
+            font-weight: bold;
+
+            padding: 2px 8px;
+
+            border-radius: 12px;
+
+            min-width: 18px;
+
+            text-align: center;
+
+            font-family: Arial, sans-serif;
+
+            display: none;
+
+        }
+
+
+
+        /* Interactive Calendar Additions */
+
+        .calendar-day-node {
+
+            cursor: pointer;
+
+            transition: background-color 0.2s, border-color 0.2s;
+
+        }
+
+        .calendar-day-node:not(.empty-node):hover {
+
+            background-color: rgba(0, 188, 212, 0.15);
+
+        }
+
+        .calendar-day-node.selected-node {
+
+            border: 2px solid var(--brand-cyan, #00bcd4) !important;
+
+            background-color: rgba(0, 188, 212, 0.25) !important;
+
+        }
+
+        .filter-reset-banner {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            background: var(--stroke-dark, #222);
+
+            color: #fff;
+
+            padding: 6px 12px;
+
+            border-radius: 6px;
+
+            margin-bottom: 10px;
+
+            font-size: 0.8rem;
+
+        }
+
+        .filter-reset-banner button {
+
+            background: var(--brand-cyan, #00bcd4);
+
+            border: none;
+
+            color: #fff;
+
+            padding: 2px 8px;
+
+            border-radius: 4px;
+
+            cursor: pointer;
+
+            font-weight: bold;
+
+        }
+
+    </style>
+
+</head>
+
+<body class="page-body-layout">
+
+
+
+    <div class="menu-header-bar">
+
+        <div class="left-nav-group">
+
+            <button class="hamburger-btn" id="openMenuToggle">
+
+                ☰
+
+                <span class="nav-alert-dot" id="hamburgerAlertDot"></span>
+
+            </button>
+
+            <div class="user-greeting">Admin: <span id="displayUsername">Master</span></div>
+
+        </div>
+
+        <div style="font-family: 'Kanit', sans-serif; font-weight: 900; color: #dc2b5c; font-size: 1.5rem; font-style: italic;">BEATS ADMIN</div>
+
+    </div>
+
+
+
+    <div class="overlay-screen" id="menuOverlay"></div>
+
+    <div class="nav-sidebar" id="sidebarDrawer">
+
+        <button class="close-menu-btn" id="closeMenuToggle">✕</button>
+
+        <div class="sidebar-links">
+
+            <a href="#" class="sidebar-view-trigger active" data-target="adminHomeSection">Admin Home</a>
+
+            <a href="#" class="sidebar-view-trigger" data-target="contiBookingsSection" id="linkBookings">
+
+                Conti Bookings <span class="sidebar-badge" id="badgeBookings">0</span>
+
+            </a>
+
+            <a href="#" class="sidebar-view-trigger" data-target="contiLogsSection" id="linkLogs">
+
+                Conti Logs <span class="sidebar-badge" id="badgeLogs">0</span>
+
+            </a>
+
+            <a href="#" class="sidebar-view-trigger" data-target="equipmentReportsSection" id="linkReports">
+
+                Equipment Reports <span class="sidebar-badge" id="badgeReports">0</span>
+
+            </a>
+
+            <a href="SignIn.html" id="logoutActionLink" style="color: #ff4d4d; margin-top: 20px;">Logout</a>
+
+        </div>
+
+        <div class="theme-toggle-row">
+
+            <span>Theme Mode</span>
+
+            <button class="theme-switch-btn" id="themeSwitchTrigger">☀️ / 🌙</button>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="dashboard-view-wrapper">
+
+        
+
+
+
+        <section class="admin-section active-view" id="adminHomeSection">
+
+            <div class="slider-box">
+
+                <div class="slider-track">
+
+                    <img src="image1.png" alt="Featured Space 1">
+
+                    <img src="image2.png" alt="Featured Space 2">
+
+                    <img src="image3.png" alt="Featured Space 3">
+
+                    <img src="image4.png" alt="Featured Space 4">
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <section class="admin-section" id="contiBookingsSection">
+
+            <div class="booking-dashboard-grid">
+
+                
+
+                <div class="calendar-card">
+
+                    <div class="calendar-header">
+
+                        <h3 id="calendarMonthYearDisplay">August 2026</h3>
+
+                        <div class="calendar-nav-buttons">
+
+                            <button type="button" id="prevMonthAction">‹</button>
+
+                            <button type="button" id="nextMonthAction">›</button>
+
+                        </div>
+
+                    </div>
+
+                    <div class="calendar-weekdays-row">
+
+                        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+
+                    </div>
+
+                    <div class="calendar-days-grid" id="calendarDaysContainer"></div>
+
+                    <div class="calendar-footer-legend">
+
+                        <span><span class="legend-indicator-dot" style="background:#dc2b5c"></span>Interviews</span>
+
+                        <span><span class="legend-indicator-dot" style="background:#00bcd4"></span>Events</span>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="upcoming-feed-container">
+
+                    <h3 class="upcoming-headline-text">Upcoming Events</h3>
+
+                    <div id="calendarFilterStatus"></div>
+
+                    <div class="events-list" id="upcomingEventsCardStack"></div>
+
+                </div>
+
+
+
+            </div>
+
+        </section>
+
+
+
+        <section class="admin-section" id="contiLogsSection">
+
+            <h2 class="core-functions-headline">Conti Logs</h2>
+
+            <div class="table-responsive-container">
+
+                <table class="admin-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Conti Sheet Key</th>
+
+                            <th>Time Slot</th>
+
+                            <th>Program / Segment Title</th>
+
+                            <th>L/R</th>
+
+                            <th>Broadcaster Crew</th>
+
+                            <th>Netia / CD</th>
+
+                            <th>Remarks</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="adminContiSheetsBody"></tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+
+        <section class="admin-section" id="equipmentReportsSection">
+
+            <h2 class="core-functions-headline">Equipment Reports</h2>
+
+            <div class="table-responsive-container">
+
+                <table class="admin-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>ID / Date</th>
+
+                            <th>Reporter</th>
+
+                            <th>Equipment</th>
+
+                            <th>Issue</th>
+
+                            <th>Photo</th>
+
+                            <th>Status</th>
+
+                            <th>Response / Control</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="adminReportBody"></tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </div>
+
+
+
+    <div class="modal-mask" id="photoModalMask">
+
+        <div class="modal-window">
+
+            <h3 style="font-family: 'Kanit'; font-style: italic; color: var(--brand-cyan); text-transform: uppercase;">Evidence Attachment</h3>
+
+            <div class="modal-preview-container" id="modalImageHolder"></div>
+
+            <button type="button" class="btn" id="closeModalBtn">Close Window</button>
+
+        </div>
+
+    </div>
+
+
+
+    <script type="module">
+
+        import { db, collection, doc, getDocs, getDoc, updateDoc, deleteDoc, setDoc } from "./firebase-config.js";
+
+
+
+        const currentActiveUser = localStorage.getItem('currentUser');
+
+        if (currentActiveUser !== 'Admin' && currentActiveUser !== 'admin@beats.com') {
+
+            alert("Unauthorized access.");
+
+            window.location.href = 'dashboard.html';
+
+        }
+
+
+
+        if(localStorage.getItem('theme') === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); }
+
+
+
+        let cachedReportsLocalArray = [];
+
+        let globalBookingsArray = [];
+
+        let uniqueLogUserCount = 0; 
+
+        let calendarCurrentDate = new Date();
+
+        let selectedDateFilterString = null; 
+
+
+
+        // CRUCIAL PIECE: High-water mark identifiers preserved to verify what was previously cleared
+
+        let badgeCheckpoints = {
+
+            bookingsLastSeenId: localStorage.getItem('checkpoint_bookings_id') || '',
+
+            logsLastSeenCount: parseInt(localStorage.getItem('checkpoint_logs_count') || '0', 10),
+
+            reportsLastSeenId: localStorage.getItem('checkpoint_reports_id') || ''
+
+        };
+
+
+
+        async function loadAdminData() {
+
+            await renderBookings();
+
+            await renderContiSheetsRows();
+
+            await renderReports();
+
+        }
+
+
+
+        function updateNotificationBadges() {
+
+            // 1. Bookings Count Badge
+
+            let unreadBookingsCount = 0;
+
+            if (globalBookingsArray.length > 0) {
+
+                if (badgeCheckpoints.bookingsLastSeenId) {
+
+                    const targetIdx = globalBookingsArray.findIndex(b => b.id === badgeCheckpoints.bookingsLastSeenId);
+
+                    unreadBookingsCount = targetIdx === -1 ? globalBookingsArray.length : globalBookingsArray.length - (targetIdx + 1);
+
+                } else {
+
+                    unreadBookingsCount = globalBookingsArray.length;
+
+                }
+
+            }
+
+            
+
+            const badgeBookings = document.getElementById('badgeBookings');
+
+            if (badgeBookings) {
+
+                if (unreadBookingsCount > 0) {
+
+                    badgeBookings.innerText = unreadBookingsCount;
+
+                    badgeBookings.style.display = 'inline-block';
+
+                } else {
+
+                    badgeBookings.style.display = 'none';
+
+                }
+
+            }
+
+
+
+            // 2. Conti Logs Count Badge
+
+            const unreadLogsCount = Math.max(0, uniqueLogUserCount - badgeCheckpoints.logsLastSeenCount);
+
+            const badgeLogs = document.getElementById('badgeLogs');
+
+            if (badgeLogs) {
+
+                if (unreadLogsCount > 0) {
+
+                    badgeLogs.innerText = unreadLogsCount;
+
+                    badgeLogs.style.display = 'inline-block';
+
+                } else {
+
+                    badgeLogs.style.display = 'none';
+
+                }
+
+            }
+
+
+
+            // 3. Equipment Reports Count Badge
+
+            let unreadReportsCount = 0;
+
+            const totalPendingReports = cachedReportsLocalArray.filter(report => !report.adminResponse || report.adminResponse.trim() === '');
+
+            
+
+            if (totalPendingReports.length > 0) {
+
+                if (badgeCheckpoints.reportsLastSeenId) {
+
+                    const targetIdx = totalPendingReports.findIndex(r => r.docId === badgeCheckpoints.reportsLastSeenId);
+
+                    unreadReportsCount = targetIdx === -1 ? totalPendingReports.length : totalPendingReports.length - (targetIdx + 1);
+
+                } else {
+
+                    unreadReportsCount = totalPendingReports.length;
+
+                }
+
+            }
+
+
+
+            const badgeReports = document.getElementById('badgeReports');
+
+            if (badgeReports) {
+
+                if (unreadReportsCount > 0) {
+
+                    badgeReports.innerText = unreadReportsCount;
+
+                    badgeReports.style.display = 'inline-block';
+
+                } else {
+
+                    badgeReports.style.display = 'none';
+
+                }
+
+            }
+
+
+
+            // 4. Global Outer Hamburger Accent Control Dot
+
+            const hamburgerAlertDot = document.getElementById('hamburgerAlertDot');
+
+            if (hamburgerAlertDot) {
+
+                if (unreadBookingsCount > 0 || unreadLogsCount > 0 || unreadReportsCount > 0) {
+
+                    hamburgerAlertDot.style.display = 'block';
+
+                } else {
+
+                    hamburgerAlertDot.style.display = 'none';
+
+                }
+
+            }
+
+        }
+
+
+
+        async function renderBookings() {
+
+            globalBookingsArray = [];
+
+            try {
+
+                const snapshot = await getDocs(collection(db, "beats_bookings"));
+
+                snapshot.forEach(docSnapshot => {
+
+                    const item = docSnapshot.data();
+
+                    const id = docSnapshot.id;
+
+                    globalBookingsArray.push({ id, ...item });
+
+                });
+
+
+
+                globalBookingsArray.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                populateUpcomingStackDOM();
+
+                buildLiveCalendarGrid();
+
+                
+
+                updateNotificationBadges();
+
+            } catch (err) { console.error(err); }
+
+        }
+
+
+
+        function populateUpcomingStackDOM() {
+
+            const cardStack = document.getElementById('upcomingEventsCardStack');
+
+            const filterStatus = document.getElementById('calendarFilterStatus');
+
+            cardStack.innerHTML = '';
+
+
+
+            let filteredArray = globalBookingsArray;
+
+            if (selectedDateFilterString) {
+
+                filteredArray = globalBookingsArray.filter(b => b.date === selectedDateFilterString);
+
+                filterStatus.innerHTML = `
+
+                    <div class="filter-reset-banner">
+
+                        <span>Viewing: <strong>${selectedDateFilterString}</strong></span>
+
+                        <button type="button" id="clearCalendarFilterBtn">Show All</button>
+
+                    </div>`;
+
+                document.getElementById('clearCalendarFilterBtn').addEventListener('click', () => {
+
+                    selectedDateFilterString = null;
+
+                    populateUpcomingStackDOM();
+
+                    buildLiveCalendarGrid();
+
+                });
+
+            } else {
+
+                filterStatus.innerHTML = '';
+
+            }
+
+
+
+            if(filteredArray.length === 0) {
+
+                cardStack.innerHTML = `<div style="text-align:center; font-style:italic; padding:20px; color:#666;">No bookings found for this scope.</div>`;
+
+            } else {
+
+                filteredArray.forEach(item => {
+
+                    const isInterview = item.type && item.type.toLowerCase().includes('interview');
+
+                    const iconSymbol = isInterview ? '🎙️' : '💿';
+
+                    const styleClass = isInterview ? 'circle-interview' : 'circle-show';
+
+
+
+                    const cardNode = document.createElement('div');
+
+                    cardNode.className = 'event-item-card';
+
+                    cardNode.innerHTML = `
+
+                        <div class="event-icon-circle ${styleClass}">${iconSymbol}</div>
+
+                        <div class="event-main-details">
+
+                            <div class="event-meta-date">${item.date}</div>
+
+                            <h4 class="event-display-title">${item.dj || 'Unknown DJ'} - ${item.timeSlot || 'Session'}</h4>
+
+                            <div class="event-sub-label">by: ${item.bookedBy || 'Admin'} ${item.remarks ? `• "${item.remarks}"` : ''}</div>
+
+                            <span class="event-card-type-badge">${item.type || 'Show'}</span>
+
+                        </div>
+
+                        <button type="button" class="card-action-bin-btn">DELETE</button>
+
+                    `;
+
+
+
+                    cardNode.querySelector('.card-action-bin-btn').addEventListener('click', () => deleteBooking(item.id));
+
+                    cardStack.appendChild(cardNode);
+
+                });
+
+            }
+
+        }
+
+
+
+        function buildLiveCalendarGrid() {
+
+            const container = document.getElementById('calendarDaysContainer');
+
+            const displayTitle = document.getElementById('calendarMonthYearDisplay');
+
+            container.innerHTML = '';
+
+
+
+            const year = calendarCurrentDate.getFullYear();
+
+            const month = calendarCurrentDate.getMonth();
+
+
+
+            const monthsList = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+            displayTitle.innerText = `${monthsList[month]} ${year}`;
+
+
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+
+            const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+
+
+
+            for(let i = 0; i < firstDayIndex; i++) {
+
+                const emptyCell = document.createElement('div');
+
+                emptyCell.className = 'calendar-day-node empty-node';
+
+                container.appendChild(emptyCell);
+
+            }
+
+
+
+            const todayObj = new Date();
+
+            for(let day = 1; day <= totalDaysInMonth; day++) {
+
+                const cellNode = document.createElement('div');
+
+                cellNode.className = 'calendar-day-node';
+
+                
+
+                const targetDateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+
+
+                if(day === todayObj.getDate() && month === todayObj.getMonth() && year === todayObj.getFullYear()) {
+
+                    cellNode.classList.add('today-node');
+
+                }
+
+                if(selectedDateFilterString === targetDateString) {
+
+                    cellNode.classList.add('selected-node');
+
+                }
+
+
+
+                cellNode.innerHTML = `<span class="day-label-num">${day}</span><div class="day-badges-stack"></div>`;
+
+                const badgesStack = cellNode.querySelector('.day-badges-stack');
+
+                
+
+                const dayMatches = globalBookingsArray.filter(b => b.date === targetDateString);
+
+                dayMatches.forEach(match => {
+
+                    const pillNode = document.createElement('span');
+
+                    const isInt = match.type && match.type.toLowerCase().includes('interview');
+
+                    pillNode.className = `mini-event-pill ${isInt ? 'pill-interview' : 'pill-show'}`;
+
+                    pillNode.innerText = isInt ? 'Interviews' : 'Events';
+
+                    badgesStack.appendChild(pillNode);
+
+                });
+
+
+
+                cellNode.addEventListener('click', () => {
+
+                    selectedDateFilterString = targetDateString;
+
+                    populateUpcomingStackDOM();
+
+                    buildLiveCalendarGrid();
+
+                });
+
+
+
+                container.appendChild(cellNode);
+
+            }
+
+        }
+
+
+
+        document.getElementById('prevMonthAction').addEventListener('click', () => {
+
+            calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() - 1);
+
+            buildLiveCalendarGrid();
+
+        });
+
+        document.getElementById('nextMonthAction').addEventListener('click', () => {
+
+            calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + 1);
+
+            buildLiveCalendarGrid();
+
+        });
+
+
+
+        async function deleteBooking(id) {
+
+            if(confirm("Admin Override: Delete this booking?")) {
+
+                await deleteDoc(doc(db, "beats_bookings", id));
+
+                await renderBookings();
+
+            }
+
+        }
+
+
+
+        async function renderContiSheetsRows() {
+
+            const container = document.getElementById('adminContiSheetsBody');
+
+            container.innerHTML = '';
+
+            
+
+            const uniqueUsersSet = new Set();
+
+            let totalRowsDisplayed = 0;
+
+
+
+            try {
+
+                const snapshot = await getDocs(collection(db, "beats_conti_sheets"));
+
+                
+
+                snapshot.forEach(docSnapshot => {
+
+                    const sheetId = docSnapshot.id;
+
+                    const sheetData = docSnapshot.data();
+
+                    const rowsArray = sheetData.rows || [];
+
+
+
+                    if (rowsArray.length === 0) { return; }
+
+
+
+                    const userKey = (sheetData.metaPerson || 'UnknownDJ').trim().toLowerCase();
+
+                    uniqueUsersSet.add(userKey);
+
+
+
+                    rowsArray.forEach((rowItem, rowIndex) => {
+
+                        totalRowsDisplayed++;
+
+                        const tr = document.createElement('tr');
+
+                        tr.innerHTML = `
+
+                            <td>
+
+                                <strong>${sheetData.metaPerson || 'DJ'}</strong><br>
+
+                                <small>${sheetData.metaDate || ''}</small><br>
+
+                                <small style="color:var(--brand-cyan)">${sheetData.metaInterval || ''}</small>
+
+                            </td>
+
+                            <td>${rowItem.hour}:${rowItem.minute} ${rowItem.ampm}</td>
+
+                            <td><strong>${rowItem.title || 'Untitled'}</strong></td>
+
+                            <td>${rowItem.lr || '--'}</td>
+
+                            <td>${rowItem.producer || '--'}</td>
+
+                            <td>${rowItem.netia || '--'}</td>
+
+                            <td>${rowItem.remarks || ''}</td>
+
+                        `;
+
+
+
+                        container.appendChild(tr);
+
+                    });
+
+                });
+
+
+
+                if (totalRowsDisplayed === 0) {
+
+                    container.innerHTML = `<tr><td colspan="7" style="text-align:center; font-style:italic;">No active sheet logs found.</td></tr>`;
+
+                }
+
+                
+
+                uniqueLogUserCount = uniqueUsersSet.size;
+
+                updateNotificationBadges();
+
+
+
+            } catch(err) { console.error(err); }
+
+        }
+
+
+
+        async function renderReports() {
+
+            const container = document.getElementById('adminReportBody');
+
+            container.innerHTML = '';
+
+            cachedReportsLocalArray = [];
+
+            
+
+            try {
+
+                const snapshot = await getDocs(collection(db, "beats_reports"));
+
+                let trackingIdx = 0;
+
+                
+
+                snapshot.forEach(docSnapshot => {
+
+                    const item = docSnapshot.data();
+
+                    const id = docSnapshot.id;
+
+                    cachedReportsLocalArray.push({ docId: id, ...item });
+
+
+
+                    const tr = document.createElement('tr');
+
+                    const statusClass = item.adminResponse ? 'status-replied' : 'status-pending';
+
+                    const statusText = item.adminResponse ? 'Replied' : 'Pending';
+
+                    
+
+                    let attachmentHTML = item.imageAttachment ? `<button type="button" class="attachment-badge btn-view-photo" data-idx="${trackingIdx}">📎 View File</button>` : `<span class="no-attachment">None</span>`;
+
+                    
+
+                    tr.innerHTML = `
+
+                        <td>${item.id}<br><small>${item.date}</small></td>
+
+                        <td>${item.reporter}<br><small>${item.department}</small></td>
+
+                        <td>${item.eqModel}</td>
+
+                        <td><strong>${item.issueType}</strong>: ${item.description}</td>
+
+                        <td>${attachmentHTML}</td>
+
+                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+
+                        <td>
+
+                            <div class="response-box">
+
+                                <input type="text" id="resp-${id}" class="response-input" placeholder="Type reply..." value="${item.adminResponse || ''}">
+
+                                <button type="button" class="row-btn row-btn-save btn-send-resp" data-id="${id}">Send</button>
+
+                                <button type="button" class="row-delete-btn btn-del-report" data-id="${id}">Delete</button>
+
+                            </div>
+
+                        </td>
+
+                    `;
+
+
+
+                    tr.querySelector('.btn-view-photo')?.addEventListener('click', (e) => openPhotoViewerModal(e.target.dataset.idx));
+
+                    tr.querySelector('.btn-send-resp').addEventListener('click', (e) => sendResponse(e.target.dataset.id));
+
+                    tr.querySelector('.btn-del-report').addEventListener('click', (e) => deleteEquipmentReport(e.target.dataset.id));
+
+
+
+                    container.appendChild(tr);
+
+                    trackingIdx++;
+
+                });
+
+
+
+                updateNotificationBadges();
+
+
+
+            } catch(err) { console.error(err); }
+
+        }
+
+
+
+        async function sendResponse(id) {
+
+            const responseText = document.getElementById(`resp-${id}`).value;
+
+            try {
+
+                await updateDoc(doc(db, "beats_reports", id), { adminResponse: responseText });
+
+                alert("Response sent to reporter!");
+
+                await renderReports();
+
+            } catch(err) { alert("Send operation failed."); }
+
+        }
+
+
+
+        async function deleteEquipmentReport(id) {
+
+            if(confirm("Admin Master Override: Permanent data erase warning?")) {
+
+                await deleteDoc(doc(db, "beats_reports", id));
+
+                alert("Equipment report deleted.");
+
+                await renderReports(); 
+
+            }
+
+        }
+
+
+
+        const photoModalMask = document.getElementById('photoModalMask');
+
+        const modalImageHolder = document.getElementById('modalImageHolder');
+
+
+
+        function openPhotoViewerModal(index) {
+
+            const targetedItem = cachedReportsLocalArray[index];
+
+            if(targetedItem && targetedItem.imageAttachment) {
+
+                modalImageHolder.innerHTML = `<img src="${targetedItem.imageAttachment}" alt="Evidence View Summary">`;
+
+                photoModalMask.classList.add('active');
+
+            }
+
+        }
+
+
+
+        function closePhotoViewerModal() {
+
+            photoModalMask.classList.remove('active');
+
+            modalImageHolder.innerHTML = ''; 
+
+        }
+
+        
+
+        document.getElementById('closeModalBtn').addEventListener('click', closePhotoViewerModal);
+
+        photoModalMask.addEventListener('click', closePhotoViewerModal);
+
+        modalImageHolder.parentNode.addEventListener('click', (e) => e.stopPropagation());
+
+
+
+        const sidebarDrawer = document.getElementById('sidebarDrawer');
+
+        const menuOverlay = document.getElementById('menuOverlay');
+
+        const themeSwitchTrigger = document.getElementById('themeSwitchTrigger');
+
+        const logoutActionLink = document.getElementById('logoutActionLink');
+
+
+
+        function toggleSidebar(open) {
+
+            if(open) { 
+
+                sidebarDrawer.classList.add('open'); 
+
+                menuOverlay.classList.add('show');
+
+                sidebarDrawer.style.pointerEvents = "auto";
+
+            }
+
+            else { 
+
+                sidebarDrawer.classList.remove('open'); 
+
+                menuOverlay.classList.remove('show');
+
+                sidebarDrawer.style.pointerEvents = "none";
+
+            }
+
+        }
+
+
+
+        sidebarDrawer.style.pointerEvents = "none";
+
+
+
+        document.getElementById('openMenuToggle').addEventListener('click', () => toggleSidebar(true));
+
+        document.getElementById('closeMenuToggle').addEventListener('click', () => toggleSidebar(false));
+
+        menuOverlay.addEventListener('click', () => toggleSidebar(false));
+
+
+
+        themeSwitchTrigger.addEventListener('click', () => {
+
+            if(document.documentElement.hasAttribute('data-theme')) {
+
+                document.documentElement.removeAttribute('data-theme');
+
+                localStorage.setItem('theme', 'light');
+
+            } else {
+
+                document.documentElement.setAttribute('data-theme', 'dark');
+
+                localStorage.setItem('theme', 'dark');
+
+            }
+
+        });
+
+
+
+        // FIXED: Only clear user details, preserving verification marks in localStorage on logout
+
+        logoutActionLink.addEventListener('click', () => { 
+
+            localStorage.removeItem('currentUser'); 
+
+        });
+
+
+
+        const viewTriggers = document.querySelectorAll('.sidebar-view-trigger');
+
+        const dashboardSections = document.querySelectorAll('.admin-section');
+
+
+
+        viewTriggers.forEach(trigger => {
+
+            trigger.addEventListener('click', (e) => {
+
+                e.preventDefault();
+
+                const targetId = trigger.getAttribute('data-target');
+
+
+
+                // Advance boundary references when an admin opens a category view
+
+                if (targetId === 'contiBookingsSection' && globalBookingsArray.length > 0) {
+
+                    const absoluteLastId = globalBookingsArray[globalBookingsArray.length - 1].id;
+
+                    badgeCheckpoints.bookingsLastSeenId = absoluteLastId;
+
+                    localStorage.setItem('checkpoint_bookings_id', absoluteLastId);
+
+                }
+
+                if (targetId === 'contiLogsSection') {
+
+                    badgeCheckpoints.logsLastSeenCount = uniqueLogUserCount;
+
+                    localStorage.setItem('checkpoint_logs_count', uniqueLogUserCount.toString());
+
+                }
+
+                if (targetId === 'equipmentReportsSection') {
+
+                    const totalPendingReports = cachedReportsLocalArray.filter(report => !report.adminResponse || report.adminResponse.trim() === '');
+
+                    if (totalPendingReports.length > 0) {
+
+                        const absoluteLastId = totalPendingReports[totalPendingReports.length - 1].docId;
+
+                        badgeCheckpoints.reportsLastSeenId = absoluteLastId;
+
+                        localStorage.setItem('checkpoint_reports_id', absoluteLastId);
+
+                    }
+
+                }
+
+
+
+                viewTriggers.forEach(btn => btn.classList.remove('active'));
+
+                trigger.classList.add('active');
+
+
+
+                dashboardSections.forEach(section => section.classList.remove('active-view'));
+
+                document.getElementById(targetId).classList.add('active-view');
+
+
+
+                updateNotificationBadges();
+
+                toggleSidebar(false);
+
+            });
+
+        });
+
+
+
+        window.addEventListener('DOMContentLoaded', loadAdminData);
+
+    </script>
+
+</body>
+
 </html>
