@@ -97,7 +97,7 @@
     </div>
  
     <script type="module">
-        import { db, collection, onSnapshot } from "./firebase-config.js";
+        import { db, collection, getDocs } from "./firebase-config.js";
 
         const openMenuToggle = document.getElementById('openMenuToggle');
         const closeMenuToggle = document.getElementById('closeMenuToggle');
@@ -114,7 +114,6 @@
             document.documentElement.setAttribute('data-theme', 'dark');
         }
  
-        // Sidebar Canvas Interaction Logic
         function toggleSidebar(open) {
             if(open) {
                 sidebarDrawer.classList.add('open');
@@ -154,31 +153,19 @@
         let dynamicCurrentLogsStringPool = "";
         let dynamicCurrentReportsStringPool = "";
 
-        // FIXED: Exposed navigation controls securely to window element from module pipeline mapping
-        window.handleSectionNavigation = function(type, targetUrl) {
-            if (type === 'logs') {
-                localStorage.setItem('last_seen_logs_content', dynamicCurrentLogsStringPool);
-            } else if (type === 'reports') {
-                localStorage.setItem('last_seen_reports_content', dynamicCurrentReportsStringPool);
-            }
-            window.location.href = targetUrl;
-        };
+        async function fetchUserRepliesAndAlert() {
+            try {
+                let triggerLogsAlert = false;
+                let triggerReportsAlert = false;
 
-        // ==========================================
-        //  REAL-TIME AUTOMATED NOTIFICATION ENGINES
-        // ==========================================
-        function initRealtimeAlertListeners() {
-            const activeClean = activeUser.trim().toLowerCase();
-            const cardLogsBadge = document.getElementById('card-count-logs');
-            const cardReportsBadge = document.getElementById('card-count-reports');
+                const activeClean = activeUser.trim().toLowerCase();
+                console.log("--- BEATS Alert Engine Active ---");
 
-            console.log("--- BEATS Real-time Alert Sync Stream Opened ---");
-
-            // Live Stream Listener for Conti Sheets Collection
-            onSnapshot(collection(db, "beats_conti_sheets"), (snapshot) => {
+                // 1. SCAN FOR ADMIN REMARKS IN CONTI LOGS
+                const sheetsSnapshot = await getDocs(collection(db, "beats_conti_sheets"));
                 let logsContentSignature = "";
                 
-                snapshot.forEach(docSnap => {
+                sheetsSnapshot.forEach(docSnap => {
                     const data = docSnap.data();
                     const sheetOwner = (data.metaPerson || "").trim().toLowerCase();
                     
@@ -191,20 +178,18 @@
                         });
                     }
                 });
-                
                 dynamicCurrentLogsStringPool = logsContentSignature;
-                const lastSeenLogs = localStorage.getItem('last_seen_logs_content') || "";
                 
-                if (cardLogsBadge) {
-                    cardLogsBadge.style.display = (dynamicCurrentLogsStringPool !== "" && dynamicCurrentLogsStringPool !== lastSeenLogs) ? 'block' : 'none';
+                const lastSeenLogs = localStorage.getItem('last_seen_logs_content') || "";
+                if (dynamicCurrentLogsStringPool !== "" && dynamicCurrentLogsStringPool !== lastSeenLogs) {
+                    triggerLogsAlert = true;
                 }
-            }, (err) => console.error("Logs socket crash:", err));
 
-            // Live Stream Listener for Equipment Reports Collection
-            onSnapshot(collection(db, "beats_reports"), (snapshot) => {
+                // 2. SCAN FOR ADMIN RESPONSES IN EQUIPMENT REPORTS
+                const reportsSnapshot = await getDocs(collection(db, "beats_reports"));
                 let reportsContentSignature = "";
                 
-                snapshot.forEach(docSnap => {
+                reportsSnapshot.forEach(docSnap => {
                     const data = docSnap.data();
                     const reporterClean = (data.submittedBy || data.reporter || "").trim().toLowerCase();
                     
@@ -214,17 +199,38 @@
                         }
                     }
                 });
-                
                 dynamicCurrentReportsStringPool = reportsContentSignature;
-                const lastSeenReports = localStorage.getItem('last_seen_reports_content') || "";
                 
-                if (cardReportsBadge) {
-                    cardReportsBadge.style.display = (dynamicCurrentReportsStringPool !== "" && dynamicCurrentReportsStringPool !== lastSeenReports) ? 'block' : 'none';
+                const lastSeenReports = localStorage.getItem('last_seen_reports_content') || "";
+                if (dynamicCurrentReportsStringPool !== "" && dynamicCurrentReportsStringPool !== lastSeenReports) {
+                    triggerReportsAlert = true;
                 }
-            }, (err) => console.error("Reports socket crash:", err));
+
+                const cardLogsBadge = document.getElementById('card-count-logs');
+                const cardReportsBadge = document.getElementById('card-count-reports');
+
+                if (cardLogsBadge) {
+                    cardLogsBadge.style.display = triggerLogsAlert ? 'block' : 'none';
+                }
+                if (cardReportsBadge) {
+                    cardReportsBadge.style.display = triggerReportsAlert ? 'block' : 'none';
+                }
+
+            } catch (err) {
+                console.error("Error running notification script processing loops: ", err);
+            }
         }
 
-        window.addEventListener('DOMContentLoaded', initRealtimeAlertListeners);
+        window.handleSectionNavigation = function(type, targetUrl) {
+            if (type === 'logs') {
+                localStorage.setItem('last_seen_logs_content', dynamicCurrentLogsStringPool);
+            } else if (type === 'reports') {
+                localStorage.setItem('last_seen_reports_content', dynamicCurrentReportsStringPool);
+            }
+            window.location.href = targetUrl;
+        };
+
+        window.addEventListener('DOMContentLoaded', fetchUserRepliesAndAlert);
     </script>
 </body>
 </html>
