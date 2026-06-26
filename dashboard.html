@@ -156,18 +156,27 @@
         });
  
         logoutActionLink.addEventListener('click', () => {
+            // FIXED: Preserve verification markings and read states during safe user swap logging out
+            const savedLogsBadge = localStorage.getItem('last_seen_logs_content');
+            const savedReportsBadge = localStorage.getItem('last_seen_reports_content');
+            const savedTheme = localStorage.getItem('theme');
+            
             localStorage.clear();
+            
+            if(savedLogsBadge) localStorage.setItem('last_seen_logs_content', savedLogsBadge);
+            if(savedReportsBadge) localStorage.setItem('last_seen_reports_content', savedReportsBadge);
+            if(savedTheme) localStorage.setItem('theme', savedTheme);
         });
+
+        // Global memory strings to stack responses and track string modifications
+        let dynamicCurrentLogsStringPool = "";
+        let dynamicCurrentReportsStringPool = "";
 
         // ==========================================
         //  DYNAMIC NOTIFICATION HANDLING ENGINE
         // ==========================================
         async function fetchUserRepliesAndAlert() {
             try {
-                // Get clear states
-                const isLogsCleared = localStorage.getItem('read_logs_badge') === 'true';
-                const isReportsCleared = localStorage.getItem('read_reports_badge') === 'true';
-
                 let triggerLogsAlert = false;
                 let triggerReportsAlert = false;
 
@@ -176,38 +185,48 @@
                 console.log("Logged In User Key:", activeClean);
 
                 // 1. SCAN FOR ADMIN REMARKS IN CONTI LOGS
-                if (!isLogsCleared) {
-                    const sheetsSnapshot = await getDocs(collection(db, "beats_conti_sheets"));
-                    sheetsSnapshot.forEach(docSnap => {
-                        const data = docSnap.data();
-                        const sheetOwner = (data.metaPerson || "").trim().toLowerCase();
-                        
-                        if (sheetOwner === activeClean || activeClean === "master" || activeClean === "admin") {
-                            const rows = data.rows || [];
-                            const hasAdminRemark = rows.some(row => row.remarks && row.remarks.trim() !== "");
-                            
-                            if (hasAdminRemark) {
-                                triggerLogsAlert = true;
-                                console.log("Match Found in Conti Logs! Doc ID:", docSnap.id);
+                const sheetsSnapshot = await getDocs(collection(db, "beats_conti_sheets"));
+                let logsContentSignature = "";
+                
+                sheetsSnapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const sheetOwner = (data.metaPerson || "").trim().toLowerCase();
+                    
+                    if (sheetOwner === activeClean || activeClean === "master" || activeClean === "admin") {
+                        const rows = data.rows || [];
+                        rows.forEach(row => {
+                            if(row.remarks && row.remarks.trim() !== "") {
+                                logsContentSignature += `${docSnap.id}_${row.remarks.trim()}|`;
                             }
-                        }
-                    });
+                        });
+                    }
+                });
+                dynamicCurrentLogsStringPool = logsContentSignature;
+                
+                const lastSeenLogs = localStorage.getItem('last_seen_logs_content') || "";
+                if (dynamicCurrentLogsStringPool !== "" && dynamicCurrentLogsStringPool !== lastSeenLogs) {
+                    triggerLogsAlert = true;
                 }
 
                 // 2. SCAN FOR ADMIN RESPONSES IN EQUIPMENT REPORTS
-                if (!isReportsCleared) {
-                    const reportsSnapshot = await getDocs(collection(db, "beats_reports"));
-                    reportsSnapshot.forEach(docSnap => {
-                        const data = docSnap.data();
-                        const reporterClean = (data.reporter || "").trim().toLowerCase();
-                        
-                        if (reporterClean === activeClean || activeClean === "master" || activeClean === "admin") {
-                            if (data.adminResponse && data.adminResponse.trim() !== "") {
-                                triggerReportsAlert = true;
-                                console.log("Match Found in Equipment Reports! Doc ID:", docSnap.id);
-                            }
+                const reportsSnapshot = await getDocs(collection(db, "beats_reports"));
+                let reportsContentSignature = "";
+                
+                reportsSnapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const reporterClean = (data.submittedBy || data.reporter || "").trim().toLowerCase();
+                    
+                    if (reporterClean === activeClean || activeClean === "master" || activeClean === "admin") {
+                        if (data.adminResponse && data.adminResponse.trim() !== "") {
+                            reportsContentSignature += `${docSnap.id}_${data.adminResponse.trim()}|`;
                         }
-                    });
+                    }
+                });
+                dynamicCurrentReportsStringPool = reportsContentSignature;
+                
+                const lastSeenReports = localStorage.getItem('last_seen_reports_content') || "";
+                if (dynamicCurrentReportsStringPool !== "" && dynamicCurrentReportsStringPool !== lastSeenReports) {
+                    triggerReportsAlert = true;
                 }
 
                 // UI Elements Reference Mapping
@@ -238,9 +257,9 @@
         // Action when standard interactive options are triggered by clicks
         window.handleSectionNavigation = function(type, targetUrl) {
             if (type === 'logs') {
-                localStorage.setItem('read_logs_badge', 'true');
+                localStorage.setItem('last_seen_logs_content', dynamicCurrentLogsStringPool);
             } else if (type === 'reports') {
-                localStorage.setItem('read_reports_badge', 'true');
+                localStorage.setItem('last_seen_reports_content', dynamicCurrentReportsStringPool);
             }
             window.location.href = targetUrl;
         };
