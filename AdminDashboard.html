@@ -266,7 +266,6 @@
     </div>
 
     <script type="module">
-        // CHANGED: Imported onSnapshot to link persistent real-time change streams
         import { db, collection, doc, updateDoc, deleteDoc, onSnapshot } from "./firebase-config.js";
 
         const currentActiveUser = localStorage.getItem('currentUser');
@@ -289,7 +288,9 @@
             reportsLastSeenId: localStorage.getItem('checkpoint_reports_id') || ''
         };
 
-        // CHANGED: Converted initialization loops into continuous open onSnapshot listening ports
+        // ==========================================
+        //  REAL-TIME FIREBASE STREAM SYNCHRONIZERS
+        // ==========================================
         function initAdminRealtimeStreams() {
             // 1. Live Sync Listener for Bookings Engine
             onSnapshot(collection(db, "beats_bookings"), (snapshot) => {
@@ -397,7 +398,6 @@
         }
 
         function updateNotificationBadges() {
-            // 1. Bookings Count Badge
             let unreadBookingsCount = 0;
             if (globalBookingsArray.length > 0) {
                 if (badgeCheckpoints.bookingsLastSeenId) {
@@ -414,7 +414,6 @@
                 badgeBookings.style.display = unreadBookingsCount > 0 ? 'inline-block' : 'none';
             }
 
-            // 2. Conti Logs Count Badge
             const unreadLogsCount = Math.max(0, uniqueLogUserCount - badgeCheckpoints.logsLastSeenCount);
             const badgeLogs = document.getElementById('badgeLogs');
             if (badgeLogs) {
@@ -422,7 +421,6 @@
                 badgeLogs.style.display = unreadLogsCount > 0 ? 'inline-block' : 'none';
             }
 
-            // 3. Equipment Reports Count Badge
             let unreadReportsCount = 0;
             const totalPendingReports = cachedReportsLocalArray.filter(report => !report.adminResponse || report.adminResponse.trim() === '');
             
@@ -441,7 +439,6 @@
                 badgeReports.style.display = unreadReportsCount > 0 ? 'inline-block' : 'none';
             }
 
-            // 4. Global Outer Hamburger Accent Control Dot
             const hamburgerAlertDot = document.getElementById('hamburgerAlertDot');
             if (hamburgerAlertDot) {
                 hamburgerAlertDot.style.display = (unreadBookingsCount > 0 || unreadLogsCount > 0 || unreadReportsCount > 0) ? 'block' : 'none';
@@ -608,6 +605,7 @@
         const themeSwitchTrigger = document.getElementById('themeSwitchTrigger');
         const logoutActionLink = document.getElementById('logoutActionLink');
 
+        // FIXED: Enabled proper canvas drawer animation routines layout
         function toggleSidebar(open) {
             if(open) { 
                 sidebarDrawer.classList.add('open'); 
@@ -621,8 +619,7 @@
             }
         }
 
-        sidebarDrawer.style.pointerEvents = "none";
-
+        // FIXED: Re-enabled standard interaction tracking listeners across modular boundaries
         document.getElementById('openMenuToggle').addEventListener('click', () => toggleSidebar(true));
         document.getElementById('closeMenuToggle').addEventListener('click', () => toggleSidebar(false));
         menuOverlay.addEventListener('click', () => toggleSidebar(false));
@@ -678,7 +675,11 @@
             });
         });
 
-        window.addEventListener('DOMContentLoaded', initAdminRealtimeStreams);
+        // Initialize Engine Sync Loops
+        window.addEventListener('DOMContentLoaded', () => {
+            toggleSidebar(false); // Clean drawer context load alignment
+            initAdminRealtimeStreams();
+        });
     </script>
 </body>
 </html>
