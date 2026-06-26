@@ -9,22 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:ital,wght@1,900&family=Kanit:ital,wght@1,900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Red Notification Badge Dot over User Dashboard Menu Trigger Button */
-        .hamburger-btn.has-alert {
-            position: relative;
-        }
-        .hamburger-btn.has-alert::after {
-            content: '';
-            position: absolute;
-            top: -2px;
-            right: -4px;
-            width: 10px;
-            height: 10px;
-            background-color: #ff3366;
-            border-radius: 50%;
-            border: 2px solid var(--bg-container);
-        }
-
         /* Dynamic Main Dashboard Card Alert System */
         .feature-card {
             position: relative;
@@ -123,7 +107,6 @@
         const displayUsername = document.getElementById('displayUsername');
         const logoutActionLink = document.getElementById('logoutActionLink');
  
-        // Fallback user defaults if localStorage isn't populated
         const activeUser = localStorage.getItem('currentUser') || 'KLENG';
         displayUsername.textContent = activeUser;
  
@@ -156,7 +139,6 @@
         });
  
         logoutActionLink.addEventListener('click', () => {
-            // FIXED: Preserve verification markings and read states during safe user swap logging out
             const savedLogsBadge = localStorage.getItem('last_seen_logs_content');
             const savedReportsBadge = localStorage.getItem('last_seen_reports_content');
             const savedTheme = localStorage.getItem('theme');
@@ -168,13 +150,9 @@
             if(savedTheme) localStorage.setItem('theme', savedTheme);
         });
 
-        // Global memory strings to stack responses and track string modifications
         let dynamicCurrentLogsStringPool = "";
         let dynamicCurrentReportsStringPool = "";
 
-        // ==========================================
-        //  DYNAMIC NOTIFICATION HANDLING ENGINE
-        // ==========================================
         async function fetchUserRepliesAndAlert() {
             try {
                 let triggerLogsAlert = false;
@@ -182,7 +160,6 @@
 
                 const activeClean = activeUser.trim().toLowerCase();
                 console.log("--- BEATS Alert Engine Active ---");
-                console.log("Logged In User Key:", activeClean);
 
                 // 1. SCAN FOR ADMIN REMARKS IN CONTI LOGS
                 const sheetsSnapshot = await getDocs(collection(db, "beats_conti_sheets"));
@@ -229,12 +206,9 @@
                     triggerReportsAlert = true;
                 }
 
-                // UI Elements Reference Mapping
                 const cardLogsBadge = document.getElementById('card-count-logs');
                 const cardReportsBadge = document.getElementById('card-count-reports');
-                const hamburgerBtn = document.getElementById('openMenuToggle');
 
-                // Render Changes to UI
                 if (cardLogsBadge) {
                     cardLogsBadge.style.display = triggerLogsAlert ? 'block' : 'none';
                 }
@@ -242,19 +216,11 @@
                     cardReportsBadge.style.display = triggerReportsAlert ? 'block' : 'none';
                 }
 
-                // Top Hamburger Menu Alert Sync
-                if (triggerLogsAlert || triggerReportsAlert) {
-                    hamburgerBtn.classList.add('has-alert');
-                } else {
-                    hamburgerBtn.classList.remove('has-alert');
-                }
-
             } catch (err) {
                 console.error("Error running notification script processing loops: ", err);
             }
         }
 
-        // Action when standard interactive options are triggered by clicks
         window.handleSectionNavigation = function(type, targetUrl) {
             if (type === 'logs') {
                 localStorage.setItem('last_seen_logs_content', dynamicCurrentLogsStringPool);
@@ -264,7 +230,6 @@
             window.location.href = targetUrl;
         };
 
-        // Initialize Engine
         window.addEventListener('DOMContentLoaded', fetchUserRepliesAndAlert);
     </script>
 </body>
