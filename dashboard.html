@@ -98,7 +98,28 @@
     </div>
  
     <script type="module">
-        import { db, collection, onSnapshot } from "./firebase-config.js";
+        // Global variables attached safely to window straight away so clicks never freeze
+        window.handleSectionNavigation = function(type, targetUrl) {
+            const activeUser = localStorage.getItem('currentUser') || 'KLENG';
+            const activeClean = activeUser.trim().toLowerCase();
+            if (type === 'reports') {
+                localStorage.setItem(`read_reports_ids_${activeClean}`, JSON.stringify(currentRepliedReportIds));
+            }
+            window.location.href = targetUrl;
+        };
+
+        let currentRepliedReportIds = [];
+
+        // Safe import structure to catch missing database configs cleanly
+        let db, collection, onSnapshot;
+        try {
+            const firebaseModule = await import("./firebase-config.js");
+            db = firebaseModule.db;
+            collection = firebaseModule.collection;
+            onSnapshot = firebaseModule.onSnapshot;
+        } catch (e) {
+            console.error("Critical: Could not load firebase-config.js paths context wrapper.", e);
+        }
 
         const openMenuToggle = document.getElementById('openMenuToggle');
         const closeMenuToggle = document.getElementById('closeMenuToggle');
@@ -108,8 +129,11 @@
         const displayUsername = document.getElementById('displayUsername');
         const logoutActionLink = document.getElementById('logoutActionLink');
  
+        // Sync Identity Framework parameters immediately
         const activeUser = localStorage.getItem('currentUser') || 'KLENG';
-        displayUsername.textContent = activeUser;
+        if (displayUsername) {
+            displayUsername.textContent = activeUser;
+        }
  
         if(localStorage.getItem('theme') === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
@@ -143,17 +167,16 @@
             localStorage.removeItem('currentUser');
         });
 
-        // Global cache array to track current active replied report IDs across updates
-        let currentRepliedReportIds = [];
-
-        // Dynamic Stream Listener Engine Configuration for Realtime Updates
+        // Safe isolated invocation loop for database subscriptions
         function setupRealtimeNotificationEngine() {
+            if (!db || !collection || !onSnapshot) {
+                console.warn("Notification Engine Aborted: Firebase parameters are unavailable.");
+                return;
+            }
+
             const activeClean = activeUser.trim().toLowerCase();
             const cardReportsBadge = document.getElementById('card-count-reports');
 
-            console.log("--- BEATS Realtime Alert Engine Active ---");
-
-            // Setup persistent data stream socket mapping target collection directly
             onSnapshot(collection(db, "beats_reports"), (snapshot) => {
                 let triggerReportsAlert = false;
                 let activeRepliedList = [];
@@ -163,7 +186,6 @@
                     const reporterClean = (data.reporter || "").trim().toLowerCase();
                     const submittedByClean = (data.submittedBy || "").trim().toLowerCase();
                     
-                    // Match document bounds to active login identity profile scopes
                     if (reporterClean === activeClean || submittedByClean === activeClean || activeClean === "master" || activeClean === "admin") {
                         if (data.adminResponse && data.adminResponse.trim() !== "") {
                             activeRepliedList.push(docSnap.id);
@@ -171,13 +193,8 @@
                     }
                 });
 
-                // Update runtime tracking cache reference states
                 currentRepliedReportIds = activeRepliedList;
-
-                // Load local confirmation tracking cache mapping historical user configurations
                 const readReportsCache = JSON.parse(localStorage.getItem(`read_reports_ids_${activeClean}`) || "[]");
-
-                // Audit if any cloud tracking keys do not exist in the confirmed local storage array
                 const hasNewUnreadReplies = activeRepliedList.some(id => !readReportsCache.includes(id));
 
                 if (hasNewUnreadReplies) {
@@ -192,17 +209,6 @@
             });
         }
 
-        // Action when interactive functional options are targeted by input actions
-        window.handleSectionNavigation = function(type, targetUrl) {
-            const activeClean = activeUser.trim().toLowerCase();
-            if (type === 'reports') {
-                // Pipe current snapshots straight to historical data arrays to clear targets on view
-                localStorage.setItem(`read_reports_ids_${activeClean}`, JSON.stringify(currentRepliedReportIds));
-            }
-            window.location.href = targetUrl;
-        };
-
-        // Initialize Runtime Engines
         window.addEventListener('DOMContentLoaded', setupRealtimeNotificationEngine);
     </script>
 </body>
