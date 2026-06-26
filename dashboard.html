@@ -28,6 +28,7 @@
             box-shadow: 0 0 8px rgba(255, 51, 102, 0.8);
             display: none; 
             pointer-events: none; /* Clicks pass straight through to the card elements */
+            z-index: 10;
         }
     </style>
 </head>
@@ -97,7 +98,6 @@
     </div>
  
     <script type="module">
-        // CHANGED: Added onSnapshot for real-time live connection pipelines
         import { db, collection, onSnapshot } from "./firebase-config.js";
 
         const openMenuToggle = document.getElementById('openMenuToggle');
@@ -140,90 +140,70 @@
         });
  
         logoutActionLink.addEventListener('click', () => {
-            const savedLogsBadge = localStorage.getItem('last_seen_logs_content');
-            const savedReportsBadge = localStorage.getItem('last_seen_reports_content');
-            const savedTheme = localStorage.getItem('theme');
-            
-            localStorage.clear();
-            
-            if(savedLogsBadge) localStorage.setItem('last_seen_logs_content', savedLogsBadge);
-            if(savedReportsBadge) localStorage.setItem('last_seen_reports_content', savedReportsBadge);
-            if(savedTheme) localStorage.setItem('theme', savedTheme);
+            localStorage.removeItem('currentUser');
         });
 
-        let dynamicCurrentLogsStringPool = "";
-        let dynamicCurrentReportsStringPool = "";
+        // Global cache array to track current active replied report IDs across updates
+        let currentRepliedReportIds = [];
 
-        // ==========================================
-        //  REAL-TIME AUTOMATED NOTIFICATION ENGINES
-        // ==========================================
-        function initRealtimeAlertListeners() {
+        // Dynamic Stream Listener Engine Configuration for Realtime Updates
+        function setupRealtimeNotificationEngine() {
             const activeClean = activeUser.trim().toLowerCase();
-            const cardLogsBadge = document.getElementById('card-count-logs');
             const cardReportsBadge = document.getElementById('card-count-reports');
 
-            console.log("--- BEATS Real-time Alert Sync Stream Opened ---");
+            console.log("--- BEATS Realtime Alert Engine Active ---");
 
-            // Live Stream Listener for Conti Sheets Collection
-            onSnapshot(collection(db, "beats_conti_sheets"), (snapshot) => {
-                let logsContentSignature = "";
-                
-                snapshot.forEach(docSnap => {
-                    const data = docSnap.data();
-                    const sheetOwner = (data.metaPerson || "").trim().toLowerCase();
-                    
-                    if (sheetOwner === activeClean || activeClean === "master" || activeClean === "admin") {
-                        const rows = data.rows || [];
-                        rows.forEach(row => {
-                            if(row.remarks && row.remarks.trim() !== "") {
-                                logsContentSignature += `${docSnap.id}_${row.remarks.trim()}|`;
-                            }
-                        });
-                    }
-                });
-                
-                dynamicCurrentLogsStringPool = logsContentSignature;
-                const lastSeenLogs = localStorage.getItem('last_seen_logs_content') || "";
-                
-                if (cardLogsBadge) {
-                    cardLogsBadge.style.display = (dynamicCurrentLogsStringPool !== "" && dynamicCurrentLogsStringPool !== lastSeenLogs) ? 'block' : 'none';
-                }
-            }, (err) => console.error("Logs socket crash:", err));
-
-            // Live Stream Listener for Equipment Reports Collection
+            // Setup persistent data stream socket mapping target collection directly
             onSnapshot(collection(db, "beats_reports"), (snapshot) => {
-                let reportsContentSignature = "";
-                
+                let triggerReportsAlert = false;
+                let activeRepliedList = [];
+
                 snapshot.forEach(docSnap => {
                     const data = docSnap.data();
-                    const reporterClean = (data.submittedBy || data.reporter || "").trim().toLowerCase();
+                    const reporterClean = (data.reporter || "").trim().toLowerCase();
+                    const submittedByClean = (data.submittedBy || "").trim().toLowerCase();
                     
-                    if (reporterClean === activeClean || activeClean === "master" || activeClean === "admin") {
+                    // Match document bounds to active login identity profile scopes
+                    if (reporterClean === activeClean || submittedByClean === activeClean || activeClean === "master" || activeClean === "admin") {
                         if (data.adminResponse && data.adminResponse.trim() !== "") {
-                            reportsContentSignature += `${docSnap.id}_${data.adminResponse.trim()}|`;
+                            activeRepliedList.push(docSnap.id);
                         }
                     }
                 });
-                
-                dynamicCurrentReportsStringPool = reportsContentSignature;
-                const lastSeenReports = localStorage.getItem('last_seen_reports_content') || "";
-                
-                if (cardReportsBadge) {
-                    cardReportsBadge.style.display = (dynamicCurrentReportsStringPool !== "" && dynamicCurrentReportsStringPool !== lastSeenReports) ? 'block' : 'none';
+
+                // Update runtime tracking cache reference states
+                currentRepliedReportIds = activeRepliedList;
+
+                // Load local confirmation tracking cache mapping historical user configurations
+                const readReportsCache = JSON.parse(localStorage.getItem(`read_reports_ids_${activeClean}`) || "[]");
+
+                // Audit if any cloud tracking keys do not exist in the confirmed local storage array
+                const hasNewUnreadReplies = activeRepliedList.some(id => !readReportsCache.includes(id));
+
+                if (hasNewUnreadReplies) {
+                    triggerReportsAlert = true;
                 }
-            }, (err) => console.error("Reports socket crash:", err));
+
+                if (cardReportsBadge) {
+                    cardReportsBadge.style.display = triggerReportsAlert ? 'block' : 'none';
+                }
+            }, (err) => {
+                console.error("Realtime notification stream listener failure:", err);
+            });
         }
 
+        // Action when interactive functional options are targeted by input actions
         window.handleSectionNavigation = function(type, targetUrl) {
-            if (type === 'logs') {
-                localStorage.setItem('last_seen_logs_content', dynamicCurrentLogsStringPool);
-            } else if (type === 'reports') {
-                localStorage.setItem('last_seen_reports_content', dynamicCurrentReportsStringPool);
+            const activeClean = activeUser.trim().toLowerCase();
+            if (type === 'reports') {
+                // Pipe current snapshots straight to historical data arrays to clear targets on view
+                localStorage.setItem(`read_reports_ids_${activeClean}`, JSON.stringify(currentRepliedReportIds));
             }
             window.location.href = targetUrl;
         };
 
-        window.addEventListener('DOMContentLoaded', initRealtimeAlertListeners);
+        // Initialize Runtime Engines
+        window.addEventListener('DOMContentLoaded', setupRealtimeNotificationEngine);
     </script>
 </body>
 </html>
