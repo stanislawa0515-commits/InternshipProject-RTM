@@ -352,6 +352,8 @@
                     return;
                 }
 
+                let reportsSignatureBuilder = "";
+
                 querySnapshot.forEach((docSnapshot) => {
                     const item = docSnapshot.data();
                     const bubble = document.createElement('div');
@@ -369,6 +371,9 @@
                         responseSectionHTML = `
                             <div style="margin-top:10px; font-weight:bold; color:var(--brand-magenta);">💬 Admin Official Reply:</div>
                             <div class="reply-text-wrapper">${item.adminResponse}</div>`;
+                        
+                        // Append to signature text calculation pool loop mapping
+                        reportsSignatureBuilder += `${docSnapshot.id}_${item.adminResponse.trim()}|`;
                     }
      
                     let imageThumbnailHTML = "";
@@ -392,6 +397,12 @@
                     `;
                     userReportsFeedbackDeck.appendChild(bubble);
                 });
+
+                // Auto-save signature footprint immediately when page loaded to silence notification red dot
+                if(reportsSignatureBuilder !== "") {
+                    localStorage.setItem('last_seen_reports_content', reportsSignatureBuilder);
+                }
+
             } catch (err) {
                 console.error("Firebase collection fetch failure:", err);
                 userReportsFeedbackDeck.innerHTML = `<p style="font-size:0.85rem; color:red; text-align:center; padding:10px;">Error syncing with cloud history module.</p>`;
@@ -445,7 +456,18 @@
         // Initialization Routine Lifecycles
         configureRealtimeClockParameters();
         refreshFeedbackDeckDisplay();
-        logoutActionLink.addEventListener('click', () => localStorage.removeItem('currentUser'));
+        
+        logoutActionLink.addEventListener('click', () => {
+            const savedLogsBadge = localStorage.getItem('last_seen_logs_content');
+            const savedReportsBadge = localStorage.getItem('last_seen_reports_content');
+            const savedTheme = localStorage.getItem('theme');
+            
+            localStorage.clear();
+            
+            if(savedLogsBadge) localStorage.setItem('last_seen_logs_content', savedLogsBadge);
+            if(savedReportsBadge) localStorage.setItem('last_seen_reports_content', savedReportsBadge);
+            if(savedTheme) localStorage.setItem('theme', savedTheme);
+        });
     </script>
 </body>
 </html>
