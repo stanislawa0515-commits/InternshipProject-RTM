@@ -175,7 +175,6 @@
 
     <div class="dashboard-view-wrapper">
         
-
         <section class="admin-section active-view" id="adminHomeSection">
             <div class="slider-box">
                 <div class="slider-track">
@@ -267,7 +266,8 @@
     </div>
 
     <script type="module">
-        import { db, collection, doc, getDocs, getDoc, updateDoc, deleteDoc, setDoc } from "./firebase-config.js";
+        // CHANGED: Imported onSnapshot to link persistent real-time change streams
+        import { db, collection, doc, updateDoc, deleteDoc, onSnapshot } from "./firebase-config.js";
 
         const currentActiveUser = localStorage.getItem('currentUser');
         if (currentActiveUser !== 'Admin' && currentActiveUser !== 'admin@beats.com') {
@@ -283,17 +283,117 @@
         let calendarCurrentDate = new Date();
         let selectedDateFilterString = null; 
 
-        // CRUCIAL PIECE: High-water mark identifiers preserved to verify what was previously cleared
         let badgeCheckpoints = {
             bookingsLastSeenId: localStorage.getItem('checkpoint_bookings_id') || '',
             logsLastSeenCount: parseInt(localStorage.getItem('checkpoint_logs_count') || '0', 10),
             reportsLastSeenId: localStorage.getItem('checkpoint_reports_id') || ''
         };
 
-        async function loadAdminData() {
-            await renderBookings();
-            await renderContiSheetsRows();
-            await renderReports();
+        // CHANGED: Converted initialization loops into continuous open onSnapshot listening ports
+        function initAdminRealtimeStreams() {
+            // 1. Live Sync Listener for Bookings Engine
+            onSnapshot(collection(db, "beats_bookings"), (snapshot) => {
+                globalBookingsArray = [];
+                snapshot.forEach(docSnapshot => {
+                    const item = docSnapshot.data();
+                    const id = docSnapshot.id;
+                    globalBookingsArray.push({ id, ...item });
+                });
+                globalBookingsArray.sort((a, b) => new Date(a.date) - new Date(b.date));
+                populateUpcomingStackDOM();
+                buildLiveCalendarGrid();
+                updateNotificationBadges();
+            }, (err) => console.error("Bookings stream connection failed: ", err));
+
+            // 2. Live Sync Listener for Conti Sheet Table Row Engines
+            onSnapshot(collection(db, "beats_conti_sheets"), (snapshot) => {
+                const container = document.getElementById('adminContiSheetsBody');
+                container.innerHTML = '';
+                const uniqueUsersSet = new Set();
+                let totalRowsDisplayed = 0;
+
+                snapshot.forEach(docSnapshot => {
+                    const sheetId = docSnapshot.id;
+                    const sheetData = docSnapshot.data();
+                    const rowsArray = sheetData.rows || [];
+
+                    if (rowsArray.length === 0) { return; }
+
+                    const userKey = (sheetData.metaPerson || 'UnknownDJ').trim().toLowerCase();
+                    uniqueUsersSet.add(userKey);
+
+                    rowsArray.forEach((rowItem) => {
+                        totalRowsDisplayed++;
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>
+                                <strong>${sheetData.metaPerson || 'DJ'}</strong><br>
+                                <small>${sheetData.metaDate || ''}</small><br>
+                                <small style="color:var(--brand-cyan)">${sheetData.metaInterval || ''}</small>
+                            </td>
+                            <td>${rowItem.hour}:${rowItem.minute} ${rowItem.ampm}</td>
+                            <td><strong>${rowItem.title || 'Untitled'}</strong></td>
+                            <td>${rowItem.lr || '--'}</td>
+                            <td>${rowItem.producer || '--'}</td>
+                            <td>${rowItem.netia || '--'}</td>
+                            <td>${rowItem.remarks || ''}</td>
+                        `;
+                        container.appendChild(tr);
+                    });
+                });
+
+                if (totalRowsDisplayed === 0) {
+                    container.innerHTML = `<tr><td colspan="7" style="text-align:center; font-style:italic;">No active sheet logs found.</td></tr>`;
+                }
+                
+                uniqueLogUserCount = uniqueUsersSet.size;
+                updateNotificationBadges();
+            }, (err) => console.error("Conti logs stream connection failed: ", err));
+
+            // 3. Live Sync Listener for Equipment Reports Modules
+            onSnapshot(collection(db, "beats_reports"), (snapshot) => {
+                const container = document.getElementById('adminReportBody');
+                container.innerHTML = '';
+                cachedReportsLocalArray = [];
+                let trackingIdx = 0;
+
+                snapshot.forEach(docSnapshot => {
+                    const item = docSnapshot.data();
+                    const id = docSnapshot.id;
+                    cachedReportsLocalArray.push({ docId: id, ...item });
+
+                    const tr = document.createElement('tr');
+                    const statusClass = item.adminResponse ? 'status-replied' : 'status-pending';
+                    const statusText = item.adminResponse ? 'Replied' : 'Pending';
+                    
+                    let attachmentHTML = item.imageAttachment ? `<button type="button" class="attachment-badge btn-view-photo" data-idx="${trackingIdx}">📎 View File</button>` : `<span class="no-attachment">None</span>`;
+                    
+                    tr.innerHTML = `
+                        <td>${item.id || id}<br><small>${item.date}</small></td>
+                        <td>${item.reporter}<br><small>${item.department}</small></td>
+                        <td>${item.eqModel}</td>
+                        <td><strong>${item.issueType}</strong>: ${item.description}</td>
+                        <td>${attachmentHTML}</td>
+                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        <td>
+                            <div class="response-box">
+                                <input type="text" id="resp-${id}" class="response-input" placeholder="Type reply..." value="${item.adminResponse || ''}">
+                                <button type="button" class="row-btn row-btn-save btn-send-resp" data-id="${id}">Send</button>
+                                <button type="button" class="row-delete-btn btn-del-report" data-id="${id}">Delete</button>
+                            </div>
+                        </td>
+                    `;
+
+                    tr.querySelector('.btn-view-photo')?.addEventListener('click', (e) => openPhotoViewerModal(e.target.dataset.idx));
+                    tr.querySelector('.btn-send-resp').addEventListener('click', (e) => sendResponse(e.target.dataset.id));
+                    tr.querySelector('.btn-del-report').addEventListener('click', (e) => deleteEquipmentReport(e.target.dataset.id));
+
+                    container.appendChild(tr);
+                    trackingIdx++;
+                });
+
+                updateNotificationBadges();
+            }, (err) => console.error("Reports stream connection failed: ", err));
         }
 
         function updateNotificationBadges() {
@@ -310,24 +410,16 @@
             
             const badgeBookings = document.getElementById('badgeBookings');
             if (badgeBookings) {
-                if (unreadBookingsCount > 0) {
-                    badgeBookings.innerText = unreadBookingsCount;
-                    badgeBookings.style.display = 'inline-block';
-                } else {
-                    badgeBookings.style.display = 'none';
-                }
+                badgeBookings.innerText = unreadBookingsCount;
+                badgeBookings.style.display = unreadBookingsCount > 0 ? 'inline-block' : 'none';
             }
 
             // 2. Conti Logs Count Badge
             const unreadLogsCount = Math.max(0, uniqueLogUserCount - badgeCheckpoints.logsLastSeenCount);
             const badgeLogs = document.getElementById('badgeLogs');
             if (badgeLogs) {
-                if (unreadLogsCount > 0) {
-                    badgeLogs.innerText = unreadLogsCount;
-                    badgeLogs.style.display = 'inline-block';
-                } else {
-                    badgeLogs.style.display = 'none';
-                }
+                badgeLogs.innerText = unreadLogsCount;
+                badgeLogs.style.display = unreadLogsCount > 0 ? 'inline-block' : 'none';
             }
 
             // 3. Equipment Reports Count Badge
@@ -345,41 +437,15 @@
 
             const badgeReports = document.getElementById('badgeReports');
             if (badgeReports) {
-                if (unreadReportsCount > 0) {
-                    badgeReports.innerText = unreadReportsCount;
-                    badgeReports.style.display = 'inline-block';
-                } else {
-                    badgeReports.style.display = 'none';
-                }
+                badgeReports.innerText = unreadReportsCount;
+                badgeReports.style.display = unreadReportsCount > 0 ? 'inline-block' : 'none';
             }
 
             // 4. Global Outer Hamburger Accent Control Dot
             const hamburgerAlertDot = document.getElementById('hamburgerAlertDot');
             if (hamburgerAlertDot) {
-                if (unreadBookingsCount > 0 || unreadLogsCount > 0 || unreadReportsCount > 0) {
-                    hamburgerAlertDot.style.display = 'block';
-                } else {
-                    hamburgerAlertDot.style.display = 'none';
-                }
+                hamburgerAlertDot.style.display = (unreadBookingsCount > 0 || unreadLogsCount > 0 || unreadReportsCount > 0) ? 'block' : 'none';
             }
-        }
-
-        async function renderBookings() {
-            globalBookingsArray = [];
-            try {
-                const snapshot = await getDocs(collection(db, "beats_bookings"));
-                snapshot.forEach(docSnapshot => {
-                    const item = docSnapshot.data();
-                    const id = docSnapshot.id;
-                    globalBookingsArray.push({ id, ...item });
-                });
-
-                globalBookingsArray.sort((a, b) => new Date(a.date) - new Date(b.date));
-                populateUpcomingStackDOM();
-                buildLiveCalendarGrid();
-                
-                updateNotificationBadges();
-            } catch (err) { console.error(err); }
         }
 
         function populateUpcomingStackDOM() {
@@ -499,108 +565,7 @@
         async function deleteBooking(id) {
             if(confirm("Admin Override: Delete this booking?")) {
                 await deleteDoc(doc(db, "beats_bookings", id));
-                await renderBookings();
             }
-        }
-
-        async function renderContiSheetsRows() {
-            const container = document.getElementById('adminContiSheetsBody');
-            container.innerHTML = '';
-            
-            const uniqueUsersSet = new Set();
-            let totalRowsDisplayed = 0;
-
-            try {
-                const snapshot = await getDocs(collection(db, "beats_conti_sheets"));
-                
-                snapshot.forEach(docSnapshot => {
-                    const sheetId = docSnapshot.id;
-                    const sheetData = docSnapshot.data();
-                    const rowsArray = sheetData.rows || [];
-
-                    if (rowsArray.length === 0) { return; }
-
-                    const userKey = (sheetData.metaPerson || 'UnknownDJ').trim().toLowerCase();
-                    uniqueUsersSet.add(userKey);
-
-                    rowsArray.forEach((rowItem, rowIndex) => {
-                        totalRowsDisplayed++;
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>
-                                <strong>${sheetData.metaPerson || 'DJ'}</strong><br>
-                                <small>${sheetData.metaDate || ''}</small><br>
-                                <small style="color:var(--brand-cyan)">${sheetData.metaInterval || ''}</small>
-                            </td>
-                            <td>${rowItem.hour}:${rowItem.minute} ${rowItem.ampm}</td>
-                            <td><strong>${rowItem.title || 'Untitled'}</strong></td>
-                            <td>${rowItem.lr || '--'}</td>
-                            <td>${rowItem.producer || '--'}</td>
-                            <td>${rowItem.netia || '--'}</td>
-                            <td>${rowItem.remarks || ''}</td>
-                        `;
-
-                        container.appendChild(tr);
-                    });
-                });
-
-                if (totalRowsDisplayed === 0) {
-                    container.innerHTML = `<tr><td colspan="7" style="text-align:center; font-style:italic;">No active sheet logs found.</td></tr>`;
-                }
-                
-                uniqueLogUserCount = uniqueUsersSet.size;
-                updateNotificationBadges();
-
-            } catch(err) { console.error(err); }
-        }
-
-        async function renderReports() {
-            const container = document.getElementById('adminReportBody');
-            container.innerHTML = '';
-            cachedReportsLocalArray = [];
-            
-            try {
-                const snapshot = await getDocs(collection(db, "beats_reports"));
-                let trackingIdx = 0;
-                
-                snapshot.forEach(docSnapshot => {
-                    const item = docSnapshot.data();
-                    const id = docSnapshot.id;
-                    cachedReportsLocalArray.push({ docId: id, ...item });
-
-                    const tr = document.createElement('tr');
-                    const statusClass = item.adminResponse ? 'status-replied' : 'status-pending';
-                    const statusText = item.adminResponse ? 'Replied' : 'Pending';
-                    
-                    let attachmentHTML = item.imageAttachment ? `<button type="button" class="attachment-badge btn-view-photo" data-idx="${trackingIdx}">📎 View File</button>` : `<span class="no-attachment">None</span>`;
-                    
-                    tr.innerHTML = `
-                        <td>${item.id}<br><small>${item.date}</small></td>
-                        <td>${item.reporter}<br><small>${item.department}</small></td>
-                        <td>${item.eqModel}</td>
-                        <td><strong>${item.issueType}</strong>: ${item.description}</td>
-                        <td>${attachmentHTML}</td>
-                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                        <td>
-                            <div class="response-box">
-                                <input type="text" id="resp-${id}" class="response-input" placeholder="Type reply..." value="${item.adminResponse || ''}">
-                                <button type="button" class="row-btn row-btn-save btn-send-resp" data-id="${id}">Send</button>
-                                <button type="button" class="row-delete-btn btn-del-report" data-id="${id}">Delete</button>
-                            </div>
-                        </td>
-                    `;
-
-                    tr.querySelector('.btn-view-photo')?.addEventListener('click', (e) => openPhotoViewerModal(e.target.dataset.idx));
-                    tr.querySelector('.btn-send-resp').addEventListener('click', (e) => sendResponse(e.target.dataset.id));
-                    tr.querySelector('.btn-del-report').addEventListener('click', (e) => deleteEquipmentReport(e.target.dataset.id));
-
-                    container.appendChild(tr);
-                    trackingIdx++;
-                });
-
-                updateNotificationBadges();
-
-            } catch(err) { console.error(err); }
         }
 
         async function sendResponse(id) {
@@ -608,7 +573,6 @@
             try {
                 await updateDoc(doc(db, "beats_reports", id), { adminResponse: responseText });
                 alert("Response sent to reporter!");
-                await renderReports();
             } catch(err) { alert("Send operation failed."); }
         }
 
@@ -616,7 +580,6 @@
             if(confirm("Admin Master Override: Permanent data erase warning?")) {
                 await deleteDoc(doc(db, "beats_reports", id));
                 alert("Equipment report deleted.");
-                await renderReports(); 
             }
         }
 
@@ -674,7 +637,6 @@
             }
         });
 
-        // FIXED: Only clear user details, preserving verification marks in localStorage on logout
         logoutActionLink.addEventListener('click', () => { 
             localStorage.removeItem('currentUser'); 
         });
@@ -687,7 +649,6 @@
                 e.preventDefault();
                 const targetId = trigger.getAttribute('data-target');
 
-                // Advance boundary references when an admin opens a category view
                 if (targetId === 'contiBookingsSection' && globalBookingsArray.length > 0) {
                     const absoluteLastId = globalBookingsArray[globalBookingsArray.length - 1].id;
                     badgeCheckpoints.bookingsLastSeenId = absoluteLastId;
@@ -717,7 +678,7 @@
             });
         });
 
-        window.addEventListener('DOMContentLoaded', loadAdminData);
+        window.addEventListener('DOMContentLoaded', initAdminRealtimeStreams);
     </script>
 </body>
 </html>
