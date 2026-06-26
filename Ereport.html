@@ -9,7 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:ital,wght@1,900&family=Kanit:ital,wght@1,900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Strict alignment of form typography variables */
         .form-box input, 
         .form-box select, 
         .form-box textarea,
@@ -23,7 +22,6 @@
             font-style: italic;
         }
 
-        /* Checkbox Layout Architecture Modifications */
         .checkbox-group-row {
             display: flex;
             align-items: center;
@@ -48,7 +46,6 @@
             accent-color: var(--brand-cyan);
         }
 
-        /* Custom File Upload Button Styling Layer */
         .file-upload-wrapper {
             display: flex;
             flex-direction: column;
@@ -85,7 +82,6 @@
             word-break: break-all;
         }
 
-        /* Admin Response History Deck Layout styles */
         .history-deck-container {
             margin-top: 25px;
             border-top: 2px dashed var(--border-color);
@@ -112,7 +108,6 @@
             color: var(--text-primary);
         }
 
-        /* User history view image thumbnail frame */
         .report-preview-img {
             width: 80px;
             height: 80px;
@@ -153,7 +148,6 @@
             <h2>E-Equipment Report</h2>
             
             <form id="eEquipmentReportForm">
-                
                 <h3 style="font-family: 'Kanit', sans-serif; font-style: italic; font-size: 1.2rem; color: var(--brand-magenta); margin-bottom: 12px; border-bottom: 2px dashed var(--border-color); padding-bottom: 4px; text-transform: uppercase;">Reporter Information</h3>
                 
                 <div class="input-group">
@@ -246,7 +240,6 @@
         const displayUsername = document.getElementById('displayUsername');
         const logoutActionLink = document.getElementById('logoutActionLink');
 
-        // Dynamic Input Form Reference Points
         const reportDateInput = document.getElementById('reportDate');
         const reportTimeInput = document.getElementById('reportTime');
         const fileUploadInput = document.getElementById('fileUploadInput');
@@ -256,18 +249,15 @@
         const eEquipmentReportForm = document.getElementById('eEquipmentReportForm');
         const userReportsFeedbackDeck = document.getElementById('userReportsFeedbackDeck');
 
-        let base64ImageString = ""; // Stores converted image string matrix
+        let base64ImageString = ""; 
 
-        // Identity Configuration Setup
         const currentActiveIdentity = localStorage.getItem('currentUser') || 'Guest';
         displayUsername.textContent = currentActiveIdentity;
 
-        // Theme Initialization Context Syncing
         if(localStorage.getItem('theme') === 'dark') { 
             document.documentElement.setAttribute('data-theme', 'dark'); 
         }
 
-        // Global Sidebar Canvas Drawer Animation Routines
         function toggleSidebar(open) {
             if(open) { 
                 sidebarDrawer.classList.add('open'); 
@@ -281,7 +271,6 @@
         closeMenuToggle.addEventListener('click', () => toggleSidebar(false));
         menuOverlay.addEventListener('click', () => toggleSidebar(false));
 
-        // Global Application Context Mode Mutator Switching Node Actions
         themeSwitchTrigger.addEventListener('click', () => {
             if(document.documentElement.hasAttribute('data-theme')) {
                 document.documentElement.removeAttribute('data-theme');
@@ -292,10 +281,8 @@
             }
         });
 
-        // Real-time Automated Time Evaluation Synchronization Subsystems
         function configureRealtimeClockParameters() {
             const dateInstance = new Date();
-            
             const formattedISODateString = dateInstance.toISOString().split('T')[0];
             reportDateInput.value = formattedISODateString;
 
@@ -305,14 +292,12 @@
 
             clockHoursRaw = clockHoursRaw % 12;
             clockHoursRaw = clockHoursRaw ? clockHoursRaw : 12; 
-            
             const stringHoursNormalized = clockHoursRaw < 10 ? '0' + clockHoursRaw : clockHoursRaw;
             const stringMinutesNormalized = clockMinutesRaw < 10 ? '0' + clockMinutesRaw : clockMinutesRaw;
 
             reportTimeInput.value = `${stringHoursNormalized}:${stringMinutesNormalized} ${periodIndicatorAMPM}`;
         }
 
-        // Checkbox Enforced Validation: Mutual Exclusive Checkbox Selections Handling
         typeDamageCheckbox.addEventListener('change', () => {
             if(typeDamageCheckbox.checked) typeLossCheckbox.checked = false;
         });
@@ -321,13 +306,11 @@
             if(typeLossCheckbox.checked) typeDamageCheckbox.checked = false;
         });
 
-        // Dynamic Attachment Conversion Engine Configuration Hook
         fileUploadInput.addEventListener('change', (e) => {
             if(e.target.files.length > 0) {
                 const targetFile = e.target.files[0];
                 fileNameDisplay.textContent = `📎 Attached: ${targetFile.name}`;
                 
-                // Read local file input matrix and serialize into text
                 const reader = new FileReader();
                 reader.onload = function(event) {
                     base64ImageString = event.target.result; 
@@ -339,11 +322,9 @@
             }
         });
 
-        // READ & DISPLAY ADMIN REPLIES FILTERED BY ACTIVE USER (CLOUD INTERFACE)
         async function refreshFeedbackDeckDisplay() {
             userReportsFeedbackDeck.innerHTML = '';
             try {
-                // Fetch reports explicitly scoped onto signed in profile identities
                 const q = query(collection(db, "beats_reports"), where("submittedBy", "==", currentActiveIdentity));
                 const querySnapshot = await getDocs(q);
                 
@@ -372,7 +353,6 @@
                             <div style="margin-top:10px; font-weight:bold; color:var(--brand-magenta);">💬 Admin Official Reply:</div>
                             <div class="reply-text-wrapper">${item.adminResponse}</div>`;
                         
-                        // Append to signature text calculation pool loop mapping
                         reportsSignatureBuilder += `${docSnapshot.id}_${item.adminResponse.trim()}|`;
                     }
      
@@ -398,7 +378,6 @@
                     userReportsFeedbackDeck.appendChild(bubble);
                 });
 
-                // Auto-save signature footprint immediately when page loaded to silence notification red dot
                 if(reportsSignatureBuilder !== "") {
                     localStorage.setItem('last_seen_reports_content', reportsSignatureBuilder);
                 }
@@ -409,7 +388,6 @@
             }
         }
 
-        // Submit Data Execution Serialization Lifecycle Sequence
         eEquipmentReportForm.addEventListener('submit', async (event) => {
             event.preventDefault();
 
@@ -422,7 +400,6 @@
             const generatedId = 'REP_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
 
             try {
-                // Directly pipe entry parameters to match beats_reports cloud targets
                 await setDoc(doc(db, "beats_reports", generatedId), {
                     id: generatedId,
                     reporter: document.getElementById('reporterName').value.trim(),
@@ -436,13 +413,13 @@
                     description: document.getElementById('detailedDescription').value.trim(),
                     submittedBy: currentActiveIdentity,
                     adminResponse: "",
-                    imageAttachment: base64ImageString // Port image parameters directly into global payload
+                    imageAttachment: base64ImageString 
                 });
 
                 alert(`Success! E-Equipment report asset entry submitted successfully. Log Record Lock Identifier: ${generatedId}`);
                 
                 eEquipmentReportForm.reset();
-                base64ImageString = ""; // Reset internal memory cache string parameters
+                base64ImageString = ""; 
                 configureRealtimeClockParameters();
                 fileNameDisplay.textContent = "No asset photo attached";
                 await refreshFeedbackDeckDisplay();
@@ -453,7 +430,6 @@
             }
         });
 
-        // Initialization Routine Lifecycles
         configureRealtimeClockParameters();
         refreshFeedbackDeckDisplay();
         
