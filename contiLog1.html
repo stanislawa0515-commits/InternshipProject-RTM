@@ -30,10 +30,10 @@
         
         .log-container-card { background: #ffffff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 30px; width: 90%; max-width: 1200px; margin: 20px auto; flex: 1; box-sizing: border-box; }
         .header-logo-section { text-align: center; margin-bottom: 25px; }
-        .header-logo-section img { max-width: 150px; height: auto; margin-bottom: 10px; }
+        .header-logo-section img { max-width: 150px; height: auto; margin-bottom: 10px; display: inline-block; }
         .divider-line { border: none; height: 2px; background: linear-gradient(to right, transparent, #dc2b5c, transparent); margin: 25px 0; }
         
-        /* Grid Layout & Form elements for Responsiveness and Uniform Size */
+        /* Grid Layout & Form elements */
         .metadata-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; background: rgba(0,0,0,0.02); padding: 20px; border-radius: 8px; margin-bottom: 25px; align-items: flex-end; }
         .meta-field { display: flex; flex-direction: column; gap: 5px; }
         .meta-field label { font-weight: 600; font-size: 0.85rem; color: #555; text-transform: uppercase; }
@@ -131,14 +131,14 @@
 
     <main class="log-container-card">
         <div class="header-logo-section">
-            <img src="BINTULUfm.png" alt="BINTULUfm Logo">
+            <img src="https://raw.githubusercontent.com/stanislawa0515-commits/InternshipProject-RTM/main/BINTULUfm.png" alt="BINTULUfm Logo">
             <h2>CATATAN KONTI</h2>
         </div>
         <hr class="divider-line">
         <div class="metadata-grid">
             <div class="meta-field"><label>JH BERTUGAS :</label><input type="text" id="jhBertugas"></div>
             <div class="meta-field"><label>Tarikh :</label><input type="date" id="tarikh"></div>
-            <div class="meta-field"><label>Waktu :</label><input type="text" id="waktu"></div>
+            <div class="meta-field"><label>Waktu :</label><input type="text" id="waktu" placeholder="e.g. 0900 - 1200"></div>
         </div>
 
         <div class="table-responsive-wrapper">
@@ -168,7 +168,8 @@
     </main>
 
     <footer>&copy; 2026 RTM Bintulu. All rights reserved.</footer>
-<script type="module" src="presence.js"></script>
+
+    <script type="module" src="presence.js"></script>
     <script type="module">
         import { db, doc, setDoc, getDoc } from "./firebase-config.js";
 
@@ -255,7 +256,7 @@
                 updatedAt: timestampNow
             });
 
-            // 2. Dispatch real-time alert to central beats_notifications collection with target metadata
+            // 2. Dispatch real-time alert to central beats_notifications collection
             const notifDocId = `contilog_${activeUser}_${dateKey}_${timestampNow}`;
             await setDoc(doc(db, "beats_notifications", notifDocId), {
                 id: notifDocId,
@@ -276,7 +277,7 @@
             
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                document.getElementById('jhBertugas').value = data.jhBertugas || '';
+                document.getElementById('jhBertugas').value = data.jhBertugas || activeUser;
                 document.getElementById('waktu').value = data.waktu || '';
                 logBody.innerHTML = '';
                 if (data.rows && data.rows.length) {
@@ -284,11 +285,10 @@
                 } else {
                     addRow();
                 }
-                document.querySelectorAll('.btn-save').forEach(btn => btn.click());
             } else {
                 logBody.innerHTML = '';
                 addRow();
-                document.getElementById('jhBertugas').value = '';
+                document.getElementById('jhBertugas').value = activeUser !== 'Guest' ? activeUser : '';
                 document.getElementById('waktu').value = '';
             }
         }
