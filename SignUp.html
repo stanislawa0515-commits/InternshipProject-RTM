@@ -57,7 +57,6 @@
 
     <script type="module">
         import { db, getDoc, doc, setDoc } from "./firebase-config.js";
-        import { serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         if (localStorage.getItem('beats-theme') === 'light') {
             document.documentElement.setAttribute('data-theme', 'light');
@@ -83,7 +82,7 @@
             }
 
             try {
-                // Verify if profile already documented in Firebase collections
+                // Check if user already exists
                 const userDocRef = doc(db, "beats_users", email);
                 const userSnapshot = await getDoc(userDocRef);
 
@@ -92,13 +91,13 @@
                     return;
                 }
 
-                // Create account inside Firebase Firestore
+                // Save user details to Firestore
                 await setDoc(userDocRef, {
                     name: name,
                     username: username,
                     email: email,
                     password: password,
-                    createdAt: serverTimestamp()
+                    createdAt: Date.now()
                 });
 
                 alert('Registration complete! You can now Sign In.');
@@ -106,12 +105,7 @@
 
             } catch (error) {
                 console.error("Database registration issue:", error);
-                
-                if (error.code === 'permission-denied') {
-                    alert("Permission denied by Firebase Firestore rules. Please update your Security Rules on Firebase Console.");
-                } else {
-                    alert("Error writing records to cloud servers. Check console logs for details.");
-                }
+                alert("Error writing records to cloud servers: " + error.message);
             }
         });
     </script>
