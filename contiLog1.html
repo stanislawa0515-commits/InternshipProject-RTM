@@ -234,62 +234,71 @@
         };
 
         document.getElementById('saveBtn').onclick = async () => {
-            const dateKey = tarikhInput.value;
-            const rows = Array.from(logBody.querySelectorAll('tr')).map(tr => ({
-                h: tr.querySelector('.h').value,
-                m: tr.querySelector('.m').value,
-                tajuk: tr.querySelectorAll('.segment-detail-input')[0].innerText,
-                lr: tr.querySelector('.lr').value,
-                penerbit: tr.querySelectorAll('.segment-detail-input')[1].innerText,
-                cd: tr.querySelector('.cd').value,
-                catatan: tr.querySelectorAll('.segment-detail-input')[2].innerText
-            }));
+            try {
+                const dateKey = tarikhInput.value;
+                const rows = Array.from(logBody.querySelectorAll('tr')).map(tr => ({
+                    h: tr.querySelector('.h').value,
+                    m: tr.querySelector('.m').value,
+                    tajuk: tr.querySelectorAll('.segment-detail-input')[0].innerText,
+                    lr: tr.querySelector('.lr').value,
+                    penerbit: tr.querySelectorAll('.segment-detail-input')[1].innerText,
+                    cd: tr.querySelector('.cd').value,
+                    catatan: tr.querySelectorAll('.segment-detail-input')[2].innerText
+                }));
 
-            const jhBertugasVal = document.getElementById('jhBertugas').value || activeUser;
-            const timestampNow = Date.now();
+                const jhBertugasVal = document.getElementById('jhBertugas').value || activeUser;
+                const timestampNow = Date.now();
 
-            // 1. Save main log document
-            await setDoc(doc(db, "beats_conti_logs", activeUser, "dates", dateKey), {
-                jhBertugas: jhBertugasVal,
-                waktu: document.getElementById('waktu').value,
-                rows: rows,
-                updatedAt: timestampNow
-            });
+                // 1. Save main log document
+                await setDoc(doc(db, "beats_conti_logs", activeUser, "dates", dateKey), {
+                    jhBertugas: jhBertugasVal,
+                    waktu: document.getElementById('waktu').value,
+                    rows: rows,
+                    updatedAt: timestampNow
+                });
 
-            // 2. Dispatch real-time alert to central beats_notifications collection
-            const notifDocId = `contilog_${activeUser}_${dateKey}_${timestampNow}`;
-            await setDoc(doc(db, "beats_notifications", notifDocId), {
-                id: notifDocId,
-                title: "New Conti Log Entry",
-                message: `User ${activeUser} submitted Conti Log for ${dateKey}`,
-                sourcePage: "contiLog.html",
-                targetUser: activeUser,
-                targetDate: dateKey,
-                timestamp: timestampNow
-            });
+                // 2. Dispatch real-time alert to central beats_notifications collection
+                const notifDocId = `contilog_${activeUser}_${dateKey}_${timestampNow}`;
+                await setDoc(doc(db, "beats_notifications", notifDocId), {
+                    id: notifDocId,
+                    title: "New Conti Log Entry",
+                    message: `User ${activeUser} submitted Conti Log for ${dateKey}`,
+                    sourcePage: "contiLog.html",
+                    targetUser: activeUser,
+                    targetDate: dateKey,
+                    timestamp: timestampNow
+                });
 
-            alert("Data saved successfully!");
+                alert("Data saved successfully!");
+            } catch (err) {
+                console.error("Save error: ", err);
+                alert("Failed to save: " + err.message);
+            }
         };
 
         async function loadData() {
-            const dateKey = tarikhInput.value;
-            const docSnap = await getDoc(doc(db, "beats_conti_logs", activeUser, "dates", dateKey));
-            
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                document.getElementById('jhBertugas').value = data.jhBertugas || activeUser;
-                document.getElementById('waktu').value = data.waktu || '';
-                logBody.innerHTML = '';
-                if (data.rows && data.rows.length) {
-                    data.rows.forEach(r => addRow(r));
+            try {
+                const dateKey = tarikhInput.value;
+                const docSnap = await getDoc(doc(db, "beats_conti_logs", activeUser, "dates", dateKey));
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.getElementById('jhBertugas').value = data.jhBertugas || activeUser;
+                    document.getElementById('waktu').value = data.waktu || '';
+                    logBody.innerHTML = '';
+                    if (data.rows && data.rows.length) {
+                        data.rows.forEach(r => addRow(r));
+                    } else {
+                        addRow();
+                    }
                 } else {
+                    logBody.innerHTML = '';
                     addRow();
+                    document.getElementById('jhBertugas').value = activeUser !== 'Guest' ? activeUser : '';
+                    document.getElementById('waktu').value = '';
                 }
-            } else {
-                logBody.innerHTML = '';
-                addRow();
-                document.getElementById('jhBertugas').value = activeUser !== 'Guest' ? activeUser : '';
-                document.getElementById('waktu').value = '';
+            } catch (err) {
+                console.error("Load error: ", err);
             }
         }
 
