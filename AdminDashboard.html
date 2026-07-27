@@ -700,7 +700,7 @@
             if (window.lucide) lucide.createIcons();
         }
 
-        // DIRECT RUN ON MODULE LOAD (bypasses DOMContentLoaded event listener timing issues)
+        // Run sync scripts immediately on module execution
         initRealtimeDatabaseSync();
         configureCloudReportStreamingPipeline();
 
