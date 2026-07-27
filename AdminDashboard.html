@@ -341,6 +341,17 @@
         </main>
     </div>
 
+    <!-- MODAL BOX WINDOW FOR E-REPORT ATTACHMENT -->
+    <div id="reportPreviewModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-lg p-6 relative flex flex-col items-center">
+            <button id="closeReportModalBtn" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider self-start mb-4">Attachment Image Preview</h3>
+            <div class="w-full h-80 rounded-lg bg-black/40 overflow-hidden border border-slate-800 flex items-center justify-center">
+                <img id="modalAttachmentImg" src="" class="w-full h-full object-contain" alt="Attachment Image Source">
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL POPUP FOR CONTI LOG VIEWER -->
     <div id="logTableModal" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-4xl max-h-[85vh] flex flex-col p-6 overflow-hidden">
@@ -420,6 +431,10 @@
         const modalWaktu = document.getElementById('modalWaktu');
         const modalTableBody = document.getElementById('modalTableBody');
 
+        const reportPreviewModal = document.getElementById('reportPreviewModal');
+        const closeReportModalBtn = document.getElementById('closeReportModalBtn');
+        const modalAttachmentImg = document.getElementById('modalAttachmentImg');
+
         let allRegisteredProfiles = [];
         let realTimePresenceMap = {};
         let globalBookingsRegistry = [];
@@ -485,7 +500,6 @@
                     if (displayUsername === currentSelectedUser) option.selected = true;
                     searchSelect.appendChild(option);
 
-                    // Add secondary name option if different
                     if (profile.name && profile.name !== displayUsername) {
                         const opt2 = document.createElement('option');
                         opt2.value = profile.name;
@@ -610,7 +624,6 @@
             searchStatusInfo.className = "text-[10px] text-blue-400 animate-pulse font-medium";
 
             try {
-                // Find matching profile object to get alternate username / name
                 const matchedProfile = allRegisteredProfiles.find(p => 
                     p.username === userTarget || p.name === userTarget || p.email === userTarget
                 );
@@ -623,14 +636,12 @@
                 ].filter(Boolean);
 
                 let snap = null;
-                let foundKey = "";
 
                 for (const key of keysToTry) {
                     const logDocRef = doc(db, "beats_conti_logs", key, "dates", dateTarget);
                     const testSnap = await getDoc(logDocRef);
                     if (testSnap.exists()) {
                         snap = testSnap;
-                        foundKey = key;
                         break;
                     }
                 }
@@ -712,6 +723,9 @@
             } catch (e) {}
         }
 
+        // ==========================================
+        // E-REPORT STATUS OVERVIEW & ADMIN ACTIONS
+        // ==========================================
         function configureCloudReportStreamingPipeline() {
             try {
                 onSnapshot(collection(db, "beats_reports"), (snapshot) => {
@@ -756,7 +770,17 @@
                                 <td class="py-3 text-slate-400 font-mono">${report.date || '--/--/----'}</td>
                                 <td class="py-3 text-center">
                                     <div class="flex items-center justify-center space-x-3 text-blue-400 text-xs font-medium">
-                                        <button class="hover:text-white flex items-center transition action-view-details-btn" data-id="${docSnapshot.id}"><i data-lucide="eye" class="w-3.5 h-3.5 mr-1"></i> View Details</button>
+                                        <button class="hover:text-white flex items-center transition action-view-details-btn" data-id="${docSnapshot.id}">
+                                            <i data-lucide="eye" class="w-3.5 h-3.5 mr-1"></i> View Full Details
+                                        </button>
+                                        <div class="flex items-center space-x-1.5 border-l border-slate-700 pl-3">
+                                            <button class="hover:text-white relative group transition action-preview-attachment-btn" data-img="${report.imageAttachment || ''}" title="View Attachment">
+                                                <i data-lucide="image" class="w-3.5 h-3.5"></i>
+                                            </button>
+                                            <button class="hover:text-white transition action-edit-report-btn" data-id="${docSnapshot.id}" title="Edit / Reply Report">
+                                                <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
@@ -767,6 +791,59 @@
                     if (metricOngoingReports) metricOngoingReports.textContent = ongoingCount;
                     if (metricClosedReports) metricClosedReports.textContent = closedCount;
                     if (eReportTableBody) eReportTableBody.innerHTML = rowsHtml;
+
+                    // Bind View Attachment Buttons
+                    document.querySelectorAll('.action-preview-attachment-btn').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const base64Src = btn.getAttribute('data-img');
+                            if (!base64Src) {
+                                alert("No photo attachment uploaded for this equipment report.");
+                                return;
+                            }
+                            if (modalAttachmentImg) modalAttachmentImg.src = base64Src;
+                            if (reportPreviewModal) reportPreviewModal.classList.remove('hidden');
+                        });
+                    });
+
+                    // Bind View Full Details Buttons
+                    document.querySelectorAll('.action-view-details-btn').forEach(btn => {
+                        btn.addEventListener('click', async () => {
+                            const targetId = btn.getAttribute('data-id');
+                            const docSnap = await getDoc(doc(db, "beats_reports", targetId));
+                            if (docSnap.exists()){
+                                const data = docSnap.data();
+                                alert(`REPORT BREAKDOWN INFORMATION:\n\nID: ${data.id}\nReporter: ${data.reporter} (${data.department || ''})\nEquipment Model: ${data.eqModel || ''} (${data.eqType || ''})\nAsset Serial Tag: ${data.serialNo || ''}\nProblem Categorization: ${data.issueType || ''}\n\nDescription details: ${data.description || ''}\n\nAdmin Response Comment: ${data.adminResponse || "No response added yet."}`);
+                            }
+                        });
+                    });
+
+                    // Bind Edit / Reply Buttons
+                    document.querySelectorAll('.action-edit-report-btn').forEach(btn => {
+                        btn.addEventListener('click', async () => {
+                            const targetId = btn.getAttribute('data-id');
+                            const newStatusChoice = prompt("Modify Report Status Option:\nType 'pending', 'ongoing', or 'feuxled' to save:");
+                            if (newStatusChoice === null) return; 
+                            
+                            const normStatus = newStatusChoice.trim().toLowerCase();
+                            if (normStatus === 'pending' || normStatus === 'ongoing' || normStatus === 'feuxled') {
+                                const adminReplyInput = prompt("Provide your official response reply message for this report:");
+                                const docRef = doc(db, "beats_reports", targetId);
+                                const snap = await getDoc(docRef);
+                                
+                                if (snap.exists()) {
+                                    const originalData = snap.data();
+                                    await setDoc(docRef, {
+                                        ...originalData,
+                                        status: normStatus,
+                                        adminResponse: adminReplyInput ? adminReplyInput.trim() : (originalData.adminResponse || "")
+                                    });
+                                    alert("Report status and response updated successfully.");
+                                }
+                            } else {
+                                alert("Validation Error: Please type 'pending', 'ongoing', or 'feuxled'.");
+                            }
+                        });
+                    });
 
                     if (window.lucide) lucide.createIcons();
                 }, (err) => console.error("Report pipeline error:", err));
@@ -830,13 +907,17 @@
 
             globalBookingsRegistry.forEach(booking => {
                 const item = document.createElement('div');
-                item.className = "flex items-center justify-between bg-slate-900/40 p-2 rounded border border-slate-800/80 text-xs";
+                item.className = "flex items-center justify-between bg-slate-900/40 p-2.5 rounded border border-slate-800/80 text-xs";
                 item.innerHTML = `
-                    <div class="truncate max-w-[140px]">
-                        <span class="text-slate-200 font-semibold block truncate">${booking.dj || 'Unknown'}</span>
-                        <span class="text-[9px] text-slate-400 block truncate">${booking.date} | ${booking.timeSlot}</span>
+                    <div class="truncate max-w-[170px]">
+                        <span class="text-slate-200 font-semibold block truncate">
+                            ${booking.dj || 'Unknown'} 
+                            <span class="text-blue-400 font-normal text-[11px] ml-1">(${booking.type || 'Booking'})</span>
+                        </span>
+                        <span class="text-[9px] text-slate-400 block truncate">📅 ${booking.date} | ⏰ ${booking.timeSlot}</span>
+                        ${booking.remarks ? `<span class="text-[10px] text-cyan-400 block truncate font-medium">Remarks: ${booking.remarks}</span>` : ''}
                     </div>
-                    <button class="text-red-400 hover:text-red-300 text-[10px] target-delete-btn">Delete</button>
+                    <button class="text-red-400 hover:text-red-300 text-[10px] font-semibold target-delete-btn shrink-0 ml-2">Delete</button>
                 `;
 
                 item.querySelector('.target-delete-btn').addEventListener('click', async () => {
@@ -906,6 +987,10 @@
 
         if (closeLogModalBtn && logTableModal) {
             closeLogModalBtn.addEventListener('click', () => logTableModal.classList.add('hidden'));
+        }
+
+        if (closeReportModalBtn && reportPreviewModal) {
+            closeReportModalBtn.addEventListener('click', () => reportPreviewModal.classList.add('hidden'));
         }
 
         if (printModalBtn) {
