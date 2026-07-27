@@ -3,701 +3,1549 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BEATS - Admin Panel</title>
+    <title>BINTULUfm Admin Portal</title>
+    <!-- Tailwind CSS for structural grid & utility foundation -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:ital,wght@1,900&family=Kanit:ital,wght@1,900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons for clean UI iconography -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* Modern hidden toggle configuration for separated views */
-        .admin-section { margin-bottom: 40px; width: 100%; display: none; }
-        .admin-section.active-view { display: block; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #121824;
+            color: #E2E8F0;
+        }
+        /* Custom exact color palettes */
+        .bg-sidebar { background-color: #1A2232; }
+        .bg-card-dark { background-color: #1E293B; }
+        .bg-main { background-color: #0F172A; }
         
-        /* Make Admin Home act as a full bleed relative container for the background slider */
-        #adminHomeSection.active-view {
-            display: block;
-            position: fixed;
-            top: 60px; 
-            left: 0;
-            width: 100vw;
-            height: calc(100vh - 60px);
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            z-index: 1;
+        /* Active Sidebar Link Highlight styling */
+        .sidebar-active {
+            background-color: #2E3E59;
+            border-left: 4px solid #3B82F6;
+            color: #FFFFFF;
         }
-
-        .admin-table { width: 100%; border-collapse: collapse; background: var(--bg-container); border-radius: 12px; overflow: hidden; border: 2px solid var(--stroke-dark); margin-top: 15px; }
-        .admin-table th, .admin-table td { padding: 12px; border: 1px solid var(--border-color); text-align: left; font-size: 0.9rem; vertical-align: middle; }
-        .admin-table th { background: var(--stroke-dark); color: white; font-family: 'Kanit'; font-style: italic; }
-        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
-        .status-pending { background: #ffc107; color: #000; }
-        .status-replied { background: #28a745; color: #fff; }
-        .response-box { display: flex; gap: 8px; margin-top: 5px; align-items: center; }
-        .response-input { flex: 1; padding: 8px; border-radius: 6px; border: 2px solid var(--border-color); background-color: var(--bg-input); color: var(--text-primary); outline: none; }
-        .response-input:focus { border-color: var(--brand-cyan); }
-        .attachment-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background-color: var(--brand-cyan); color: #fff; border: 1px solid var(--stroke-dark); border-radius: 6px; font-size: 0.75rem; cursor: pointer; text-decoration: none; font-weight: bold; }
-        .no-attachment { font-size: 0.8rem; color: var(--text-secondary); font-style: italic; }
-        .modal-mask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 200; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
-        .modal-mask.active { opacity: 1; pointer-events: auto; }
-        .modal-window { background: var(--bg-container); border: 3px solid var(--stroke-dark); border-radius: 16px; width: 90%; max-width: 480px; padding: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); transform: scale(0.8); transition: transform 0.2s ease; }
-        .modal-mask.active .modal-window { transform: scale(1); }
-        .modal-preview-container { width: 100%; max-height: 350px; border: 2px dashed var(--border-color); border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--bg-input); margin: 15px 0; }
-        .modal-preview-container img { width: 100%; height: auto; max-height: 345px; object-fit: contain; display: block; }
         
-        .actions-cell-inline-wrapper { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; }
-
-        /* CSS Automatic Slider Configured as Fullscreen Background */
-        .slider-box { 
-            width: 100%; 
-            height: 100%; 
-            margin: 0; 
-            overflow: hidden; 
-            border-radius: 0; 
-            border: none; 
-            box-shadow: none; 
-            position: absolute;
-            top: 0;
-            left: 0;
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
-        .slider-track { display: flex; width: 400%; height: 100%; animation: slideAnimation 12s infinite ease-in-out; }
-        .slider-track img { width: 25%; height: 100%; object-fit: cover; display: block; }
-        
-        @keyframes slideAnimation {
-            0%, 20% { transform: translateX(0%); }
-            25%, 45% { transform: translateX(-25%); }
-            50%, 70% { transform: translateX(-50%); }
-            75%, 95% { transform: translateX(-75%); }
-            100% { transform: translateX(0%); }
+        ::-webkit-scrollbar-track {
+            background: #121824;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
         }
 
-        /* DYNAMIC NOTIFICATION BADGE SYSTEM CONFIGURATIONS */
-        .hamburger-btn {
-            position: relative;
-        }
-        .hamburger-btn .nav-alert-dot {
-            position: absolute;
-            top: 2px;
-            right: 2px;
-            width: 8px;
-            height: 8px;
-            background-color: #ff4d4d;
-            border-radius: 50%;
-            border: 1px solid var(--bg-container);
-            display: none;
-        }
-        .sidebar-links a {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .sidebar-badge {
-            background-color: #ff4d4d;
-            color: #fff;
-            font-size: 0.75rem;
-            font-weight: bold;
-            padding: 2px 8px;
-            border-radius: 12px;
-            min-width: 18px;
-            text-align: center;
-            font-family: Arial, sans-serif;
-            display: none;
-        }
+        /* PRINT STYLES FOR OVERVIEW SCHEDULE & LOG MODAL ISOLATION */
+        @media print {
+            body * {
+                visibility: hidden !important;
+            }
+            
+            /* Print mode for Log Table Modal */
+            body.printing-log-modal #logTableModal, 
+            body.printing-log-modal #logTableModal * {
+                visibility: visible !important;
+            }
+            body.printing-log-modal #logTableModal {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                height: auto !important;
+                background: #ffffff !important;
+                color: #000000 !important;
+            }
+            body.printing-log-modal #printModalArea {
+                color: #000000 !important;
+            }
+            body.printing-log-modal #printModalArea table, 
+            body.printing-log-modal #printModalArea th, 
+            body.printing-log-modal #printModalArea td {
+                border-color: #000000 !important;
+                color: #000000 !important;
+            }
 
-        /* Interactive Calendar Additions */
-        .calendar-day-node {
-            cursor: pointer;
-            transition: background-color 0.2s, border-color 0.2s;
-        }
-        .calendar-day-node:not(.empty-node):hover {
-            background-color: rgba(0, 188, 212, 0.15);
-        }
-        .calendar-day-node.selected-node {
-            border: 2px solid var(--brand-cyan, #00bcd4) !important;
-            background-color: rgba(0, 188, 212, 0.25) !important;
-        }
-        .filter-reset-banner {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--stroke-dark, #222);
-            color: #fff;
-            padding: 6px 12px;
-            border-radius: 6px;
-            margin-bottom: 10px;
-            font-size: 0.8rem;
-        }
-        .filter-reset-banner button {
-            background: var(--brand-cyan, #00bcd4);
-            border: none;
-            color: #fff;
-            padding: 2px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
+            /* Standard Print mode for Schedule Isolation */
+            body:not(.printing-log-modal) #printScheduleIsolationZone, 
+            body:not(.printing-log-modal) #printScheduleIsolationZone * {
+                visibility: visible !important;
+            }
+            body:not(.printing-log-modal) #printScheduleIsolationZone {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                color: #000000 !important;
+                background-color: #ffffff !important;
+                padding: 20px !important;
+            }
+            .no-print-element {
+                display: none !important;
+            }
+            table {
+                border-collapse: collapse !important;
+                width: 100% !important;
+            }
+            th, td {
+                border: 1px solid #1e293b !important;
+                color: #000000 !important;
+                padding: 10px !important;
+            }
+            th {
+                background-color: #f1f5f9 !important;
+            }
         }
     </style>
 </head>
-<body class="page-body-layout">
+<body class="h-screen flex overflow-hidden relative">
 
-    <div class="menu-header-bar">
-        <div class="left-nav-group">
-            <button class="hamburger-btn" id="openMenuToggle">
-                ☰
-                <span class="nav-alert-dot" id="hamburgerAlertDot"></span>
+    <!-- ========================================== -->
+    <!--          MOBILE SIDEBAR OVERLAY            -->
+    <!-- ========================================== -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-30 hidden xl:hidden transition-opacity duration-300"></div>
+
+    <!-- ========================================== -->
+    <!--                LEFT SIDEBAR                -->
+    <!-- ========================================== -->
+    <aside id="sidebarMenu" class="fixed inset-y-0 left-0 w-64 bg-sidebar flex flex-col justify-between border-r border-slate-800 shrink-0 z-40 transform -translate-x-full transition-transform duration-300 ease-in-out xl:translate-x-0 xl:static xl:z-20">
+        <div class="overflow-y-auto flex-1">
+            <!-- Brand Logo & Mobile Close Trigger -->
+            <div class="p-6 flex items-center justify-between">
+                <div style="font-family: 'Kanit', sans-serif; font-weight: 900; color: #dc2b5c; font-size: 1.5rem; font-style: italic;">BEATS</div>
+                <button id="closeMobileSidebar" class="xl:hidden text-slate-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Profile Widget -->
+            <div class="px-6 pb-6 flex items-center space-x-3 border-b border-slate-800/60">
+                <div class="relative">
+                    <img src="BTUfm.jpg" alt="BINTULUfm Logo" class="w-10 h-10 rounded-full object-cover ring-2 ring-slate-700">
+                    <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-sidebar"></span>
+                </div>
+                <div>
+                    <h4 class="text-sm font-semibold text-white">Admin User</h4>
+                    <p class="text-xs text-slate-400">System Administrator</p>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="mt-6 px-3 space-y-1 text-sm text-slate-300">
+                <a href="#" class="sidebar-active flex items-center space-x-3 px-3 py-3 rounded-lg transition-all font-medium">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4 text-blue-400"></i>
+                    <span>Overview Dashboard</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Logout Trigger Button -->
+        <div class="p-4 border-t border-slate-800">
+            <button id="adminLogoutBtn" class="w-full flex items-center space-x-3 px-3 py-2 text-sm text-slate-400 hover:text-red-400 transition rounded-lg">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+                <span>Logout</span>
             </button>
-            <div class="user-greeting">Admin: <span id="displayUsername">Master</span></div>
         </div>
-        <div style="font-family: 'Kanit', sans-serif; font-weight: 900; color: #dc2b5c; font-size: 1.5rem; font-style: italic;">BEATS ADMIN</div>
-    </div>
+    </aside>
 
-    <div class="overlay-screen" id="menuOverlay"></div>
-    <div class="nav-sidebar" id="sidebarDrawer">
-        <button class="close-menu-btn" id="closeMenuToggle">✕</button>
-        <div class="sidebar-links">
-            <a href="#" class="sidebar-view-trigger active" data-target="adminHomeSection">Admin Home</a>
-            <a href="#" class="sidebar-view-trigger" data-target="contiBookingsSection" id="linkBookings">
-                Conti Bookings <span class="sidebar-badge" id="badgeBookings">0</span>
-            </a>
-            <a href="#" class="sidebar-view-trigger" data-target="contiLogsSection" id="linkLogs">
-                Conti Logs <span class="sidebar-badge" id="badgeLogs">0</span>
-            </a>
-            <a href="#" class="sidebar-view-trigger" data-target="equipmentReportsSection" id="linkReports">
-                Equipment Reports <span class="sidebar-badge" id="badgeReports">0</span>
-            </a>
-            <a href="SignIn.html" id="logoutActionLink" style="color: #ff4d4d; margin-top: 20px;">Logout</a>
-        </div>
-        <div class="theme-toggle-row">
-            <span>Theme Mode</span>
-            <button class="theme-switch-btn" id="themeSwitchTrigger">☀️ / 🌙</button>
-        </div>
-    </div>
-
-    <div class="dashboard-view-wrapper">
+    <!-- ========================================== -->
+    <!--              MAIN CONTENT AREA             -->
+    <!-- ========================================== -->
+    <div class="flex-1 flex flex-col overflow-hidden bg-main">
         
-        <section class="admin-section active-view" id="adminHomeSection">
-            <div class="slider-box">
-                <div class="slider-track">
-                    <img src="image1.png" alt="Featured Space 1">
-                    <img src="image2.png" alt="Featured Space 2">
-                    <img src="image3.png" alt="Featured Space 3">
-                    <img src="image4.png" alt="Featured Space 4">
-                </div>
+        <!-- Header / Top Bar -->
+        <header class="h-16 bg-sidebar border-b border-slate-800 flex items-center justify-between px-4 sm:px-6 shrink-0 z-10 relative">
+            <div class="flex items-center space-x-4">
+                <button id="openMobileSidebar" class="text-slate-400 hover:text-white transition xl:hidden">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
             </div>
-        </section>
-
-        <section class="admin-section" id="contiBookingsSection">
-            <div class="booking-dashboard-grid">
-                
-                <div class="calendar-card">
-                    <div class="calendar-header">
-                        <h3 id="calendarMonthYearDisplay">August 2026</h3>
-                        <div class="calendar-nav-buttons">
-                            <button type="button" id="prevMonthAction">‹</button>
-                            <button type="button" id="nextMonthAction">›</button>
-                        </div>
-                    </div>
-                    <div class="calendar-weekdays-row">
-                        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
-                    </div>
-                    <div class="calendar-days-grid" id="calendarDaysContainer"></div>
-                    <div class="calendar-footer-legend">
-                        <span><span class="legend-indicator-dot" style="background:#dc2b5c"></span>Interviews</span>
-                        <span><span class="legend-indicator-dot" style="background:#00bcd4"></span>Events</span>
-                    </div>
-                </div>
-
-                <div class="upcoming-feed-container">
-                    <h3 class="upcoming-headline-text">Upcoming Events</h3>
-                    <div id="calendarFilterStatus"></div>
-                    <div class="events-list" id="upcomingEventsCardStack"></div>
-                </div>
-
-            </div>
-        </section>
-
-        <section class="admin-section" id="contiLogsSection">
-            <h2 class="core-functions-headline">Conti Logs</h2>
-            <div class="table-responsive-container">
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>Conti Sheet Key</th>
-                            <th>Time Slot</th>
-                            <th>Program / Segment Title</th>
-                            <th>L/R</th>
-                            <th>Broadcaster Crew</th>
-                            <th>Netia / CD</th>
-                            <th>Remarks</th>
-                        </tr>
-                    </thead>
-                    <tbody id="adminContiSheetsBody"></tbody>
-                </table>
-            </div>
-        </section>
-
-        <section class="admin-section" id="equipmentReportsSection">
-            <h2 class="core-functions-headline">Equipment Reports</h2>
-            <div class="table-responsive-container">
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>ID / Date</th>
-                            <th>Reporter</th>
-                            <th>Equipment</th>
-                            <th>Issue</th>
-                            <th>Photo</th>
-                            <th>Status</th>
-                            <th>Response / Control</th>
-                        </tr>
-                    </thead>
-                    <tbody id="adminReportBody"></tbody>
-                </table>
-            </div>
-        </section>
-    </div>
-
-    <div class="modal-mask" id="photoModalMask">
-        <div class="modal-window">
-            <h3 style="font-family: 'Kanit'; font-style: italic; color: var(--brand-cyan); text-transform: uppercase;">Evidence Attachment</h3>
-            <div class="modal-preview-container" id="modalImageHolder"></div>
-            <button type="button" class="btn" id="closeModalBtn">Close Window</button>
-        </div>
-    </div>
-
-    <script type="module">
-        import { db, collection, doc, getDocs, updateDoc, deleteDoc } from "./firebase-config.js";
-
-        const currentActiveUser = localStorage.getItem('currentUser');
-        if (currentActiveUser !== 'Admin' && currentActiveUser !== 'admin@beats.com') {
-            alert("Unauthorized access.");
-            window.location.href = 'dashboard.html';
-        }
-
-        if(localStorage.getItem('theme') === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); }
-
-        let cachedReportsLocalArray = [];
-        let globalBookingsArray = [];
-        let uniqueLogUserCount = 0; 
-        let calendarCurrentDate = new Date();
-        let selectedDateFilterString = null; 
-
-        let badgeCheckpoints = {
-            bookingsLastSeenId: localStorage.getItem('checkpoint_bookings_id') || '',
-            logsLastSeenCount: parseInt(localStorage.getItem('checkpoint_logs_count') || '0', 10),
-            reportsLastSeenId: localStorage.getItem('checkpoint_reports_id') || ''
-        };
-
-        async function loadAdminData() {
-            await renderBookings();
-            await renderContiSheetsRows();
-            await renderReports();
-        }
-
-        function updateNotificationBadges() {
-            let unreadBookingsCount = 0;
-            if (globalBookingsArray.length > 0) {
-                if (badgeCheckpoints.bookingsLastSeenId) {
-                    const targetIdx = globalBookingsArray.findIndex(b => b.id === badgeCheckpoints.bookingsLastSeenId);
-                    unreadBookingsCount = targetIdx === -1 ? globalBookingsArray.length : globalBookingsArray.length - (targetIdx + 1);
-                } else {
-                    unreadBookingsCount = globalBookingsArray.length;
-                }
-            }
             
-            const badgeBookings = document.getElementById('badgeBookings');
-            if (badgeBookings) {
-                if (unreadBookingsCount > 0) {
-                    badgeBookings.innerText = unreadBookingsCount;
-                    badgeBookings.style.display = 'inline-block';
-                } else {
-                    badgeBookings.style.display = 'none';
-                }
-            }
+            <div class="flex items-center space-x-4 sm:space-x-6 relative">
+                <!-- BELL NOTIFICATION BUTTON & BADGE -->
+                <div class="relative">
+                    <button id="notificationBellBtn" class="relative text-slate-400 hover:text-white transition p-1.5 rounded-lg hover:bg-slate-800 focus:outline-none">
+                        <i data-lucide="bell" class="w-5 h-5"></i>
+                        <span id="notificationBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden animate-pulse">0</span>
+                    </button>
 
-            const unreadLogsCount = Math.max(0, uniqueLogUserCount - badgeCheckpoints.logsLastSeenCount);
-            const badgeLogs = document.getElementById('badgeLogs');
-            if (badgeLogs) {
-                if (unreadLogsCount > 0) {
-                    badgeLogs.innerText = unreadLogsCount;
-                    badgeLogs.style.display = 'inline-block';
-                } else {
-                    badgeLogs.style.display = 'none';
-                }
-            }
-
-            let unreadReportsCount = 0;
-            const totalPendingReports = cachedReportsLocalArray.filter(report => !report.adminResponse || report.adminResponse.trim() === '');
-            
-            if (totalPendingReports.length > 0) {
-                if (badgeCheckpoints.reportsLastSeenId) {
-                    const targetIdx = totalPendingReports.findIndex(r => r.docId === badgeCheckpoints.reportsLastSeenId);
-                    unreadReportsCount = targetIdx === -1 ? totalPendingReports.length : totalPendingReports.length - (targetIdx + 1);
-                } else {
-                    unreadReportsCount = totalPendingReports.length;
-                }
-            }
-
-            const badgeReports = document.getElementById('badgeReports');
-            if (badgeReports) {
-                if (unreadReportsCount > 0) {
-                    badgeReports.innerText = unreadReportsCount;
-                    badgeReports.style.display = 'inline-block';
-                } else {
-                    badgeReports.style.display = 'none';
-                }
-            }
-
-            const hamburgerAlertDot = document.getElementById('hamburgerAlertDot');
-            if (hamburgerAlertDot) {
-                if (unreadBookingsCount > 0 || unreadLogsCount > 0 || unreadReportsCount > 0) {
-                    hamburgerAlertDot.style.display = 'block';
-                } else {
-                    hamburgerAlertDot.style.display = 'none';
-                }
-            }
-        }
-
-        async function renderBookings() {
-            globalBookingsArray = [];
-            try {
-                const snapshot = await getDocs(collection(db, "beats_bookings"));
-                snapshot.forEach(docSnapshot => {
-                    const item = docSnapshot.data();
-                    const id = docSnapshot.id;
-                    globalBookingsArray.push({ id, ...item });
-                });
-
-                globalBookingsArray.sort((a, b) => new Date(a.date) - new Date(b.date));
-                populateUpcomingStackDOM();
-                buildLiveCalendarGrid();
-                updateNotificationBadges();
-            } catch (err) { console.error(err); }
-        }
-
-        function populateUpcomingStackDOM() {
-            const cardStack = document.getElementById('upcomingEventsCardStack');
-            const filterStatus = document.getElementById('calendarFilterStatus');
-            cardStack.innerHTML = '';
-
-            let filteredArray = globalBookingsArray;
-            if (selectedDateFilterString) {
-                filteredArray = globalBookingsArray.filter(b => b.date === selectedDateFilterString);
-                filterStatus.innerHTML = `
-                    <div class="filter-reset-banner">
-                        <span>Viewing: <strong>${selectedDateFilterString}</strong></span>
-                        <button type="button" id="clearCalendarFilterBtn">Show All</button>
-                    </div>`;
-                document.getElementById('clearCalendarFilterBtn').addEventListener('click', () => {
-                    selectedDateFilterString = null;
-                    populateUpcomingStackDOM();
-                    buildLiveCalendarGrid();
-                });
-            } else {
-                filterStatus.innerHTML = '';
-            }
-
-            if(filteredArray.length === 0) {
-                cardStack.innerHTML = `<div style="text-align:center; font-style:italic; padding:20px; color:#666;">No bookings found for this scope.</div>`;
-            } else {
-                filteredArray.forEach(item => {
-                    const isInterview = item.type && item.type.toLowerCase().includes('interview');
-                    const iconSymbol = isInterview ? '🎙️' : '💿';
-                    const styleClass = isInterview ? 'circle-interview' : 'circle-show';
-
-                    const cardNode = document.createElement('div');
-                    cardNode.className = 'event-item-card';
-                    cardNode.innerHTML = `
-                        <div class="event-icon-circle ${styleClass}">${iconSymbol}</div>
-                        <div class="event-main-details">
-                            <div class="event-meta-date">${item.date}</div>
-                            <h4 class="event-display-title">${item.dj || 'Unknown DJ'} - ${item.timeSlot || 'Session'}</h4>
-                            <div class="event-sub-label">by: ${item.bookedBy || 'Admin'} ${item.remarks ? `• "${item.remarks}"` : ''}</div>
-                            <span class="event-card-type-badge">${item.type || 'Show'}</span>
-                        </div>
-                        <button type="button" class="card-action-bin-btn">DELETE</button>
-                    `;
-
-                    cardNode.querySelector('.card-action-bin-btn').addEventListener('click', () => deleteBooking(item.id));
-                    cardStack.appendChild(cardNode);
-                });
-            }
-        }
-
-        function buildLiveCalendarGrid() {
-            const container = document.getElementById('calendarDaysContainer');
-            const displayTitle = document.getElementById('calendarMonthYearDisplay');
-            container.innerHTML = '';
-
-            const year = calendarCurrentDate.getFullYear();
-            const month = calendarCurrentDate.getMonth();
-            const monthsList = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            displayTitle.innerText = `${monthsList[month]} ${year}`;
-
-            const firstDayIndex = new Date(year, month, 1).getDay();
-            const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
-
-            for(let i = 0; i < firstDayIndex; i++) {
-                const emptyCell = document.createElement('div');
-                emptyCell.className = 'calendar-day-node empty-node';
-                container.appendChild(emptyCell);
-            }
-
-            const todayObj = new Date();
-            for(let day = 1; day <= totalDaysInMonth; day++) {
-                const cellNode = document.createElement('div');
-                cellNode.className = 'calendar-day-node';
-                const targetDateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-
-                if(day === todayObj.getDate() && month === todayObj.getMonth() && year === todayObj.getFullYear()) {
-                    cellNode.classList.add('today-node');
-                }
-                if(selectedDateFilterString === targetDateString) {
-                    cellNode.classList.add('selected-node');
-                }
-
-                cellNode.innerHTML = `<span class="day-label-num">${day}</span><div class="day-badges-stack"></div>`;
-                const badgesStack = cellNode.querySelector('.day-badges-stack');
-                
-                const dayMatches = globalBookingsArray.filter(b => b.date === targetDateString);
-                dayMatches.forEach(match => {
-                    const pillNode = document.createElement('span');
-                    const isInt = match.type && match.type.toLowerCase().includes('interview');
-                    pillNode.className = `mini-event-pill ${isInt ? 'pill-interview' : 'pill-show'}`;
-                    pillNode.innerText = isInt ? 'Interviews' : 'Events';
-                    badgesStack.appendChild(pillNode);
-                });
-
-                cellNode.addEventListener('click', () => {
-                    selectedDateFilterString = targetDateString;
-                    populateUpcomingStackDOM();
-                    buildLiveCalendarGrid();
-                });
-
-                container.appendChild(cellNode);
-            }
-        }
-
-        document.getElementById('prevMonthAction').addEventListener('click', () => {
-            calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() - 1);
-            buildLiveCalendarGrid();
-        });
-        document.getElementById('nextMonthAction').addEventListener('click', () => {
-            calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + 1);
-            buildLiveCalendarGrid();
-        });
-
-        async function deleteBooking(id) {
-            if(confirm("Admin Override: Delete this booking?")) {
-                await deleteDoc(doc(db, "beats_bookings", id));
-                await renderBookings();
-            }
-        }
-
-        async function renderContiSheetsRows() {
-            const container = document.getElementById('adminContiSheetsBody');
-            container.innerHTML = '';
-            const uniqueUsersSet = new Set();
-            let totalRowsDisplayed = 0;
-
-            try {
-                const snapshot = await getDocs(collection(db, "beats_conti_sheets"));
-                snapshot.forEach(docSnapshot => {
-                    const sheetData = docSnapshot.data();
-                    const rowsArray = sheetData.rows || [];
-                    if (rowsArray.length === 0) { return; }
-
-                    const userKey = (sheetData.metaPerson || 'UnknownDJ').trim().toLowerCase();
-                    uniqueUsersSet.add(userKey);
-
-                    rowsArray.forEach((rowItem) => {
-                        totalRowsDisplayed++;
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>
-                                <strong>${sheetData.metaPerson || 'DJ'}</strong><br>
-                                <small>${sheetData.metaDate || ''}</small><br>
-                                <small style="color:var(--brand-cyan)">${sheetData.metaInterval || ''}</small>
-                            </td>
-                            <td>${rowItem.hour}:${rowItem.minute} ${rowItem.ampm}</td>
-                            <td><strong>${rowItem.title || 'Untitled'}</strong></td>
-                            <td>${rowItem.lr || '--'}</td>
-                            <td>${rowItem.producer || '--'}</td>
-                            <td>${rowItem.netia || '--'}</td>
-                            <td>${rowItem.remarks || ''}</td>
-                        `;
-                        container.appendChild(tr);
-                    });
-                });
-
-                if (totalRowsDisplayed === 0) {
-                    container.innerHTML = `<tr><td colspan="7" style="text-align:center; font-style:italic;">No active sheet logs found.</td></tr>`;
-                }
-                uniqueLogUserCount = uniqueUsersSet.size;
-                updateNotificationBadges();
-            } catch(err) { console.error(err); }
-        }
-
-        async function renderReports() {
-            const container = document.getElementById('adminReportBody');
-            container.innerHTML = '';
-            cachedReportsLocalArray = [];
-            
-            try {
-                const snapshot = await getDocs(collection(db, "beats_reports"));
-                let trackingIdx = 0;
-                
-                snapshot.forEach(docSnapshot => {
-                    const item = docSnapshot.data();
-                    const id = docSnapshot.id;
-                    cachedReportsLocalArray.push({ docId: id, ...item });
-
-                    const tr = document.createElement('tr');
-                    const statusClass = item.adminResponse ? 'status-replied' : 'status-pending';
-                    const statusText = item.adminResponse ? 'Replied' : 'Pending';
-                    let attachmentHTML = item.imageAttachment ? `<button type="button" class="attachment-badge btn-view-photo" data-idx="${trackingIdx}">📎 View File</button>` : `<span class="no-attachment">None</span>`;
-                    
-                    tr.innerHTML = `
-                        <td>${item.id}<br><small>${item.date}</small></td>
-                        <td>${item.reporter}<br><small>${item.department}</small></td>
-                        <td>${item.eqModel}</td>
-                        <td><strong>${item.issueType}</strong>: ${item.description}</td>
-                        <td>${attachmentHTML}</td>
-                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                        <td>
-                            <div class="response-box">
-                                <input type="text" id="resp-${id}" class="response-input" placeholder="Type reply..." value="${item.adminResponse || ''}">
-                                <button type="button" class="row-btn row-btn-save btn-send-resp" data-id="${id}">Send</button>
-                                <button type="button" class="row-delete-btn btn-del-report" data-id="${id}">Delete</button>
+                    <!-- NOTIFICATION DROPDOWN MENU -->
+                    <div id="notificationDropdown" class="absolute right-0 mt-3 w-80 sm:w-96 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-50 hidden overflow-hidden transition-all duration-200">
+                        <div class="p-3 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
+                            <div class="flex items-center space-x-2">
+                                <i data-lucide="bell-ring" class="w-4 h-4 text-blue-400"></i>
+                                <h4 class="text-xs font-bold text-white uppercase tracking-wider">Live System Alerts</h4>
                             </div>
-                        </td>
-                    `;
+                            <button id="markAllReadBtn" class="text-[10px] text-blue-400 hover:text-blue-300 font-medium transition">Mark all as read</button>
+                        </div>
+                        <div id="notificationList" class="max-h-80 overflow-y-auto divide-y divide-slate-800/60 text-xs">
+                            <p class="p-4 text-center text-slate-500 italic">Listening for live updates...</p>
+                        </div>
+                    </div>
+                </div>
 
-                    tr.querySelector('.btn-view-photo')?.addEventListener('click', (e) => openPhotoViewerModal(e.target.dataset.idx));
-                    tr.querySelector('.btn-send-resp').addEventListener('click', (e) => sendResponse(e.target.dataset.id));
-                    tr.querySelector('.btn-del-report').addEventListener('click', (e) => deleteEquipmentReport(e.target.dataset.id));
+                <div class="text-right hidden sm:block">
+                    <h5 class="text-xs font-bold text-white tracking-wide">BINTULU<span class="lowercase">fm</span></h5>
+                    <p class="text-[10px] text-slate-400">Admin Portal</p>
+                </div>
+            </div>
+        </header>
 
-                    container.appendChild(tr);
-                    trackingIdx++;
-                });
+        <!-- Dynamic Body Workspace Grid -->
+        <main class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+            
+            <!-- Dashboard Structure Container Matrix -->
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                
+                <!-- Left Stack Columns spanning 2 columns wide -->
+                <div class="xl:col-span-2 space-y-6">
+                    
+                    <!-- Component Block: Overview Dashboard Header & Counter Stat Cards -->
+                    <div>
+                        <h1 class="text-xl font-bold text-white mb-4">Overview Dashboard</h1>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <!-- Card #1: Total Profiles Added -->
+                            <div class="bg-card-dark p-4 rounded-xl border border-slate-800 flex items-center justify-between">
+                                <div>
+                                    <p class="text-xs font-medium text-slate-400">Total Profiles Added</p>
+                                    <div class="flex items-baseline mt-2 space-x-2">
+                                        <span id="metricTotalProfiles" class="text-2xl font-bold text-white">0</span>
+                                        <span class="text-[10px] text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded flex items-center"><i data-lucide="trending-up" class="w-2.5 h-2.5 mr-0.5"></i> Users</span>
+                                    </div>
+                                </div>
+                                <div class="p-3 bg-blue-500/10 rounded-xl">
+                                    <i data-lucide="users" class="w-6 h-6 text-blue-500"></i>
+                                </div>
+                            </div>
+                            
+                            <!-- Card #2: Profiles Online -->
+                            <div class="bg-card-dark p-4 rounded-xl border border-slate-800 flex items-center justify-between">
+                                <div>
+                                    <p class="text-xs font-medium text-slate-400">Profiles Online</p>
+                                    <div class="flex items-baseline mt-2 space-x-2">
+                                        <span id="metricProfilesOnline" class="text-2xl font-bold text-white">0</span>
+                                        <span class="text-[10px] text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded font-semibold tracking-wide uppercase">Active</span>
+                                    </div>
+                                </div>
+                                <div class="p-3 bg-green-500/10 rounded-xl">
+                                    <i data-lucide="zap" class="w-6 h-6 text-green-400"></i>
+                                </div>
+                            </div>
 
-                updateNotificationBadges();
-            } catch(err) { console.error(err); }
-        }
+                            <!-- Card #3: Profiles Offline -->
+                            <div class="bg-card-dark p-4 rounded-xl border border-slate-800 flex items-center justify-between">
+                                <div>
+                                    <p class="text-xs font-medium text-slate-400">Profiles Offline</p>
+                                    <div class="flex items-baseline mt-2 space-x-2">
+                                        <span id="metricProfilesOffline" class="text-2xl font-bold text-white">0</span>
+                                        <span class="text-[10px] text-slate-400 bg-slate-700/40 px-1.5 py-0.5 rounded font-semibold tracking-wide uppercase">Inactive</span>
+                                    </div>
+                                </div>
+                                <div class="p-3 bg-slate-700/30 rounded-xl">
+                                    <i data-lucide="zap-off" class="w-6 h-6 text-slate-400"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-        async function sendResponse(id) {
-            const responseText = document.getElementById(`resp-${id}`).value;
-            try {
-                await updateDoc(doc(db, "beats_reports", id), { adminResponse: responseText });
-                alert("Response sent to reporter!");
-                await renderReports();
-            } catch(err) { alert("Send operation failed."); }
-        }
+                    <!-- Component Block: User Status Table Container Grid -->
+                    <div class="bg-card-dark rounded-xl border border-slate-800 p-5">
+                        <h2 class="text-sm font-semibold text-white mb-4">User Status Table</h2>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse min-w-[500px]">
+                                <thead>
+                                    <tr class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-800">
+                                        <th class="pb-3 w-16">Profile Picture</th>
+                                        <th class="pb-3 pl-4">Profile Name</th>
+                                        <th class="pb-3">Last Logged In</th>
+                                        <th class="pb-3">Current Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="userStatusTableBody" class="text-xs text-slate-300 divide-y divide-slate-800/50">
+                                    <tr>
+                                        <td colspan="4" class="py-8 text-center text-slate-500">Connecting live records database stream...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
-        async function deleteEquipmentReport(id) {
-            if(confirm("Admin Master Override: Permanent data erase warning?")) {
-                await deleteDoc(doc(db, "beats_reports", id));
-                alert("Equipment report deleted.");
-                await renderReports(); 
-            }
-        }
+                    <!-- Component Block: Schedule Overview Carousel Slider Data Grid -->
+                    <div id="printScheduleIsolationZone" class="bg-card-dark rounded-xl border border-slate-800 p-5 relative scroll-mt-20">
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 id="scheduleMainTitle" class="text-sm font-semibold text-white">Schedule Overview: Segment Melayu / Segment Iban</h2>
+                            <button id="printOverviewScheduleBtn" class="no-print-element px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white rounded-md text-xs font-semibold flex items-center transition">
+                                <i data-lucide="printer" class="w-3.5 h-3.5 mr-1.5"></i> Print Schedule
+                            </button>
+                        </div>
+                        
+                        <div class="text-center mb-4">
+                            <h3 id="scheduleCurrentViewHeader" class="text-sm font-bold text-blue-400 tracking-wide uppercase">Segment Melayu Data</h3>
+                        </div>
 
-        const photoModalMask = document.getElementById('photoModalMask');
-        const modalImageHolder = document.getElementById('modalImageHolder');
+                        <!-- Data Grid Slider Panel Interface Structure with arrows -->
+                        <div class="relative px-0 sm:px-8">
+                            <button id="carouselPrevBtn" class="no-print-element absolute left-0 top-1/2 -translate-y-1/2 w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center text-slate-400 hover:text-white transition z-10">
+                                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                            </button>
+                            
+                            <div class="bg-slate-900/40 rounded-xl overflow-hidden border border-slate-800/60 overflow-x-auto">
+                                <table class="w-full text-left text-xs min-w-[500px]">
+                                    <thead>
+                                        <tr class="text-slate-400 border-b border-slate-800 bg-slate-900/60">
+                                            <th class="p-3 pl-6 w-24 text-center">Time Slot</th>
+                                            <th class="p-3">Hebahan / Rancangan / Segmen</th>
+                                            <th class="p-3 w-28 text-center">Durasi</th>
+                                            <th class="p-3 w-32">Sumber</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="scheduleOverviewTableBody" class="text-slate-300 divide-y divide-slate-800/40">
+                                        <tr>
+                                            <td colspan="4" class="p-8 text-center text-slate-500 italic">Select user profile and date target to populate schedules template loop...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
 
-        function openPhotoViewerModal(index) {
-            const targetedItem = cachedReportsLocalArray[index];
-            if(targetedItem && targetedItem.imageAttachment) {
-                modalImageHolder.innerHTML = `<img src="${targetedItem.imageAttachment}" alt="Evidence View Summary">`;
-                photoModalMask.classList.add('active');
-            }
-        }
+                            <button id="carouselNextBtn" class="no-print-element absolute right-0 top-1/2 -translate-y-1/2 w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center text-slate-400 hover:text-white transition z-10">
+                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        
+                        <p id="scheduleCarouselCaption" class="no-print-element text-[10px] text-center text-slate-400 mt-4 italic">Showing data for "Segment Melayu". Use arrows to slide views.</p>
+                    </div>
+                </div>
 
-        function closePhotoViewerModal() {
-            photoModalMask.classList.remove('active');
-            modalImageHolder.innerHTML = ''; 
-        }
+                <!-- Right Stack Columns (Dashboard sidebars) -->
+                <div class="space-y-6">
+                    
+                    <!-- Component Block: Conti Logs Overview & Custom Bar Chart Widget -->
+                    <div id="contiLogsOverviewCard" class="bg-card-dark rounded-xl border border-slate-800 p-5 scroll-mt-20">
+                        <h2 class="text-sm font-semibold text-white mb-4">Conti Logs Overview</h2>
+                        
+                        <div class="mb-4">
+                            <h4 class="text-xs font-medium text-slate-400 mb-2">Daily Log Summary</h4>
+                            <div id="barChartContainer" class="h-28 flex items-end justify-between gap-[2px] px-1 pt-4 border-b border-slate-700 relative overflow-x-auto overflow-y-hidden">
+                                <div class="absolute left-0 top-0 h-full flex flex-col justify-between text-[8px] text-slate-500 pointer-events-none z-10">
+                                    <span id="chartMaxVal">40</span><span></span><span></span><span></span><span>0</span>
+                                </div>
+                            </div>
+                            <div id="barChartHoursLabels" class="flex justify-between text-[7px] text-slate-500 px-1 mt-1 font-mono min-w-[240px]">
+                            </div>
+                            <p class="text-center text-[9px] text-slate-500 mt-1 font-medium">Hour Segment (0 - 23h)</p>
+                        </div>
+
+                        <!-- Dropdowns/Inputs Forms Inside Sidebar View -->
+                        <div class="space-y-3 pt-2 border-t border-slate-800">
+                            <h4 class="text-xs font-medium text-white">Quick Conti Log Search</h4>
+                            <div>
+                                <select id="searchProfileSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-300 focus:outline-none focus:border-blue-500">
+                                    <option value="">Select User Profile</option>
+                                </select>
+                            </div>
+                            <div class="relative">
+                                <input type="date" id="filterLogDate" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-300 focus:outline-none focus:border-blue-500">
+                            </div>
+                            <p id="searchStatusInfo" class="text-[10px] text-slate-400 italic">Select a profile to preview and print logs.</p>
+                            <button id="viewSelectedLogBtn" class="w-full py-2.5 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-500 transition hidden flex items-center justify-center space-x-2">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                                <span>View & Print Logs Table</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Component Block: Conti Book Calendar Preview Widget Grid -->
+                    <div id="contiBookCalendarCard" class="bg-card-dark rounded-xl border border-slate-800 p-5 scroll-mt-20">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-sm font-semibold text-white">Conti Book Calendar Preview</h2>
+                            <div class="flex space-x-2 text-slate-400">
+                                <button id="prevCalendarMonth" class="hover:text-white"><i data-lucide="chevron-left" class="w-3.5 h-3.5"></i></button>
+                                <button id="nextCalendarMonth" class="hover:text-white"><i data-lucide="chevron-right" class="w-3.5 h-3.5"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Mini Calendar Month Display Header -->
+                        <p id="calendarMonthHeader" class="text-[11px] font-bold text-center text-blue-400 mb-2 uppercase tracking-wider"></p>
+
+                        <!-- Mini Calendar Grid Layout Matrix -->
+                        <div id="miniCalendarGrid" class="grid grid-cols-7 gap-1 text-center text-[10px] mb-4">
+                            <span class="text-slate-500 font-medium">Sun</span>
+                            <span class="text-slate-500 font-medium">Mon</span>
+                            <span class="text-slate-500 font-medium">Tue</span>
+                            <span class="text-slate-500 font-medium">Wed</span>
+                            <span class="text-slate-500 font-medium">Thu</span>
+                            <span class="text-slate-500 font-medium">Fri</span>
+                            <span class="text-slate-500 font-medium">Sat</span>
+                        </div>
+
+                        <!-- Manage Bookings Dynamic Actions Stack -->
+                        <div class="space-y-3 pt-3 border-t border-slate-800">
+                            <h4 class="text-xs font-semibold text-white">Manage Bookings</h4>
+                            <div id="manageBookingsDeck" class="space-y-2 text-xs max-h-48 overflow-y-auto pr-1">
+                                <p class="text-[10px] text-slate-500 italic text-center py-2">Loading reservations from cloud storage...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!--        BOTTOM SECTION: E-REPORT MATRIX     -->
+            <!-- ========================================== -->
+            <div id="eReportStatusCard" class="bg-card-dark rounded-xl border border-slate-800 p-5 scroll-mt-20">
+                <h2 class="text-sm font-semibold text-white mb-4">E-Report Status Overview</h2>
+                
+                <!-- Status Colored Info Boxes Row Container Layout -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-red-500 text-white p-4 rounded-xl flex items-center justify-between shadow-lg shadow-red-500/10">
+                        <div>
+                            <p class="text-xs font-medium opacity-80">Pending Reports</p>
+                            <h3 id="metricPendingReports" class="text-3xl font-bold mt-1">0</h3>
+                        </div>
+                        <i data-lucide="file-text" class="w-8 h-8 opacity-40"></i>
+                    </div>
+
+                    <div class="bg-amber-500 text-white p-4 rounded-xl flex items-center justify-between shadow-lg shadow-amber-500/10">
+                        <div>
+                            <p class="text-xs font-medium opacity-80">Ongoing Reports</p>
+                            <h3 id="metricOngoingReports" class="text-3xl font-bold mt-1">0</h3>
+                        </div>
+                        <i data-lucide="refresh-cw" class="w-8 h-8 opacity-40"></i>
+                    </div>
+
+                    <div class="bg-emerald-600 text-white p-4 rounded-xl flex items-center justify-between shadow-lg shadow-emerald-600/10">
+                        <div>
+                            <p class="text-xs font-medium opacity-80">Fixed/Closed Reports</p>
+                            <h3 id="metricClosedReports" class="text-3xl font-bold mt-1">0</h3>
+                        </div>
+                        <i data-lucide="check-circle" class="w-8 h-8 opacity-40"></i>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto relative">
+                    <table class="w-full text-left text-xs border-collapse min-w-[600px]">
+                        <thead>
+                            <tr class="text-slate-400 border-b border-slate-800 uppercase tracking-wider text-[10px]">
+                                <th class="pb-3 w-28">Report ID</th>
+                                <th class="pb-3">Reporter Name</th>
+                                <th class="pb-3">Report Title / Model</th>
+                                <th class="pb-3 text-center">Status</th>
+                                <th class="pb-3">Date Submitted</th>
+                                <th class="pb-3 text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="eReportTableBody" class="text-slate-300 divide-y divide-slate-800/60">
+                            <tr>
+                                <td colspan="6" class="py-8 text-center text-slate-500">Connecting live records database stream...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- MODAL BOX WINDOW FOR E-REPORT ATTACHMENT -->
+    <div id="reportPreviewModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-lg p-6 relative flex flex-col items-center">
+            <button id="closeReportModalBtn" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider self-start mb-4">Attachment Image Preview</h3>
+            <div class="w-full h-80 rounded-lg bg-black/40 overflow-hidden border border-slate-800 flex items-center justify-center">
+                <img id="modalAttachmentImg" src="" class="w-full h-full object-contain" alt="Attachment Image Source">
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL POPUP FOR CONTI LOG VIEWER & PRINTING -->
+    <div id="logTableModal" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-4xl max-h-[85vh] flex flex-col p-6 overflow-hidden">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-800 no-print-element">
+                <h3 class="text-sm font-bold text-white uppercase tracking-wider">Conti Log Table Preview</h3>
+                <button id="closeLogModalBtn" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div id="printModalArea" class="flex-1 overflow-y-auto my-4 space-y-4 text-xs text-slate-300">
+                <div class="grid grid-cols-3 gap-4 bg-slate-800/40 p-4 rounded-lg border border-slate-800">
+                    <div><span class="text-slate-400 block font-medium uppercase text-[10px]">JH BERTUGAS</span> <span id="modalJH" class="text-white font-semibold"></span></div>
+                    <div><span class="text-slate-400 block font-medium uppercase text-[10px]">TARIKH</span> <span id="modalDate" class="text-white font-semibold"></span></div>
+                    <div><span class="text-slate-400 block font-medium uppercase text-[10px]">WAKTU</span> <span id="modalWaktu" class="text-white font-semibold"></span></div>
+                </div>
+                <table class="w-full text-left border-collapse border border-slate-800">
+                    <thead>
+                        <tr class="bg-slate-800/80 text-slate-300 font-bold border-b border-slate-800">
+                            <th class="p-2.5 border-r border-slate-800 text-center w-20">Waktu</th>
+                            <th class="p-2.5 border-r border-slate-800">Tajuk Rancangan</th>
+                            <th class="p-2.5 border-r border-slate-800 text-center w-16">L/R</th>
+                            <th class="p-2.5 border-r border-slate-800">Penerbit</th>
+                            <th class="p-2.5 border-r border-slate-800 text-center w-24">Netia/CD</th>
+                            <th class="p-2.5">Catatan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalTableBody" class="divide-y divide-slate-800 bg-slate-950/20"></tbody>
+                </table>
+            </div>
+            <div class="pt-4 border-t border-slate-800 flex justify-end space-x-3 no-print-element">
+                <button id="printModalBtn" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-semibold hover:bg-emerald-500 transition flex items-center space-x-1.5">
+                    <i data-lucide="printer" class="w-4 h-4"></i>
+                    <span>Print Document</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- REAL-TIME DATABASE SYNC -->
+    <script type="module">
+        import { db } from "./firebase-config.js";
+        import { collection, onSnapshot, doc, getDoc, deleteDoc, setDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+        // DOM elements configuration
+        const metricTotal = document.getElementById('metricTotalProfiles');
+        const metricOnline = document.getElementById('metricProfilesOnline');
+        const metricOffline = document.getElementById('metricProfilesOffline');
+        const userTableBody = document.getElementById('userStatusTableBody');
         
-        document.getElementById('closeModalBtn').addEventListener('click', closePhotoViewerModal);
-        photoModalMask.addEventListener('click', closePhotoViewerModal);
-        modalImageHolder.parentNode.addEventListener('click', (e) => e.stopPropagation());
+        // Conti Log UI binding hooks
+        const searchSelect = document.getElementById('searchProfileSelect');
+        const filterLogDate = document.getElementById('filterLogDate');
+        const searchStatusInfo = document.getElementById('searchStatusInfo');
+        const viewSelectedLogBtn = document.getElementById('viewSelectedLogBtn');
+        const barChartContainer = document.getElementById('barChartContainer');
+        const barChartHoursLabels = document.getElementById('barChartHoursLabels');
+        const chartMaxVal = document.getElementById('chartMaxVal');
+        const contiLogsOverviewCard = document.getElementById('contiLogsOverviewCard');
 
-        const sidebarDrawer = document.getElementById('sidebarDrawer');
-        const menuOverlay = document.getElementById('menuOverlay');
-        const themeSwitchTrigger = document.getElementById('themeSwitchTrigger');
-        const logoutActionLink = document.getElementById('logoutActionLink');
+        // Mini Calendar Preview Hooks
+        const calendarMonthHeader = document.getElementById('calendarMonthHeader');
+        const miniCalendarGrid = document.getElementById('miniCalendarGrid');
+        const prevCalendarMonth = document.getElementById('prevCalendarMonth');
+        const nextCalendarMonth = document.getElementById('nextCalendarMonth');
+        const manageBookingsDeck = document.getElementById('manageBookingsDeck');
+        const contiBookCalendarCard = document.getElementById('contiBookCalendarCard');
 
-        function toggleSidebar(open) {
-            if(open) { 
-                sidebarDrawer.classList.add('open'); 
-                menuOverlay.classList.add('show');
-                sidebarDrawer.style.pointerEvents = "auto";
+        // Schedule Carousel UI Elements Hooks
+        const scheduleMainTitle = document.getElementById('scheduleMainTitle');
+        const scheduleCurrentViewHeader = document.getElementById('scheduleCurrentViewHeader');
+        const scheduleOverviewTableBody = document.getElementById('scheduleOverviewTableBody');
+        const scheduleCarouselCaption = document.getElementById('scheduleCarouselCaption');
+        const carouselPrevBtn = document.getElementById('carouselPrevBtn');
+        const carouselNextBtn = document.getElementById('carouselNextBtn');
+        const printOverviewScheduleBtn = document.getElementById('printOverviewScheduleBtn');
+        const printScheduleIsolationZone = document.getElementById('printScheduleIsolationZone');
+
+        // E-Report UI components hooks
+        const metricPendingReports = document.getElementById('metricPendingReports');
+        const metricOngoingReports = document.getElementById('metricOngoingReports');
+        const metricClosedReports = document.getElementById('metricClosedReports');
+        const eReportTableBody = document.getElementById('eReportTableBody');
+        const reportPreviewModal = document.getElementById('reportPreviewModal');
+        const closeReportModalBtn = document.getElementById('closeReportModalBtn');
+        const modalAttachmentImg = document.getElementById('modalAttachmentImg');
+        const eReportStatusCard = document.getElementById('eReportStatusCard');
+
+        // Notification UI components hooks
+        const notificationBellBtn = document.getElementById('notificationBellBtn');
+        const notificationBadge = document.getElementById('notificationBadge');
+        const notificationDropdown = document.getElementById('notificationDropdown');
+        const notificationList = document.getElementById('notificationList');
+        const markAllReadBtn = document.getElementById('markAllReadBtn');
+
+        // Modal Hooks
+        const logTableModal = document.getElementById('logTableModal');
+        const closeLogModalBtn = document.getElementById('closeLogModalBtn');
+        const printModalBtn = document.getElementById('printModalBtn');
+        const modalJH = document.getElementById('modalJH');
+        const modalDate = document.getElementById('modalDate');
+        const modalWaktu = document.getElementById('modalWaktu');
+        const modalTableBody = document.getElementById('modalTableBody');
+
+        // Dynamic State Repositories
+        let allRegisteredProfiles = [];
+        let realTimePresenceMap = {};
+        let activeSelectedLogData = null; 
+        let globalBookingsRegistry = [];
+
+        // Global Notifications Store synced with Firestore
+        let notificationsMasterList = [];
+        let globalReadIdsSet = new Set();
+
+        const SEGMENT_ARRAY_LEDFER = [
+            { id: "melayu", label: "Segment Melayu", collection: "beats_melayu_logs", sourcePage: "segmenMelayu.html" },
+            { id: "iban_bintulu", label: "WAIfm BINTULU (Segment Iban)", collection: "beats_segmen_WAI_logs", sourcePage: "segmenIban.html" },
+            { id: "iban_sabtu", label: "Inter-Station Sabtu (Segment Iban)", collection: "beats_interstation_sabtu_logs", sourcePage: "segmenIban1.html" },
+            { id: "iban_ahad", label: "Inter-Station Ahad (Segment Iban)", collection: "beats_interstation_ahad_logs", sourcePage: "segmenIban2.html" }
+        ];
+        let currentCarouselSegmentIndex = 0;
+
+        let currentNavDate = new Date();
+        const svgAvatarFallback = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23535370"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
+
+        filterLogDate.value = new Date().toISOString().split('T')[0];
+
+        function init24HourLabelAxis() {
+            let labelsHtml = '';
+            for (let i = 0; i <= 23; i++) {
+                labelsHtml += `<span class="w-full text-center">${i}</span>`;
             }
-            else { 
-                sidebarDrawer.classList.remove('open'); 
-                menuOverlay.classList.remove('show');
-                sidebarDrawer.style.pointerEvents = "none";
-            }
+            barChartHoursLabels.innerHTML = labelsHtml;
+        }
+        init24HourLabelAxis();
+
+        // ==========================================
+        //  REAL-TIME BELL NOTIFICATION ENGINE
+        // ==========================================
+
+        function initGlobalNotificationSync() {
+            const metaDocRef = doc(db, "beats_notifications_meta", "admin_read_state");
+            
+            onSnapshot(metaDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (Array.isArray(data.readIds)) {
+                        globalReadIdsSet = new Set(data.readIds);
+                    }
+                } else {
+                    setDoc(metaDocRef, { readIds: [] }, { merge: true }).catch(err => console.error(err));
+                }
+                renderNotificationsDropdownUI();
+            }, (err) => {
+                console.error("Notification meta read sync error:", err);
+            });
+
+            setupCentralNotificationListener();
+            setupDirectCollectionListeners();
         }
 
-        sidebarDrawer.style.pointerEvents = "none";
-
-        document.getElementById('openMenuToggle').addEventListener('click', () => toggleSidebar(true));
-        document.getElementById('closeMenuToggle').addEventListener('click', () => toggleSidebar(false));
-        menuOverlay.addEventListener('click', () => toggleSidebar(false));
-
-        themeSwitchTrigger.addEventListener('click', () => {
-            if(document.documentElement.hasAttribute('data-theme')) {
-                document.documentElement.removeAttribute('data-theme');
-                localStorage.setItem('theme', 'light');
+        function addNotificationEntry(notif) {
+            const existingIndex = notificationsMasterList.findIndex(n => n.id === notif.id);
+            if (existingIndex !== -1) {
+                notificationsMasterList[existingIndex] = { ...notificationsMasterList[existingIndex], ...notif };
             } else {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                localStorage.setItem('theme', 'dark');
+                notificationsMasterList.push(notif);
             }
-        });
 
-        logoutActionLink.addEventListener('click', () => { 
-            localStorage.removeItem('currentUser'); 
-        });
+            notificationsMasterList.sort((a, b) => b.timestamp - a.timestamp);
+            renderNotificationsDropdownUI();
+        }
 
-        const viewTriggers = document.querySelectorAll('.sidebar-view-trigger');
-        const dashboardSections = document.querySelectorAll('.admin-section');
+        function renderNotificationsDropdownUI() {
+            if (!notificationsMasterList.length) {
+                notificationList.innerHTML = `<p class="p-4 text-center text-slate-500 italic">No activity logs recorded.</p>`;
+                notificationBadge.textContent = "0";
+                notificationBadge.classList.add('hidden');
+                return;
+            }
 
-        viewTriggers.forEach(trigger => {
-            trigger.addEventListener('click', (e) => {
-                e.preventDefault();
-                const targetId = trigger.getAttribute('data-target');
+            let unreadCount = 0;
+            let listHtml = '';
 
-                if (targetId === 'contiBookingsSection' && globalBookingsArray.length > 0) {
-                    const absoluteLastId = globalBookingsArray[globalBookingsArray.length - 1].id;
-                    badgeCheckpoints.bookingsLastSeenId = absoluteLastId;
-                    localStorage.setItem('checkpoint_bookings_id', absoluteLastId);
-                }
-                if (targetId === 'contiLogsSection') {
-                    badgeCheckpoints.logsLastSeenCount = uniqueLogUserCount;
-                    localStorage.setItem('checkpoint_logs_count', uniqueLogUserCount.toString());
-                }
-                if (targetId === 'equipmentReportsSection') {
-                    const totalPendingReports = cachedReportsLocalArray.filter(report => !report.adminResponse || report.adminResponse.trim() === '');
-                    if (totalPendingReports.length > 0) {
-                        const absoluteLastId = totalPendingReports[totalPendingReports.length - 1].docId;
-                        badgeCheckpoints.reportsLastSeenId = absoluteLastId;
-                        localStorage.setItem('checkpoint_reports_id', absoluteLastId);
+            notificationsMasterList.forEach(item => {
+                const isRead = globalReadIdsSet.has(item.id);
+                if (!isRead) unreadCount++;
+
+                const relativeTime = getRelativeTimeString(item.timestamp);
+                const bgStyle = isRead ? 'bg-transparent hover:bg-slate-800/40' : 'bg-blue-500/10 hover:bg-blue-500/15';
+                const dotStyle = isRead ? 'bg-slate-600' : 'bg-blue-400';
+
+                let targetUser = item.targetUser || '';
+                let targetDate = item.targetDate || '';
+                let targetReportId = item.targetReportId || '';
+
+                if (!targetUser || !targetDate) {
+                    const parsed = item.message ? item.message.match(/(?:Reporter|User|for|by|booked slot.*for)\s+([A-Za-z0-9_ -]+).*(?:for|updated)\s+(\d{4}-\d{2}-\d{2})/) : null;
+                    if (parsed) {
+                        targetUser = targetUser || parsed[1];
+                        targetDate = targetDate || parsed[2];
                     }
                 }
 
-                viewTriggers.forEach(btn => btn.classList.remove('active'));
-                trigger.classList.add('active');
-
-                dashboardSections.forEach(section => section.classList.remove('active-view'));
-                document.getElementById(targetId).classList.add('active-view');
-
-                updateNotificationBadges();
-                toggleSidebar(false);
+                listHtml += `
+                    <div class="p-3 ${bgStyle} transition cursor-pointer flex items-start space-x-3 notification-item-row" 
+                         data-id="${item.id}" 
+                         data-source="${item.sourcePage || ''}" 
+                         data-user="${targetUser}" 
+                         data-date="${targetDate}"
+                         data-reportid="${targetReportId}">
+                        <span class="w-2 h-2 rounded-full ${dotStyle} mt-1.5 shrink-0"></span>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between mb-0.5">
+                                <span class="font-semibold text-white truncate text-xs">${item.title}</span>
+                                <span class="text-[9px] text-slate-400 font-mono shrink-0 ml-2">${relativeTime}</span>
+                            </div>
+                            <p class="text-slate-300 text-[11px] leading-snug break-words">${item.message}</p>
+                            <span class="inline-block mt-1 text-[9px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded font-mono">${item.sourcePage}</span>
+                        </div>
+                    </div>
+                `;
             });
+
+            notificationList.innerHTML = listHtml;
+
+            if (unreadCount > 0) {
+                notificationBadge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                notificationBadge.classList.remove('hidden');
+            } else {
+                notificationBadge.textContent = "0";
+                notificationBadge.classList.add('hidden');
+            }
+
+            document.querySelectorAll('.notification-item-row').forEach(row => {
+                row.addEventListener('click', () => {
+                    const targetId = row.getAttribute('data-id');
+                    const sourcePage = row.getAttribute('data-source');
+                    const userVal = row.getAttribute('data-user');
+                    const dateVal = row.getAttribute('data-date');
+                    const reportIdVal = row.getAttribute('data-reportid');
+
+                    markNotificationAsRead(targetId);
+                    notificationDropdown.classList.add('hidden');
+
+                    // 1. AUTO-TRIGGER CONTI LOG OVERVIEW UPON CLICKING CONTI LOG NOTIFICATION
+                    if (sourcePage === 'contiLog.html' && userVal && dateVal) {
+                        if ([...searchSelect.options].some(opt => opt.value === userVal)) {
+                            searchSelect.value = userVal;
+                        } else {
+                            const newOpt = document.createElement('option');
+                            newOpt.value = userVal;
+                            newOpt.textContent = userVal;
+                            newOpt.selected = true;
+                            searchSelect.appendChild(newOpt);
+                        }
+
+                        filterLogDate.value = dateVal;
+                        fetchSelectedContiLogs();
+                        loadActiveCarouselScheduleData();
+                        contiLogsOverviewCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+
+                    // 2. AUTO-TRIGGER SCHEDULE OVERVIEW CAROUSEL UPON CLICKING SCHEDULE NOTIFICATIONS
+                    const scheduleSegmentIndex = SEGMENT_ARRAY_LEDFER.findIndex(s => s.sourcePage === sourcePage);
+                    if (scheduleSegmentIndex !== -1) {
+                        currentCarouselSegmentIndex = scheduleSegmentIndex;
+                        if (dateVal) {
+                            filterLogDate.value = dateVal;
+                        }
+                        loadActiveCarouselScheduleData();
+                        printScheduleIsolationZone.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+
+                    // 3. AUTO-TRIGGER CONTI BOOK CALENDAR PREVIEW UPON CLICKING CONTI BOOK NOTIFICATION
+                    if (sourcePage === 'contiBook.html') {
+                        if (dateVal) {
+                            const dateParts = dateVal.split('-');
+                            if (dateParts.length === 3) {
+                                const targetYear = parseInt(dateParts[0], 10);
+                                const targetMonth = parseInt(dateParts[1], 10) - 1;
+                                currentNavDate.setFullYear(targetYear);
+                                currentNavDate.setMonth(targetMonth);
+                                renderCalendarPreviewWidget();
+                            }
+                        }
+                        contiBookCalendarCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+
+                    // 4. AUTO-TRIGGER E-REPORT STATUS OVERVIEW UPON CLICKING E-REPORT NOTIFICATION
+                    if (sourcePage === 'EReport.html') {
+                        eReportStatusCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                        setTimeout(() => {
+                            const rows = eReportTableBody.querySelectorAll('tr');
+                            rows.forEach(tr => {
+                                const cellText = tr.textContent || '';
+                                if ((reportIdVal && cellText.includes(reportIdVal)) || (userVal && cellText.includes(userVal))) {
+                                    tr.classList.add('bg-blue-600/30', 'ring-2', 'ring-blue-500');
+                                    setTimeout(() => {
+                                        tr.classList.remove('bg-blue-600/30', 'ring-2', 'ring-blue-500');
+                                    }, 4000);
+                                }
+                            });
+                        }, 500);
+                    }
+                });
+            });
+
+            lucide.createIcons();
+        }
+
+        async function markNotificationAsRead(notifId) {
+            if (!notifId || globalReadIdsSet.has(notifId)) return;
+            globalReadIdsSet.add(notifId);
+            renderNotificationsDropdownUI();
+
+            try {
+                const metaDocRef = doc(db, "beats_notifications_meta", "admin_read_state");
+                await setDoc(metaDocRef, {
+                    readIds: arrayUnion(notifId)
+                }, { merge: true });
+            } catch (err) {
+                console.error("Error marking notification read in Firestore:", err);
+            }
+        }
+
+        async function markAllNotificationsAsRead() {
+            const allIds = notificationsMasterList.map(n => n.id);
+            allIds.forEach(id => globalReadIdsSet.add(id));
+            renderNotificationsDropdownUI();
+
+            try {
+                const metaDocRef = doc(db, "beats_notifications_meta", "admin_read_state");
+                await setDoc(metaDocRef, {
+                    readIds: Array.from(globalReadIdsSet)
+                }, { merge: true });
+            } catch (err) {
+                console.error("Error marking all read in Firestore:", err);
+            }
+        }
+
+        function getRelativeTimeString(timestamp) {
+            if (!timestamp) return 'Just now';
+            const deltaSec = Math.floor((Date.now() - timestamp) / 1000);
+            if (deltaSec < 60) return deltaSec <= 5 ? 'Just now' : `${deltaSec}s ago`;
+            const mins = Math.floor(deltaSec / 60);
+            if (mins < 60) return `${mins}m ago`;
+            const hours = Math.floor(mins / 60);
+            if (hours < 24) return `${hours}h ago`;
+            const days = Math.floor(hours / 24);
+            return `${days}d ago`;
+        }
+
+        function setupCentralNotificationListener() {
+            onSnapshot(collection(db, "beats_notifications"), (snapshot) => {
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    addNotificationEntry({
+                        id: data.id || docSnap.id,
+                        title: data.title || "New System Alert",
+                        message: data.message || "Activity recorded",
+                        sourcePage: data.sourcePage || "Form Submission",
+                        targetUser: data.targetUser || "",
+                        targetDate: data.targetDate || "",
+                        targetReportId: data.targetReportId || "",
+                        timestamp: data.timestamp || Date.now()
+                    });
+                });
+            }, (err) => {
+                console.error("Central notifications listener error:", err);
+            });
+        }
+
+        function setupDirectCollectionListeners() {
+            onSnapshot(collection(db, "beats_bookings"), (snapshot) => {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === "added" || change.type === "modified") {
+                        const data = change.doc.data();
+                        addNotificationEntry({
+                            id: `booking_${change.doc.id}`,
+                            title: `New Conti Slot Reservation`,
+                            message: `${data.dj || 'User'} booked slot [${data.timeSlot || ''}] for ${data.date || ''}`,
+                            sourcePage: `contiBook.html`,
+                            targetUser: data.dj || data.bookedBy || '',
+                            targetDate: data.date || '',
+                            timestamp: data.createdAt || Date.now()
+                        });
+                    }
+                });
+            });
+
+            onSnapshot(collection(db, "beats_reports"), (snapshot) => {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === "added" || change.type === "modified") {
+                        const data = change.doc.data();
+                        addNotificationEntry({
+                            id: `ereport_${change.doc.id}`,
+                            title: `E-Report Filed (${data.issueType || 'Issue'})`,
+                            message: `Reporter ${data.reporter || 'Guest'} logged problem on ${data.eqModel || 'Equipment'}`,
+                            sourcePage: `EReport.html`,
+                            targetUser: data.reporter || data.submittedBy || '',
+                            targetDate: data.date || '',
+                            targetReportId: data.id || change.doc.id,
+                            timestamp: data.createdAt || Date.now()
+                        });
+                    }
+                });
+            });
+
+            onSnapshot(collection(db, "beats_melayu_logs"), (snapshot) => {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === "added" || change.type === "modified") {
+                        const data = change.doc.data();
+                        addNotificationEntry({
+                            id: `melayu_${change.doc.id}_${data.updatedAt || Date.now()}`,
+                            title: `Segmen Melayu Schedule Updated`,
+                            message: `Schedule for ${data.dateKey || change.doc.id} updated by ${data.presenter || 'Presenter'}`,
+                            sourcePage: `segmenMelayu.html`,
+                            targetUser: data.presenter || '',
+                            targetDate: data.dateKey || change.doc.id,
+                            timestamp: data.updatedAt || Date.now()
+                        });
+                    }
+                });
+            });
+
+            onSnapshot(collection(db, "beats_segmen_WAI_logs"), (snapshot) => {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === "added" || change.type === "modified") {
+                        const data = change.doc.data();
+                        addNotificationEntry({
+                            id: `iban_wai_${change.doc.id}_${data.updatedAt || Date.now()}`,
+                            title: `Segmen Iban WAIfm Updated`,
+                            message: `WAIfm Bintulu log updated for ${data.dateKey || change.doc.id}`,
+                            sourcePage: `segmenIban.html`,
+                            targetUser: data.presenter || '',
+                            targetDate: data.dateKey || change.doc.id,
+                            timestamp: data.updatedAt || Date.now()
+                        });
+                    }
+                });
+            });
+
+            onSnapshot(collection(db, "beats_interstation_sabtu_logs"), (snapshot) => {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === "added" || change.type === "modified") {
+                        const data = change.doc.data();
+                        addNotificationEntry({
+                            id: `iban_sabtu_${change.doc.id}_${data.updatedAt || Date.now()}`,
+                            title: `Inter-Station Sabtu Log Updated`,
+                            message: `Sabtu segment log updated for ${data.dateKey || change.doc.id}`,
+                            sourcePage: `segmenIban1.html`,
+                            targetUser: data.presenter || '',
+                            targetDate: data.dateKey || change.doc.id,
+                            timestamp: data.updatedAt || Date.now()
+                        });
+                    }
+                });
+            });
+
+            onSnapshot(collection(db, "beats_interstation_ahad_logs"), (snapshot) => {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === "added" || change.type === "modified") {
+                        const data = change.doc.data();
+                        addNotificationEntry({
+                            id: `iban_ahad_${change.doc.id}_${data.updatedAt || Date.now()}`,
+                            title: `Inter-Station Ahad Log Updated`,
+                            message: `Ahad segment log updated for ${data.dateKey || change.doc.id}`,
+                            sourcePage: `segmenIban2.html`,
+                            targetUser: data.presenter || '',
+                            targetDate: data.dateKey || change.doc.id,
+                            timestamp: data.updatedAt || Date.now()
+                        });
+                    }
+                });
+            });
+        }
+
+        notificationBellBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notificationDropdown.classList.toggle('hidden');
         });
 
-        window.addEventListener('DOMContentLoaded', loadAdminData);
+        document.addEventListener('click', (e) => {
+            if (!notificationDropdown.contains(e.target) && !notificationBellBtn.contains(e.target)) {
+                notificationDropdown.classList.add('hidden');
+            }
+        });
+
+        markAllReadBtn.addEventListener('click', markAllNotificationsAsRead);
+
+        function evaluateMetricsAndRenderTable() {
+            let onlineCount = 0;
+            let offlineCount = 0;
+            let rowsHtml = '';
+
+            const currentSelectedUser = searchSelect.value;
+            searchSelect.innerHTML = '<option value="">Select User Profile</option>';
+
+            if (!allRegisteredProfiles.length) {
+                userTableBody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-slate-500">No profile cards found in data repository.</td></tr>`;
+                metricTotal.textContent = "0";
+                metricOnline.textContent = "0";
+                metricOffline.textContent = "0";
+                return;
+            }
+
+            allRegisteredProfiles.forEach(profile => {
+                const option = document.createElement('option');
+                option.value = profile.name;
+                option.textContent = profile.name;
+                if (profile.name === currentSelectedUser) option.selected = true;
+                searchSelect.appendChild(option);
+
+                const presence = realTimePresenceMap[profile.name];
+                let isOnline = false;
+                let lastLoggedText = 'Never logged in';
+
+                if (presence) {
+                    const lastUpdatedTime = presence.lastUpdated || 0;
+                    const deltaSeconds = Math.floor((Date.now() - lastUpdatedTime) / 1000);
+                    
+                    if (presence.status === 'online' && deltaSeconds < 45) {
+                        isOnline = true;
+                    }
+
+                    if (lastUpdatedTime > 0) {
+                        const mins = Math.floor(deltaSeconds / 60);
+                        if (mins < 1) {
+                            lastLoggedText = deltaSeconds <= 5 ? 'Just now' : `${deltaSeconds}s ago`;
+                        } else if (mins < 60) {
+                            lastLoggedText = `${mins} min${mins > 1 ? 's' : ''} ago`;
+                        } else {
+                            const hours = Math.floor(mins / 60);
+                            lastLoggedText = `${hours} hour${hours > 1 ? 's' : ''} ago`;
+                        }
+                    }
+                }
+
+                if (isOnline) {
+                    onlineCount++;
+                } else {
+                    offlineCount++;
+                }
+
+                const imgSource = profile.photo ? profile.photo : svgAvatarFallback;
+                const statusBadgeColor = isOnline ? 'bg-green-500' : 'bg-slate-500';
+                const statusTextColor = isOnline ? 'text-green-400' : 'text-slate-400';
+                const statusLabel = isOnline ? 'Online' : 'Offline';
+
+                rowsHtml += `
+                    <tr>
+                        <td class="py-3">
+                            <div class="relative w-8 h-8">
+                                <img src="${imgSource}" class="w-8 h-8 rounded-full object-cover" alt="${profile.name}">
+                                <span class="absolute bottom-0 right-0 w-2 h-2 ${statusBadgeColor} rounded-full border border-card-dark"></span>
+                            </div>
+                        </td>
+                        <td class="py-3 font-medium text-white pl-4">${profile.name}</td>
+                        <td class="py-3 text-slate-400">${lastLoggedText}</td>
+                        <td class="py-3">
+                            <span class="flex items-center space-x-1.5 ${statusTextColor}">
+                                <span class="w-1.5 h-1.5 rounded-full ${statusBadgeColor}"></span>
+                                <span>${statusLabel}</span>
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            metricTotal.textContent = allRegisteredProfiles.length;
+            metricOnline.textContent = onlineCount;
+            metricOffline.textContent = offlineCount;
+            userTableBody.innerHTML = rowsHtml;
+
+            lucide.createIcons();
+        }
+
+        async function loadActiveCarouselScheduleData() {
+            const currentSegment = SEGMENT_ARRAY_LEDFER[currentCarouselSegmentIndex];
+            const dateTarget = filterLogDate.value;
+
+            scheduleMainTitle.textContent = `Schedule Overview: Segment Melayu / Segment Iban`;
+            scheduleCurrentViewHeader.textContent = currentSegment.label;
+            scheduleCarouselCaption.textContent = `Showing data for "${currentSegment.label}". Use arrows to slide views.`;
+
+            if (!dateTarget) {
+                scheduleOverviewTableBody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-500 italic">Please configure filter window to track timeline entries.</td></tr>`;
+                return;
+            }
+
+            scheduleOverviewTableBody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-blue-400 font-medium animate-pulse">Streaming segment matrix parameters...</td></tr>`;
+
+            try {
+                const scheduleDocRef = doc(db, currentSegment.collection, dateTarget);
+                const snap = await getDoc(scheduleDocRef);
+
+                if (snap.exists() && Array.isArray(snap.data().rowsArray) && snap.data().rowsArray.length > 0) {
+                    let rowsHtml = '';
+                    snap.data().rowsArray.forEach(row => {
+                        const strippedDetails = (row.segmentDetails || "").replace(/<\/?[^>]+(>|$)/g, "");
+                        rowsHtml += `
+                            <tr class="hover:bg-slate-800/10 transition">
+                                <td class="p-3 pl-6 font-semibold text-white tracking-wide text-center bg-slate-950/20">${row.hour}:${row.minute}</td>
+                                <td class="p-3 font-medium text-slate-200">${strippedDetails || '--'}</td>
+                                <td class="p-3 text-center text-slate-400 font-mono">${row.duration || row.durasi || '--'}</td>
+                                <td class="p-3 italic text-slate-400">${row.source || '--'}</td>
+                            </tr>
+                        `;
+                    });
+                    scheduleOverviewTableBody.innerHTML = rowsHtml;
+                } else {
+                    scheduleOverviewTableBody.innerHTML = `
+                        <tr class="text-slate-500 italic">
+                            <td colspan="4" class="p-8 text-center">No active contis log entries found matching this date configuration.</td>
+                        </tr>
+                    `;
+                }
+            } catch (err) {
+                console.error("Failed to compile segment schedules payload:", err);
+                scheduleOverviewTableBody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-red-400 font-semibold">Database pipe connection fault.</td></tr>`;
+            }
+        }
+
+        function configureCloudReportStreamingPipeline() {
+            onSnapshot(collection(db, "beats_reports"), (snapshot) => {
+                let pendingCount = 0;
+                let ongoingCount = 0;
+                let closedCount = 0;
+                let rowsHtml = '';
+
+                if (snapshot.empty) {
+                    eReportTableBody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-500 italic">No submitted equipment failure logs discovered.</td></tr>`;
+                    metricPendingReports.textContent = "0";
+                    metricOngoingReports.textContent = "0";
+                    metricClosedReports.textContent = "0";
+                    return;
+                }
+
+                snapshot.forEach(docSnapshot => {
+                    const report = docSnapshot.data();
+                    const statusStr = (report.issueType || "").trim().toLowerCase();
+                    const resolvedStatus = (report.status || "").trim().toLowerCase();
+
+                    if (resolvedStatus === "fixed" || resolvedStatus === "closed" || resolvedStatus === "feuxled") {
+                        closedCount++;
+                    } else if (resolvedStatus === "ongoing") {
+                        ongoingCount++;
+                    } else {
+                        pendingCount++;
+                    }
+
+                    let statusBadgeHTML = '';
+                    if (resolvedStatus === "fixed" || resolvedStatus === "closed" || resolvedStatus === "feuxled") {
+                        statusBadgeHTML = `<span class="flex items-center justify-center space-x-1 text-emerald-400 font-medium"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span><span>Feuxled</span></span>`;
+                    } else if (resolvedStatus === "ongoing") {
+                        statusBadgeHTML = `<span class="flex items-center justify-center space-x-1 text-amber-400 font-medium"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span><span>Ongoing</span></span>`;
+                    } else {
+                        statusBadgeHTML = `<span class="flex items-center justify-center space-x-1 text-red-400 font-medium"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span><span>Pending</span></span>`;
+                    }
+
+                    rowsHtml += `
+                        <tr class="hover:bg-slate-800/20 transition duration-300">
+                            <td class="py-3 text-blue-400 font-mono tracking-wider font-medium">${report.id || docSnapshot.id}</td>
+                            <td class="py-3 text-white font-medium pl-1">${report.reporter || 'Guest'}</td>
+                            <td class="py-3 max-w-xs truncate text-slate-300" title="${report.description || ''}">${report.eqModel || 'Equipment Item'}</td>
+                            <td class="py-3 text-center">${statusBadgeHTML}</td>
+                            <td class="py-3 text-slate-400 font-mono">${report.date || '--/--/----'}</td>
+                            <td class="py-3 text-center">
+                                <div class="flex items-center justify-center space-x-3 text-blue-400 text-xs font-medium">
+                                    <button class="hover:text-white flex items-center transition action-view-details-btn" data-id="${docSnapshot.id}"><i data-lucide="eye" class="w-3.5 h-3.5 mr-1"></i> View Full Details</button>
+                                    <div class="flex items-center space-x-1.5 border-l border-slate-700 pl-3">
+                                        <button class="hover:text-white relative group transition action-preview-attachment-btn" data-img="${report.imageAttachment || ''}">
+                                            <i data-lucide="image" class="w-3.5 h-3.5"></i>
+                                            <span class="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[9px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-30 pointer-events-none shadow-md">Attachment photo</span>
+                                        </button>
+                                        <button class="hover:text-white transition action-edit-report-btn" data-id="${docSnapshot.id}"><i data-lucide="edit-2" class="w-3.5 h-3.5"></i></button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                metricPendingReports.textContent = pendingCount;
+                metricOngoingReports.textContent = ongoingCount;
+                metricClosedReports.textContent = closedCount;
+                eReportTableBody.innerHTML = rowsHtml;
+
+                document.querySelectorAll('.action-preview-attachment-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const base64Src = btn.getAttribute('data-img');
+                        if (!base64Src) {
+                            alert("No photo attachment uploaded for this equipment problem log.");
+                            return;
+                        }
+                        modalAttachmentImg.src = base64Src;
+                        reportPreviewModal.classList.remove('hidden');
+                    });
+                });
+
+                document.querySelectorAll('.action-view-details-btn').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const targetId = btn.getAttribute('data-id');
+                        const docSnap = await getDoc(doc(db, "beats_reports", targetId));
+                        if(docSnap.exists()){
+                            const data = docSnap.data();
+                            alert(`REPORT BREAKDOWN INFORMATION:\n\nID: ${data.id}\nReporter: ${data.reporter} (${data.department || ''})\nEquipment Model: ${data.eqModel || ''} (${data.eqType || ''})\nAsset Serial Tag: ${data.serialNo || ''}\nProblem Categorization: ${data.issueType || ''}\n\nDescription details: ${data.description || ''}\n\nAdmin Reply Comment: ${data.adminResponse || "No response added yet."}`);
+                        }
+                    });
+                });
+
+                document.querySelectorAll('.action-edit-report-btn').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const targetId = btn.getAttribute('data-id');
+                        const newStatusChoice = prompt("Modify Report Status Option:\nType 'pending', 'ongoing', or 'feuxled' to save:");
+                        if (newStatusChoice === null) return; 
+                        
+                        const normStatus = newStatusChoice.trim().toLowerCase();
+                        if (normStatus === 'pending' || normStatus === 'ongoing' || normStatus === 'feuxled') {
+                            const adminReplyInput = prompt("Provide your official processing commentary response reply message below:");
+                            const docRef = doc(db, "beats_reports", targetId);
+                            const snap = await getDoc(docRef);
+                            
+                            if (snap.exists()) {
+                                const originalData = snap.data();
+                                await setDoc(docRef, {
+                                    ...originalData,
+                                    status: normStatus,
+                                    adminResponse: adminReplyInput ? adminReplyInput.trim() : (originalData.adminResponse || "")
+                                });
+                                alert("Document status config flags adjusted successfully.");
+                            }
+                        } else {
+                            alert("Validation Error: Please select 'pending', 'ongoing', or 'feuxled'.");
+                        }
+                    });
+                });
+
+                lucide.createIcons();
+            }, (err) => {
+                console.error("Live streaming collection disrupted:", err);
+            });
+        }
+
+        function renderCalendarPreviewWidget() {
+            const year = currentNavDate.getFullYear();
+            const month = currentNavDate.getMonth();
+
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            calendarMonthHeader.textContent = `${monthNames[month]} ${year}`;
+
+            const baselineHeaders = `
+                <span class="text-slate-500 font-medium">Sun</span>
+                <span class="text-slate-500 font-medium">Mon</span>
+                <span class="text-slate-500 font-medium">Tue</span>
+                <span class="text-slate-500 font-medium">Wed</span>
+                <span class="text-slate-500 font-medium">Thu</span>
+                <span class="text-slate-500 font-medium">Fri</span>
+                <span class="text-slate-500 font-medium">Sat</span>
+            `;
+            miniCalendarGrid.innerHTML = baselineHeaders;
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const totalDaysCount = new Date(year, month + 1, 0).getDate();
+            const prevMonthDaysCount = new Date(year, month, 0).getDate();
+
+            for (let i = firstDayIndex; i > 0; i--) {
+                const dayNum = prevMonthDaysCount - i + 1;
+                const span = document.createElement('span');
+                span.className = 'text-slate-600 p-1';
+                span.textContent = dayNum;
+                miniCalendarGrid.appendChild(span);
+            }
+
+            for (let day = 1; day <= totalDaysCount; day++) {
+                const span = document.createElement('span');
+                span.className = 'text-slate-300 p-1 relative font-medium';
+                const formattedISODateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayBookings = globalBookingsRegistry.filter(b => b.date === formattedISODateKey);
+                
+                let underlineColor = "";
+                if (dayBookings.length > 0) {
+                    const types = dayBookings.map(b => b.type);
+                    if (types.includes("Recording Session") && types.includes("Guest Interview")) {
+                        underlineColor = "bg-purple-500"; 
+                    } else if (types.includes("Recording Session")) {
+                        underlineColor = "bg-emerald-500";
+                    } else {
+                        underlineColor = "bg-blue-500";
+                    }
+                }
+
+                const rightNow = new Date();
+                if (day === rightNow.getDate() && month === rightNow.getMonth() && year === rightNow.getFullYear()) {
+                    span.classList.add('bg-slate-800/80', 'rounded-md', 'text-white');
+                }
+
+                span.innerHTML = `
+                    ${day}
+                    ${underlineColor ? `<span class="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-3 h-0.5 ${underlineColor}"></span>` : ''}
+                `;
+                miniCalendarGrid.appendChild(span);
+            }
+
+            const remainingGridSlots = 42 - (firstDayIndex + totalDaysCount);
+            for (let day = 1; day <= remainingGridSlots; day++) {
+                const span = document.createElement('span');
+                span.className = 'text-slate-600 p-1';
+                span.textContent = day;
+                miniCalendarGrid.appendChild(span);
+            }
+        }
+
+        function renderManageBookingsDeck() {
+            manageBookingsDeck.innerHTML = '';
+            if (globalBookingsRegistry.length === 0) {
+                manageBookingsDeck.innerHTML = `<p class="text-[10px] text-slate-500 italic text-center py-2">No upcoming reservation metrics detected.</p>`;
+                return;
+            }
+
+            globalBookingsRegistry.forEach(booking => {
+                const item = document.createElement('div');
+                item.className = "flex items-center justify-between bg-slate-900/40 p-2 rounded border border-slate-800/80 text-xs";
+                item.innerHTML = `
+                    <div class="truncate max-w-[120px] sm:max-w-[140px]" title="DJ: ${booking.dj || 'User'} (${booking.timeSlot || ''})">
+                        <span class="text-slate-200 font-semibold block truncate">${booking.dj || 'Unknown'}</span>
+                        <span class="text-[9px] text-slate-400 block truncate">${booking.date} | ${booking.timeSlot}</span>
+                    </div>
+                    <div class="flex items-center space-x-2 text-[10px] shrink-0 ml-1">
+                        <button class="text-red-400 hover:text-red-300 flex items-center target-delete-btn"><i data-lucide="trash-2" class="w-3 h-3 mr-0.5"></i>Delete</button>
+                    </div>
+                `;
+
+                item.querySelector('.target-delete-btn').addEventListener('click', async () => {
+                    if (confirm(`Permanently drop booking reservation slot mapped for ${booking.dj || 'this profile'}?`)) {
+                        try {
+                            await deleteDoc(doc(db, "beats_bookings", booking.id));
+                            alert("Reservation dropped from ledger.");
+                        } catch(e) {
+                            alert("Database deletion fault encountered.");
+                        }
+                    }
+                });
+                manageBookingsDeck.appendChild(item);
+            });
+            lucide.createIcons();
+        }
+
+        function refreshDailyLogChart(rowsArray = []) {
+            const hourlyFrequencies = new Array(24).fill(0);
+            rowsArray.forEach(row => {
+                const hourInt = parseInt(row.h || 0, 10);
+                if (hourInt >= 0 && hourInt <= 23) {
+                    hourlyFrequencies[hourInt]++;
+                }
+            });
+
+            const maximumValue = Math.max(...hourlyFrequencies, 1);
+            chartMaxVal.textContent = maximumValue;
+            
+            let chartHtml = `
+                <div class="absolute left-0 top-0 h-full flex flex-col justify-between text-[8px] text-slate-500 pointer-events-none z-10">
+                    <span>${maximumValue}</span><span></span><span></span><span></span><span>0</span>
+                </div>
+            `;
+
+            hourlyFrequencies.forEach((count, hour) => {
+                const heightPercentage = count > 0 ? (count / maximumValue) * 85 : 0;
+                chartHtml += `
+                    <div class="w-full bg-blue-500 rounded-t-sm transition-all duration-500" 
+                         style="height: ${Math.max(heightPercentage, 2)}%; opacity: ${count > 0 ? '1' : '0.15'}" 
+                         title="Hour ${hour}:00 - ${count} logs submitted"></div>
+                `;
+            });
+
+            chartHtml += `<span class="absolute -left-6 top-1/2 -rotate-90 text-[8px] tracking-wide text-slate-500">Uploaded logs</span>`;
+            barChartContainer.innerHTML = chartHtml;
+        }
+
+        async function fetchSelectedContiLogs() {
+            const userTarget = searchSelect.value;
+            const dateTarget = filterLogDate.value;
+
+            if (!userTarget || !dateTarget) {
+                searchStatusInfo.textContent = "Select profile and date to run queries.";
+                searchStatusInfo.className = "text-[10px] text-slate-400 italic";
+                viewSelectedLogBtn.classList.add('hidden');
+                refreshDailyLogChart([]); 
+                return;
+            }
+
+            searchStatusInfo.textContent = "Reading database records...";
+            searchStatusInfo.className = "text-[10px] text-blue-400 animate-pulse font-medium";
+
+            try {
+                const logDocRef = doc(db, "beats_conti_logs", userTarget, "dates", dateTarget);
+                const snap = await getDoc(logDocRef);
+
+                if (snap.exists()) {
+                    const data = snap.data();
+                    activeSelectedLogData = data; 
+                    const totalRowsCount = data.rows ? data.rows.length : 0;
+
+                    searchStatusInfo.textContent = `Found ${totalRowsCount} log entry paths for selected parameters.`;
+                    searchStatusInfo.className = "text-[10px] text-green-400 font-semibold";
+                    
+                    viewSelectedLogBtn.classList.remove('hidden');
+                    refreshDailyLogChart(data.rows || []);
+                } else {
+                    activeSelectedLogData = null;
+                    searchStatusInfo.textContent = "No log records found matching this configuration.";
+                    searchStatusInfo.className = "text-[10px] text-amber-500 font-medium";
+                    viewSelectedLogBtn.classList.add('hidden');
+                    refreshDailyLogChart([]); 
+                }
+            } catch (err) {
+                console.error("Failed to query target log array elements:", err);
+                searchStatusInfo.textContent = "System connectivity error tracking records.";
+                searchStatusInfo.className = "text-[10px] text-red-400 font-semibold";
+            }
+        }
+
+        function initRealtimeDatabaseSync() {
+            onSnapshot(collection(db, "beats_profiles"), (snapshot) => {
+                let consolidated = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data && Array.isArray(data.profiles)) {
+                        consolidated = consolidated.concat(data.profiles);
+                    }
+                });
+                allRegisteredProfiles = consolidated;
+                evaluateMetricsAndRenderTable();
+            }, (err) => {
+                console.error("Profiles real-time stream disrupted:", err);
+            });
+
+            onSnapshot(collection(db, "beats_presence"), (snapshot) => {
+                snapshot.forEach(doc => {
+                    realTimePresenceMap[doc.id] = doc.data();
+                });
+                evaluateMetricsAndRenderTable();
+            }, (err) => {
+                console.error("Live presence telemetry link down:", err);
+            });
+
+            onSnapshot(collection(db, "beats_bookings"), (snapshot) => {
+                let itemsList = [];
+                snapshot.forEach(doc => {
+                    itemsList.push({ id: doc.id, ...doc.data() });
+                });
+                globalBookingsRegistry = itemsList;
+                renderCalendarPreviewWidget();
+                renderManageBookingsDeck();
+            }, (err) => {
+                console.error("Live booking registration stream offline:", err);
+            });
+        }
+
+        viewSelectedLogBtn.addEventListener('click', () => {
+            if (!activeSelectedLogData) {
+                alert("No active Conti Log loaded for current selection.");
+                return;
+            }
+
+            const activeUser = searchSelect.value || 'User';
+            const activeDate = filterLogDate.value || '--/--/----';
+
+            modalJH.textContent = activeSelectedLogData.jhBertugas || activeUser;
+            modalDate.textContent = activeDate;
+            modalWaktu.textContent = activeSelectedLogData.waktu || 'Standard Shift';
+
+            modalTableBody.innerHTML = '';
+
+            if (Array.isArray(activeSelectedLogData.rows) && activeSelectedLogData.rows.length > 0) {
+                let rowsHtml = '';
+                activeSelectedLogData.rows.forEach(row => {
+                    const timeString = `${row.h || '00'}:${row.m || '00'}`;
+                    rowsHtml += `
+                        <tr class="hover:bg-slate-800/30 transition">
+                            <td class="p-2.5 border-r border-slate-800 text-center font-mono text-white font-medium">${timeString}</td>
+                            <td class="p-2.5 border-r border-slate-800 text-slate-200">${row.tajuk || row.segmentDetails || '--'}</td>
+                            <td class="p-2.5 border-r border-slate-800 text-center font-bold text-blue-400">${row.lr || '--'}</td>
+                            <td class="p-2.5 border-r border-slate-800 text-slate-300">${row.penerbit || '--'}</td>
+                            <td class="p-2.5 border-r border-slate-800 text-center text-slate-400 font-mono text-[11px]">${row.cd || '--'}</td>
+                            <td class="p-2.5 text-slate-300">${row.catatan || '--'}</td>
+                        </tr>
+                    `;
+                });
+                modalTableBody.innerHTML = rowsHtml;
+            } else {
+                modalTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="p-6 text-center text-slate-500 italic">No detailed log entries recorded in this document.</td>
+                    </tr>
+                `;
+            }
+
+            logTableModal.classList.remove('hidden');
+        });
+
+        closeReportModalBtn.addEventListener('click', () => reportPreviewModal.classList.add('hidden'));
+
+        setInterval(() => {
+            evaluateMetricsAndRenderTable();
+        }, 4000);
+
+        closeLogModalBtn.addEventListener('click', () => logTableModal.classList.add('hidden'));
+
+        printModalBtn.addEventListener('click', () => { 
+            document.body.classList.add('printing-log-modal');
+            window.print(); 
+            document.body.classList.remove('printing-log-modal');
+        });
+
+        printOverviewScheduleBtn.addEventListener('click', () => { 
+            document.body.classList.remove('printing-log-modal');
+            window.print(); 
+        });
+
+        searchSelect.addEventListener('change', fetchSelectedContiLogs);
+        
+        filterLogDate.addEventListener('change', () => {
+            fetchSelectedContiLogs();
+            loadActiveCarouselScheduleData();
+        });
+
+        carouselPrevBtn.addEventListener('click', () => {
+            currentCarouselSegmentIndex = (currentCarouselSegmentIndex - 1 + SEGMENT_ARRAY_LEDFER.length) % SEGMENT_ARRAY_LEDFER.length;
+            loadActiveCarouselScheduleData();
+        });
+        carouselNextBtn.addEventListener('click', () => {
+            currentCarouselSegmentIndex = (currentCarouselSegmentIndex + 1) % SEGMENT_ARRAY_LEDFER.length;
+            loadActiveCarouselScheduleData();
+        });
+
+        prevCalendarMonth.addEventListener('click', () => {
+            currentNavDate.setMonth(currentNavDate.getMonth() - 1);
+            renderCalendarPreviewWidget();
+        });
+        nextCalendarMonth.addEventListener('click', () => {
+            currentNavDate.setMonth(currentNavDate.getMonth() + 1);
+            renderCalendarPreviewWidget();
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initRealtimeDatabaseSync();
+            refreshDailyLogChart([]); 
+            loadActiveCarouselScheduleData(); 
+            configureCloudReportStreamingPipeline();
+            initGlobalNotificationSync();
+        });
+
+        document.getElementById('adminLogoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('currentUserEmail');
+            alert('Admin session cleared.');
+            window.location.href = 'SignIn.html';
+        });
+    </script>
+
+    <script>
+        const openMobileSidebar = document.getElementById('openMobileSidebar');
+        const closeMobileSidebar = document.getElementById('closeMobileSidebar');
+        const sidebarMenu = document.getElementById('sidebarMenu');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        function toggleMobileSidebar(isActive) {
+            if (isActive) {
+                sidebarMenu.classList.remove('-translate-x-full');
+                sidebarOverlay.classList.remove('hidden');
+            } else {
+                sidebarMenu.classList.add('-translate-x-full');
+                sidebarOverlay.classList.add('hidden');
+            }
+        }
+
+        openMobileSidebar.addEventListener('click', () => toggleMobileSidebar(true));
+        closeMobileSidebar.addEventListener('click', () => toggleMobileSidebar(false));
+        sidebarOverlay.addEventListener('click', () => toggleMobileSidebar(false));
+
+        lucide.createIcons();
     </script>
 </body>
 </html>
