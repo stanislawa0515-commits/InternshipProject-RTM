@@ -816,14 +816,21 @@
             }
 
             allRegisteredProfiles.forEach(profile => {
-                const displayName = profile.username || profile.name || 'User';
+                // Primary display name is the sign-up username (fallback to name or email)
+                const displayUsername = profile.username || profile.name || profile.email;
+                
+                // Populate Quick Conti Log Search dropdown
                 const option = document.createElement('option');
-                option.value = displayName;
-                option.textContent = displayName;
-                if (displayName === currentSelectedUser) option.selected = true;
+                option.value = displayUsername;
+                option.textContent = displayUsername;
+                if (displayUsername === currentSelectedUser) option.selected = true;
                 searchSelect.appendChild(option);
 
-                const presence = realTimePresenceMap[displayName] || realTimePresenceMap[profile.email];
+                // Look up presence status by username, name, or email key
+                const presence = realTimePresenceMap[displayUsername] || 
+                                 realTimePresenceMap[profile.name] || 
+                                 realTimePresenceMap[profile.email];
+                                 
                 let isOnline = false;
                 let lastLoggedText = 'Never logged in';
 
@@ -863,11 +870,14 @@
                     <tr>
                         <td class="py-3">
                             <div class="relative w-8 h-8">
-                                <img src="${imgSource}" class="w-8 h-8 rounded-full object-cover" alt="${displayName}">
+                                <img src="${imgSource}" class="w-8 h-8 rounded-full object-cover" alt="${displayUsername}">
                                 <span class="absolute bottom-0 right-0 w-2 h-2 ${statusBadgeColor} rounded-full border border-card-dark"></span>
                             </div>
                         </td>
-                        <td class="py-3 font-medium text-white pl-4">${displayName} ${profile.name ? `<span class="text-slate-500 text-[10px] block">(${profile.name})</span>` : ''}</td>
+                        <td class="py-3 font-medium text-white pl-4">
+                            <span class="font-semibold text-slate-100">${displayUsername}</span>
+                            ${profile.name ? `<span class="text-slate-400 text-[11px] block font-normal">${profile.name}</span>` : ''}
+                        </td>
                         <td class="py-3 text-slate-400 font-mono">${profile.email || '--'}</td>
                         <td class="py-3 text-slate-400">${lastLoggedText}</td>
                         <td class="py-3">
@@ -1188,18 +1198,21 @@
         }
 
         function initRealtimeDatabaseSync() {
-            // Retrieve user accounts created in SignUp.html from beats_users
+            // Retrieve sign-up accounts directly from the beats_users Firestore collection
             onSnapshot(collection(db, "beats_users"), (snapshot) => {
                 let profiles = [];
                 snapshot.forEach(docSnap => {
                     const data = docSnap.data();
-                    profiles.push({
-                        id: docSnap.id,
-                        email: docSnap.id,
-                        name: data.name || "",
-                        username: data.username || docSnap.id,
-                        createdAt: data.createdAt
-                    });
+                    if (data) {
+                        profiles.push({
+                            id: docSnap.id,
+                            email: data.email || docSnap.id,
+                            name: data.name || '',
+                            username: data.username || '',
+                            photo: data.photo || null,
+                            createdAt: data.createdAt || 0
+                        });
+                    }
                 });
                 allRegisteredProfiles = profiles;
                 evaluateMetricsAndRenderTable();
@@ -1207,7 +1220,7 @@
                 console.error("Profiles real-time stream disrupted:", err);
             });
 
-            // Listen to presence updates
+            // Listen to live presence updates
             onSnapshot(collection(db, "beats_presence"), (snapshot) => {
                 snapshot.forEach(doc => {
                     realTimePresenceMap[doc.id] = doc.data();
