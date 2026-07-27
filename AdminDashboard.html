@@ -396,11 +396,7 @@
         
         const searchSelect = document.getElementById('searchProfileSelect');
         const filterLogDate = document.getElementById('filterLogDate');
-        const searchStatusInfo = document.getElementById('searchStatusInfo');
-        const viewSelectedLogBtn = document.getElementById('viewSelectedLogBtn');
-        const barChartContainer = document.getElementById('barChartContainer');
         const barChartHoursLabels = document.getElementById('barChartHoursLabels');
-        const chartMaxVal = document.getElementById('chartMaxVal');
 
         const calendarMonthHeader = document.getElementById('calendarMonthHeader');
         const miniCalendarGrid = document.getElementById('miniCalendarGrid');
@@ -416,32 +412,36 @@
         let globalBookingsRegistry = [];
         let currentNavDate = new Date();
 
-        filterLogDate.value = new Date().toISOString().split('T')[0];
+        if (filterLogDate) {
+            filterLogDate.value = new Date().toISOString().split('T')[0];
+        }
 
         function evaluateMetricsAndRenderTable() {
             let onlineCount = 0;
             let offlineCount = 0;
             let rowsHtml = '';
 
-            const currentSelectedUser = searchSelect.value;
-            searchSelect.innerHTML = '<option value="">Select User Profile</option>';
+            const currentSelectedUser = searchSelect ? searchSelect.value : '';
+            if (searchSelect) searchSelect.innerHTML = '<option value="">Select User Profile</option>';
 
             if (!allRegisteredProfiles.length) {
                 userTableBody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-slate-500">No registered profiles found in database.</td></tr>`;
-                metricTotal.textContent = "0";
-                metricOnline.textContent = "0";
-                metricOffline.textContent = "0";
+                if (metricTotal) metricTotal.textContent = "0";
+                if (metricOnline) metricOnline.textContent = "0";
+                if (metricOffline) metricOffline.textContent = "0";
                 return;
             }
 
             allRegisteredProfiles.forEach(profile => {
                 const displayUsername = profile.username || profile.name || profile.email;
                 
-                const option = document.createElement('option');
-                option.value = displayUsername;
-                option.textContent = displayUsername;
-                if (displayUsername === currentSelectedUser) option.selected = true;
-                searchSelect.appendChild(option);
+                if (searchSelect) {
+                    const option = document.createElement('option');
+                    option.value = displayUsername;
+                    option.textContent = displayUsername;
+                    if (displayUsername === currentSelectedUser) option.selected = true;
+                    searchSelect.appendChild(option);
+                }
 
                 const presence = realTimePresenceMap[displayUsername] || 
                                  realTimePresenceMap[profile.name] || 
@@ -499,10 +499,10 @@
                 `;
             });
 
-            metricTotal.textContent = allRegisteredProfiles.length;
-            metricOnline.textContent = onlineCount;
-            metricOffline.textContent = offlineCount;
-            userTableBody.innerHTML = rowsHtml;
+            if (metricTotal) metricTotal.textContent = allRegisteredProfiles.length;
+            if (metricOnline) metricOnline.textContent = onlineCount;
+            if (metricOffline) metricOffline.textContent = offlineCount;
+            if (userTableBody) userTableBody.innerHTML = rowsHtml;
 
             if (window.lucide) lucide.createIcons();
         }
@@ -528,11 +528,11 @@
                     evaluateMetricsAndRenderTable();
                 }, (err) => {
                     console.error("Profiles real-time stream disrupted:", err);
-                    userTableBody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-red-400 font-mono">Firestore Error: ${err.message}</td></tr>`;
+                    if (userTableBody) userTableBody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-red-400 font-mono">Firestore Error: ${err.message}</td></tr>`;
                 });
             } catch (err) {
                 console.error("Initialization Error:", err);
-                userTableBody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-red-400 font-mono">System Error: ${err.message}</td></tr>`;
+                if (userTableBody) userTableBody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-red-400 font-mono">System Error: ${err.message}</td></tr>`;
             }
 
             // Live presence updates
@@ -566,10 +566,10 @@
                     let rowsHtml = '';
 
                     if (snapshot.empty) {
-                        eReportTableBody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-500 italic">No submitted equipment failure logs.</td></tr>`;
-                        metricPendingReports.textContent = "0";
-                        metricOngoingReports.textContent = "0";
-                        metricClosedReports.textContent = "0";
+                        if (eReportTableBody) eReportTableBody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-500 italic">No submitted equipment failure logs.</td></tr>`;
+                        if (metricPendingReports) metricPendingReports.textContent = "0";
+                        if (metricOngoingReports) metricOngoingReports.textContent = "0";
+                        if (metricClosedReports) metricClosedReports.textContent = "0";
                         return;
                     }
 
@@ -610,10 +610,10 @@
                         `;
                     });
 
-                    metricPendingReports.textContent = pendingCount;
-                    metricOngoingReports.textContent = ongoingCount;
-                    metricClosedReports.textContent = closedCount;
-                    eReportTableBody.innerHTML = rowsHtml;
+                    if (metricPendingReports) metricPendingReports.textContent = pendingCount;
+                    if (metricOngoingReports) metricOngoingReports.textContent = ongoingCount;
+                    if (metricClosedReports) metricClosedReports.textContent = closedCount;
+                    if (eReportTableBody) eReportTableBody.innerHTML = rowsHtml;
 
                     if (window.lucide) lucide.createIcons();
                 }, (err) => console.error("Report pipeline error:", err));
@@ -621,10 +621,11 @@
         }
 
         function renderCalendarPreviewWidget() {
+            if (!miniCalendarGrid) return;
             const year = currentNavDate.getFullYear();
             const month = currentNavDate.getMonth();
             const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            calendarMonthHeader.textContent = `${monthNames[month]} ${year}`;
+            if (calendarMonthHeader) calendarMonthHeader.textContent = `${monthNames[month]} ${year}`;
 
             miniCalendarGrid.innerHTML = `
                 <span class="text-slate-500 font-medium">Sun</span>
@@ -667,6 +668,7 @@
         }
 
         function renderManageBookingsDeck() {
+            if (!manageBookingsDeck) return;
             manageBookingsDeck.innerHTML = '';
             if (globalBookingsRegistry.length === 0) {
                 manageBookingsDeck.innerHTML = `<p class="text-[10px] text-slate-500 italic text-center py-2">No upcoming reservations.</p>`;
@@ -698,16 +700,18 @@
             if (window.lucide) lucide.createIcons();
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            initRealtimeDatabaseSync();
-            configureCloudReportStreamingPipeline();
-        });
+        // DIRECT RUN ON MODULE LOAD (bypasses DOMContentLoaded event listener timing issues)
+        initRealtimeDatabaseSync();
+        configureCloudReportStreamingPipeline();
 
-        document.getElementById('adminLogoutBtn').addEventListener('click', () => {
-            localStorage.removeItem('currentUser');
-            alert('Admin session cleared.');
-            window.location.href = 'SignIn.html';
-        });
+        const logoutBtn = document.getElementById('adminLogoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                localStorage.removeItem('currentUser');
+                alert('Admin session cleared.');
+                window.location.href = 'SignIn.html';
+            });
+        }
     </script>
 
     <script>
