@@ -225,14 +225,14 @@
 
                 <!-- Right Stack -->
                 <div class="space-y-6">
-                    <!-- Conti Logs Overview & Bar Chart Widget -->
+                    <!-- Conti Logs Overview Card -->
                     <div id="contiLogsOverviewCard" class="bg-card-dark rounded-xl border border-slate-800 p-5 scroll-mt-20">
                         <h2 class="text-sm font-semibold text-white mb-4">Conti Logs Overview</h2>
                         <div class="mb-4">
                             <h4 class="text-xs font-medium text-slate-400 mb-2">Daily Log Summary</h4>
-                            <div id="barChartContainer" class="h-28 flex items-end justify-between gap-[2px] px-1 pt-4 border-b border-slate-700 relative overflow-x-auto overflow-y-hidden">
+                            <div id="barChartContainer" class="h-32 flex items-end justify-between gap-[2px] px-2 pt-4 pb-1 border-b border-slate-700 relative overflow-x-auto overflow-y-hidden">
                                 <div class="absolute left-0 top-0 h-full flex flex-col justify-between text-[8px] text-slate-500 pointer-events-none z-10">
-                                    <span id="chartMaxVal">40</span><span></span><span></span><span></span><span>0</span>
+                                    <span id="chartMaxVal">4</span><span></span><span>0</span>
                                 </div>
                             </div>
                             <div id="barChartHoursLabels" class="flex justify-between text-[7px] text-slate-500 px-1 mt-1 font-mono min-w-[240px]"></div>
@@ -341,11 +341,11 @@
         </main>
     </div>
 
-    <!-- MODAL POPUP FOR CONTI LOG VIEWER & PRINTING -->
+    <!-- MODAL POPUP FOR CONTI LOG VIEWER -->
     <div id="logTableModal" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-4xl max-h-[85vh] flex flex-col p-6 overflow-hidden">
             <div class="flex items-center justify-between pb-4 border-b border-slate-800 no-print-element">
-                <h3 class="text-sm font-bold text-white uppercase tracking-wider">Conti Log Table Preview</h3>
+                <h3 class="text-sm font-bold text-white uppercase tracking-wider">CONTI LOG TABLE PREVIEW</h3>
                 <button id="closeLogModalBtn" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <div id="printModalArea" class="flex-1 overflow-y-auto my-4 space-y-4 text-xs text-slate-300">
@@ -440,7 +440,6 @@
         }
         init24HourLabelAxis();
 
-        // Helper for case-insensitive presence matching
         function findPresenceData(profile) {
             const keysToTry = [
                 profile.username,
@@ -485,6 +484,15 @@
                     option.textContent = displayUsername;
                     if (displayUsername === currentSelectedUser) option.selected = true;
                     searchSelect.appendChild(option);
+
+                    // Add secondary name option if different
+                    if (profile.name && profile.name !== displayUsername) {
+                        const opt2 = document.createElement('option');
+                        opt2.value = profile.name;
+                        opt2.textContent = profile.name;
+                        if (profile.name === currentSelectedUser) opt2.selected = true;
+                        searchSelect.appendChild(opt2);
+                    }
                 }
 
                 const presence = findPresenceData(profile);
@@ -568,7 +576,7 @@
             
             let chartHtml = `
                 <div class="absolute left-0 top-0 h-full flex flex-col justify-between text-[8px] text-slate-500 pointer-events-none z-10">
-                    <span>${maximumValue}</span><span></span><span></span><span></span><span>0</span>
+                    <span>${maximumValue}</span><span></span><span>0</span>
                 </div>
             `;
 
@@ -602,11 +610,32 @@
             searchStatusInfo.className = "text-[10px] text-blue-400 animate-pulse font-medium";
 
             try {
-                // Read from beats_conti_logs/{userTarget}/dates/{dateTarget}
-                const logDocRef = doc(db, "beats_conti_logs", userTarget, "dates", dateTarget);
-                const snap = await getDoc(logDocRef);
+                // Find matching profile object to get alternate username / name
+                const matchedProfile = allRegisteredProfiles.find(p => 
+                    p.username === userTarget || p.name === userTarget || p.email === userTarget
+                );
 
-                if (snap.exists()) {
+                const keysToTry = [
+                    userTarget,
+                    matchedProfile?.username,
+                    matchedProfile?.name,
+                    matchedProfile?.email
+                ].filter(Boolean);
+
+                let snap = null;
+                let foundKey = "";
+
+                for (const key of keysToTry) {
+                    const logDocRef = doc(db, "beats_conti_logs", key, "dates", dateTarget);
+                    const testSnap = await getDoc(logDocRef);
+                    if (testSnap.exists()) {
+                        snap = testSnap;
+                        foundKey = key;
+                        break;
+                    }
+                }
+
+                if (snap && snap.exists()) {
                     const data = snap.data();
                     activeSelectedLogData = data; 
                     const totalRowsCount = data.rows ? data.rows.length : 0;
@@ -634,7 +663,6 @@
         // REALTIME DATABASE INITIALIZATION
         // ==========================================
         function initRealtimeDatabaseSync() {
-            // Retrieve user accounts directly from beats_users
             try {
                 onSnapshot(collection(db, "beats_users"), (snapshot) => {
                     let profiles = [];
@@ -652,6 +680,7 @@
                     });
                     allRegisteredProfiles = profiles;
                     evaluateMetricsAndRenderTable();
+                    fetchSelectedContiLogs();
                 }, (err) => {
                     console.error("Profiles real-time stream disrupted:", err);
                     if (userTableBody) userTableBody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-red-400 font-mono">Firestore Error: ${err.message}</td></tr>`;
@@ -661,7 +690,6 @@
                 if (userTableBody) userTableBody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-red-400 font-mono">System Error: ${err.message}</td></tr>`;
             }
 
-            // Live presence updates
             try {
                 onSnapshot(collection(db, "beats_presence"), (snapshot) => {
                     snapshot.forEach(doc => {
@@ -671,7 +699,6 @@
                 }, (err) => console.error("Presence telemetry offline:", err));
             } catch (e) {}
 
-            // Booking updates
             try {
                 onSnapshot(collection(db, "beats_bookings"), (snapshot) => {
                     let itemsList = [];
@@ -839,8 +866,8 @@
                     return;
                 }
 
-                const activeUser = searchSelect.value || 'User';
-                const activeDate = filterLogDate.value || '--/--/----';
+                const activeUser = searchSelect ? searchSelect.value : 'User';
+                const activeDate = filterLogDate ? filterLogDate.value : '--/--/----';
 
                 if (modalJH) modalJH.textContent = activeSelectedLogData.jhBertugas || activeUser;
                 if (modalDate) modalDate.textContent = activeDate;
@@ -853,7 +880,7 @@
                         activeSelectedLogData.rows.forEach(row => {
                             const timeString = `${row.h || '00'}:${row.m || '00'}`;
                             rowsHtml += `
-                                <tr class="hover:bg-slate-800/30 transition">
+                                <tr class="hover:bg-slate-800/30 transition border-b border-slate-800/50">
                                     <td class="p-2.5 border-r border-slate-800 text-center font-mono text-white font-medium">${timeString}</td>
                                     <td class="p-2.5 border-r border-slate-800 text-slate-200">${row.tajuk || row.segmentDetails || '--'}</td>
                                     <td class="p-2.5 border-r border-slate-800 text-center font-bold text-blue-400">${row.lr || '--'}</td>
