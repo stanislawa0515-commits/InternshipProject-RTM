@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BINTULUfm Admin Portal</title>
-    <!-- Tailwind CSS for structural grid & utility foundation -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Lucide Icons for clean UI iconography -->
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body {
@@ -18,19 +18,16 @@
             background-color: #121824;
             color: #E2E8F0;
         }
-        /* Custom exact color palettes */
         .bg-sidebar { background-color: #1A2232; }
         .bg-card-dark { background-color: #1E293B; }
         .bg-main { background-color: #0F172A; }
         
-        /* Active Sidebar Link Highlight styling */
         .sidebar-active {
             background-color: #2E3E59;
             border-left: 4px solid #3B82F6;
             color: #FFFFFF;
         }
         
-        /* Custom scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -43,17 +40,10 @@
             border-radius: 3px;
         }
 
-        /* PRINT STYLES FOR LOG MODAL ISOLATION */
         @media print {
-            body * {
-                visibility: hidden !important;
-            }
-            
-            /* Print mode for Log Table Modal */
+            body * { visibility: hidden !important; }
             body.printing-log-modal #logTableModal, 
-            body.printing-log-modal #logTableModal * {
-                visibility: visible !important;
-            }
+            body.printing-log-modal #logTableModal * { visibility: visible !important; }
             body.printing-log-modal #logTableModal {
                 position: absolute !important;
                 left: 0 !important;
@@ -63,47 +53,31 @@
                 background: #ffffff !important;
                 color: #000000 !important;
             }
-            body.printing-log-modal #printModalArea {
-                color: #000000 !important;
-            }
+            body.printing-log-modal #printModalArea { color: #000000 !important; }
             body.printing-log-modal #printModalArea table, 
             body.printing-log-modal #printModalArea th, 
             body.printing-log-modal #printModalArea td {
                 border-color: #000000 !important;
                 color: #000000 !important;
             }
-
-            .no-print-element {
-                display: none !important;
-            }
-            table {
-                border-collapse: collapse !important;
-                width: 100% !important;
-            }
+            .no-print-element { display: none !important; }
+            table { border-collapse: collapse !important; width: 100% !important; }
             th, td {
                 border: 1px solid #1e293b !important;
                 color: #000000 !important;
                 padding: 10px !important;
             }
-            th {
-                background-color: #f1f5f9 !important;
-            }
+            th { background-color: #f1f5f9 !important; }
         }
     </style>
 </head>
 <body class="h-screen flex overflow-hidden relative">
 
-    <!-- ========================================== -->
-    <!--          MOBILE SIDEBAR OVERLAY            -->
-    <!-- ========================================== -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-30 hidden xl:hidden transition-opacity duration-300"></div>
 
-    <!-- ========================================== -->
-    <!--                LEFT SIDEBAR                -->
-    <!-- ========================================== -->
+    <!-- LEFT SIDEBAR -->
     <aside id="sidebarMenu" class="fixed inset-y-0 left-0 w-64 bg-sidebar flex flex-col justify-between border-r border-slate-800 shrink-0 z-40 transform -translate-x-full transition-transform duration-300 ease-in-out xl:translate-x-0 xl:static xl:z-20">
         <div class="overflow-y-auto flex-1">
-            <!-- Brand Logo & Mobile Close Trigger -->
             <div class="p-6 flex items-center justify-between">
                 <div style="font-family: 'Kanit', sans-serif; font-weight: 900; color: #dc2b5c; font-size: 1.5rem; font-style: italic;">BEATS</div>
                 <button id="closeMobileSidebar" class="xl:hidden text-slate-400 hover:text-white">
@@ -111,7 +85,6 @@
                 </button>
             </div>
 
-            <!-- Profile Widget -->
             <div class="px-6 pb-6 flex items-center space-x-3 border-b border-slate-800/60">
                 <div class="relative">
                     <img src="BTUfm.jpg" alt="BINTULUfm Logo" class="w-10 h-10 rounded-full object-cover ring-2 ring-slate-700">
@@ -123,7 +96,6 @@
                 </div>
             </div>
 
-            <!-- Navigation Links -->
             <nav class="mt-6 px-3 space-y-1 text-sm text-slate-300">
                 <a href="#" class="sidebar-active flex items-center space-x-3 px-3 py-3 rounded-lg transition-all font-medium">
                     <i data-lucide="layout-dashboard" class="w-4 h-4 text-blue-400"></i>
@@ -132,7 +104,6 @@
             </nav>
         </div>
 
-        <!-- Logout Trigger Button -->
         <div class="p-4 border-t border-slate-800">
             <button id="adminLogoutBtn" class="w-full flex items-center space-x-3 px-3 py-2 text-sm text-slate-400 hover:text-red-400 transition rounded-lg">
                 <i data-lucide="log-out" class="w-4 h-4"></i>
@@ -141,12 +112,8 @@
         </div>
     </aside>
 
-    <!-- ========================================== -->
-    <!--              MAIN CONTENT AREA             -->
-    <!-- ========================================== -->
+    <!-- MAIN CONTENT AREA -->
     <div class="flex-1 flex flex-col overflow-hidden bg-main">
-        
-        <!-- Header / Top Bar -->
         <header class="h-16 bg-sidebar border-b border-slate-800 flex items-center justify-between px-4 sm:px-6 shrink-0 z-10 relative">
             <div class="flex items-center space-x-4">
                 <button id="openMobileSidebar" class="text-slate-400 hover:text-white transition xl:hidden">
@@ -155,14 +122,12 @@
             </div>
             
             <div class="flex items-center space-x-4 sm:space-x-6 relative">
-                <!-- BELL NOTIFICATION BUTTON & BADGE -->
                 <div class="relative">
                     <button id="notificationBellBtn" class="relative text-slate-400 hover:text-white transition p-1.5 rounded-lg hover:bg-slate-800 focus:outline-none">
                         <i data-lucide="bell" class="w-5 h-5"></i>
                         <span id="notificationBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden animate-pulse">0</span>
                     </button>
 
-                    <!-- NOTIFICATION DROPDOWN MENU -->
                     <div id="notificationDropdown" class="absolute right-0 mt-3 w-80 sm:w-96 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-50 hidden overflow-hidden transition-all duration-200">
                         <div class="p-3 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
                             <div class="flex items-center space-x-2">
@@ -184,20 +149,14 @@
             </div>
         </header>
 
-        <!-- Dynamic Body Workspace Grid -->
         <main class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
-            
-            <!-- Dashboard Structure Container Matrix -->
             <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
                 
-                <!-- Left Stack Columns spanning 2 columns wide -->
                 <div class="xl:col-span-2 space-y-6">
-                    
-                    <!-- Component Block: Overview Dashboard Header & Counter Stat Cards -->
                     <div>
                         <h1 class="text-xl font-bold text-white mb-4">Overview Dashboard</h1>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <!-- Card #1: Total Profiles Added -->
+                            <!-- Card #1: Total Profiles -->
                             <div class="bg-card-dark p-4 rounded-xl border border-slate-800 flex items-center justify-between">
                                 <div>
                                     <p class="text-xs font-medium text-slate-400">Total Profiles Added</p>
@@ -211,7 +170,7 @@
                                 </div>
                             </div>
                             
-                            <!-- Card #2: Profiles Online -->
+                            <!-- Card #2: Online -->
                             <div class="bg-card-dark p-4 rounded-xl border border-slate-800 flex items-center justify-between">
                                 <div>
                                     <p class="text-xs font-medium text-slate-400">Profiles Online</p>
@@ -225,7 +184,7 @@
                                 </div>
                             </div>
 
-                            <!-- Card #3: Profiles Offline -->
+                            <!-- Card #3: Offline -->
                             <div class="bg-card-dark p-4 rounded-xl border border-slate-800 flex items-center justify-between">
                                 <div>
                                     <p class="text-xs font-medium text-slate-400">Profiles Offline</p>
@@ -241,7 +200,7 @@
                         </div>
                     </div>
 
-                    <!-- Component Block: User Status Table Container Grid -->
+                    <!-- User Status Table -->
                     <div class="bg-card-dark rounded-xl border border-slate-800 p-5">
                         <h2 class="text-sm font-semibold text-white mb-4">User Status Table</h2>
                         <div class="overflow-x-auto">
@@ -263,16 +222,12 @@
                             </table>
                         </div>
                     </div>
-
                 </div>
 
-                <!-- Right Stack Columns (Dashboard sidebars) -->
+                <!-- Right Stack -->
                 <div class="space-y-6">
-                    
-                    <!-- Component Block: Conti Logs Overview & Custom Bar Chart Widget -->
                     <div id="contiLogsOverviewCard" class="bg-card-dark rounded-xl border border-slate-800 p-5 scroll-mt-20">
                         <h2 class="text-sm font-semibold text-white mb-4">Conti Logs Overview</h2>
-                        
                         <div class="mb-4">
                             <h4 class="text-xs font-medium text-slate-400 mb-2">Daily Log Summary</h4>
                             <div id="barChartContainer" class="h-28 flex items-end justify-between gap-[2px] px-1 pt-4 border-b border-slate-700 relative overflow-x-auto overflow-y-hidden">
@@ -280,12 +235,10 @@
                                     <span id="chartMaxVal">40</span><span></span><span></span><span></span><span>0</span>
                                 </div>
                             </div>
-                            <div id="barChartHoursLabels" class="flex justify-between text-[7px] text-slate-500 px-1 mt-1 font-mono min-w-[240px]">
-                            </div>
+                            <div id="barChartHoursLabels" class="flex justify-between text-[7px] text-slate-500 px-1 mt-1 font-mono min-w-[240px]"></div>
                             <p class="text-center text-[9px] text-slate-500 mt-1 font-medium">Hour Segment (0 - 23h)</p>
                         </div>
 
-                        <!-- Dropdowns/Inputs Forms Inside Sidebar View -->
                         <div class="space-y-3 pt-2 border-t border-slate-800">
                             <h4 class="text-xs font-medium text-white">Quick Conti Log Search</h4>
                             <div>
@@ -304,7 +257,6 @@
                         </div>
                     </div>
 
-                    <!-- Component Block: Conti Book Calendar Preview Widget Grid -->
                     <div id="contiBookCalendarCard" class="bg-card-dark rounded-xl border border-slate-800 p-5 scroll-mt-20">
                         <div class="flex items-center justify-between mb-4">
                             <h2 class="text-sm font-semibold text-white">Conti Book Calendar Preview</h2>
@@ -314,10 +266,8 @@
                             </div>
                         </div>
 
-                        <!-- Mini Calendar Month Display Header -->
                         <p id="calendarMonthHeader" class="text-[11px] font-bold text-center text-blue-400 mb-2 uppercase tracking-wider"></p>
 
-                        <!-- Mini Calendar Grid Layout Matrix -->
                         <div id="miniCalendarGrid" class="grid grid-cols-7 gap-1 text-center text-[10px] mb-4">
                             <span class="text-slate-500 font-medium">Sun</span>
                             <span class="text-slate-500 font-medium">Mon</span>
@@ -328,7 +278,6 @@
                             <span class="text-slate-500 font-medium">Sat</span>
                         </div>
 
-                        <!-- Manage Bookings Dynamic Actions Stack -->
                         <div class="space-y-3 pt-3 border-t border-slate-800">
                             <h4 class="text-xs font-semibold text-white">Manage Bookings</h4>
                             <div id="manageBookingsDeck" class="space-y-2 text-xs max-h-48 overflow-y-auto pr-1">
@@ -336,17 +285,13 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
 
-            <!-- ========================================== -->
-            <!--        BOTTOM SECTION: E-REPORT MATRIX     -->
-            <!-- ========================================== -->
+            <!-- E-REPORT MATRIX -->
             <div id="eReportStatusCard" class="bg-card-dark rounded-xl border border-slate-800 p-5 scroll-mt-20">
                 <h2 class="text-sm font-semibold text-white mb-4">E-Report Status Overview</h2>
                 
-                <!-- Status Colored Info Boxes Row Container Layout -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     <div class="bg-red-500 text-white p-4 rounded-xl flex items-center justify-between shadow-lg shadow-red-500/10">
                         <div>
@@ -393,7 +338,6 @@
                     </table>
                 </div>
             </div>
-
         </main>
     </div>
 
@@ -408,7 +352,7 @@
         </div>
     </div>
 
-    <!-- MODAL POPUP FOR CONTI LOG VIEWER & PRINTING -->
+    <!-- MODAL POPUP FOR CONTI LOG VIEWER -->
     <div id="logTableModal" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-4xl max-h-[85vh] flex flex-col p-6 overflow-hidden">
             <div class="flex items-center justify-between pb-4 border-b border-slate-800 no-print-element">
@@ -444,17 +388,25 @@
         </div>
     </div>
 
-    <!-- REAL-TIME DATABASE SYNC -->
+    <!-- REAL-TIME DATABASE SYNC SCRIPT -->
     <script type="module">
-        import { db, collection, onSnapshot, doc, getDoc, deleteDoc, setDoc, updateDoc, arrayUnion } from "./firebase-config.js";
+        import { db } from "./firebase-config.js";
+        import { 
+            collection, 
+            onSnapshot, 
+            doc, 
+            getDoc, 
+            deleteDoc, 
+            setDoc, 
+            updateDoc, 
+            arrayUnion 
+        } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
-        // DOM elements configuration
         const metricTotal = document.getElementById('metricTotalProfiles');
         const metricOnline = document.getElementById('metricProfilesOnline');
         const metricOffline = document.getElementById('metricProfilesOffline');
         const userTableBody = document.getElementById('userStatusTableBody');
         
-        // Conti Log UI binding hooks
         const searchSelect = document.getElementById('searchProfileSelect');
         const filterLogDate = document.getElementById('filterLogDate');
         const searchStatusInfo = document.getElementById('searchStatusInfo');
@@ -464,7 +416,6 @@
         const chartMaxVal = document.getElementById('chartMaxVal');
         const contiLogsOverviewCard = document.getElementById('contiLogsOverviewCard');
 
-        // Mini Calendar Preview Hooks
         const calendarMonthHeader = document.getElementById('calendarMonthHeader');
         const miniCalendarGrid = document.getElementById('miniCalendarGrid');
         const prevCalendarMonth = document.getElementById('prevCalendarMonth');
@@ -472,7 +423,6 @@
         const manageBookingsDeck = document.getElementById('manageBookingsDeck');
         const contiBookCalendarCard = document.getElementById('contiBookCalendarCard');
 
-        // E-Report UI components hooks
         const metricPendingReports = document.getElementById('metricPendingReports');
         const metricOngoingReports = document.getElementById('metricOngoingReports');
         const metricClosedReports = document.getElementById('metricClosedReports');
@@ -482,14 +432,12 @@
         const modalAttachmentImg = document.getElementById('modalAttachmentImg');
         const eReportStatusCard = document.getElementById('eReportStatusCard');
 
-        // Notification UI components hooks
         const notificationBellBtn = document.getElementById('notificationBellBtn');
         const notificationBadge = document.getElementById('notificationBadge');
         const notificationDropdown = document.getElementById('notificationDropdown');
         const notificationList = document.getElementById('notificationList');
         const markAllReadBtn = document.getElementById('markAllReadBtn');
 
-        // Modal Hooks
         const logTableModal = document.getElementById('logTableModal');
         const closeLogModalBtn = document.getElementById('closeLogModalBtn');
         const printModalBtn = document.getElementById('printModalBtn');
@@ -498,13 +446,11 @@
         const modalWaktu = document.getElementById('modalWaktu');
         const modalTableBody = document.getElementById('modalTableBody');
 
-        // Dynamic State Repositories
         let allRegisteredProfiles = [];
         let realTimePresenceMap = {};
         let activeSelectedLogData = null; 
         let globalBookingsRegistry = [];
 
-        // Global Notifications Store synced with Firestore
         let notificationsMasterList = [];
         let globalReadIdsSet = new Set();
 
@@ -521,282 +467,6 @@
             barChartHoursLabels.innerHTML = labelsHtml;
         }
         init24HourLabelAxis();
-
-        // ==========================================
-        //  REAL-TIME BELL NOTIFICATION ENGINE
-        // ==========================================
-
-        function initGlobalNotificationSync() {
-            const metaDocRef = doc(db, "beats_notifications_meta", "admin_read_state");
-            
-            onSnapshot(metaDocRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    if (Array.isArray(data.readIds)) {
-                        globalReadIdsSet = new Set(data.readIds);
-                    }
-                } else {
-                    setDoc(metaDocRef, { readIds: [] }, { merge: true }).catch(err => console.error(err));
-                }
-                renderNotificationsDropdownUI();
-            }, (err) => {
-                console.error("Notification meta read sync error:", err);
-            });
-
-            setupCentralNotificationListener();
-            setupDirectCollectionListeners();
-        }
-
-        function addNotificationEntry(notif) {
-            const existingIndex = notificationsMasterList.findIndex(n => n.id === notif.id);
-            if (existingIndex !== -1) {
-                notificationsMasterList[existingIndex] = { ...notificationsMasterList[existingIndex], ...notif };
-            } else {
-                notificationsMasterList.push(notif);
-            }
-
-            notificationsMasterList.sort((a, b) => b.timestamp - a.timestamp);
-            renderNotificationsDropdownUI();
-        }
-
-        function renderNotificationsDropdownUI() {
-            if (!notificationsMasterList.length) {
-                notificationList.innerHTML = `<p class="p-4 text-center text-slate-500 italic">No activity logs recorded.</p>`;
-                notificationBadge.textContent = "0";
-                notificationBadge.classList.add('hidden');
-                return;
-            }
-
-            let unreadCount = 0;
-            let listHtml = '';
-
-            notificationsMasterList.forEach(item => {
-                const isRead = globalReadIdsSet.has(item.id);
-                if (!isRead) unreadCount++;
-
-                const relativeTime = getRelativeTimeString(item.timestamp);
-                const bgStyle = isRead ? 'bg-transparent hover:bg-slate-800/40' : 'bg-blue-500/10 hover:bg-blue-500/15';
-                const dotStyle = isRead ? 'bg-slate-600' : 'bg-blue-400';
-
-                let targetUser = item.targetUser || '';
-                let targetDate = item.targetDate || '';
-                let targetReportId = item.targetReportId || '';
-
-                if (!targetUser || !targetDate) {
-                    const parsed = item.message ? item.message.match(/(?:Reporter|User|for|by|booked slot.*for)\s+([A-Za-z0-9_ -]+).*(?:for|updated)\s+(\d{4}-\d{2}-\d{2})/) : null;
-                    if (parsed) {
-                        targetUser = targetUser || parsed[1];
-                        targetDate = targetDate || parsed[2];
-                    }
-                }
-
-                listHtml += `
-                    <div class="p-3 ${bgStyle} transition cursor-pointer flex items-start space-x-3 notification-item-row" 
-                         data-id="${item.id}" 
-                         data-source="${item.sourcePage || ''}" 
-                         data-user="${targetUser}" 
-                         data-date="${targetDate}"
-                         data-reportid="${targetReportId}">
-                        <span class="w-2 h-2 rounded-full ${dotStyle} mt-1.5 shrink-0"></span>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center justify-between mb-0.5">
-                                <span class="font-semibold text-white truncate text-xs">${item.title}</span>
-                                <span class="text-[9px] text-slate-400 font-mono shrink-0 ml-2">${relativeTime}</span>
-                            </div>
-                            <p class="text-slate-300 text-[11px] leading-snug break-words">${item.message}</p>
-                            <span class="inline-block mt-1 text-[9px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded font-mono">${item.sourcePage}</span>
-                        </div>
-                    </div>
-                `;
-            });
-
-            notificationList.innerHTML = listHtml;
-
-            if (unreadCount > 0) {
-                notificationBadge.textContent = unreadCount > 99 ? '99+' : unreadCount;
-                notificationBadge.classList.remove('hidden');
-            } else {
-                notificationBadge.textContent = "0";
-                notificationBadge.classList.add('hidden');
-            }
-
-            document.querySelectorAll('.notification-item-row').forEach(row => {
-                row.addEventListener('click', () => {
-                    const targetId = row.getAttribute('data-id');
-                    const sourcePage = row.getAttribute('data-source');
-                    const userVal = row.getAttribute('data-user');
-                    const dateVal = row.getAttribute('data-date');
-                    const reportIdVal = row.getAttribute('data-reportid');
-
-                    markNotificationAsRead(targetId);
-                    notificationDropdown.classList.add('hidden');
-
-                    // 1. AUTO-TRIGGER CONTI LOG OVERVIEW UPON CLICKING CONTI LOG NOTIFICATION
-                    if (sourcePage === 'contiLog.html' && userVal && dateVal) {
-                        if ([...searchSelect.options].some(opt => opt.value === userVal)) {
-                            searchSelect.value = userVal;
-                        } else {
-                            const newOpt = document.createElement('option');
-                            newOpt.value = userVal;
-                            newOpt.textContent = userVal;
-                            newOpt.selected = true;
-                            searchSelect.appendChild(newOpt);
-                        }
-
-                        filterLogDate.value = dateVal;
-                        fetchSelectedContiLogs();
-                        contiLogsOverviewCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-
-                    // 2. AUTO-TRIGGER CONTI BOOK CALENDAR PREVIEW UPON CLICKING CONTI BOOK NOTIFICATION
-                    if (sourcePage === 'contiBook.html') {
-                        if (dateVal) {
-                            const dateParts = dateVal.split('-');
-                            if (dateParts.length === 3) {
-                                const targetYear = parseInt(dateParts[0], 10);
-                                const targetMonth = parseInt(dateParts[1], 10) - 1;
-                                currentNavDate.setFullYear(targetYear);
-                                currentNavDate.setMonth(targetMonth);
-                                renderCalendarPreviewWidget();
-                            }
-                        }
-                        contiBookCalendarCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-
-                    // 3. AUTO-TRIGGER E-REPORT STATUS OVERVIEW UPON CLICKING E-REPORT NOTIFICATION
-                    if (sourcePage === 'EReport.html') {
-                        eReportStatusCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-                        setTimeout(() => {
-                            const rows = eReportTableBody.querySelectorAll('tr');
-                            rows.forEach(tr => {
-                                const cellText = tr.textContent || '';
-                                if ((reportIdVal && cellText.includes(reportIdVal)) || (userVal && cellText.includes(userVal))) {
-                                    tr.classList.add('bg-blue-600/30', 'ring-2', 'ring-blue-500');
-                                    setTimeout(() => {
-                                        tr.classList.remove('bg-blue-600/30', 'ring-2', 'ring-blue-500');
-                                    }, 4000);
-                                }
-                            });
-                        }, 500);
-                    }
-                });
-            });
-
-            lucide.createIcons();
-        }
-
-        async function markNotificationAsRead(notifId) {
-            if (!notifId || globalReadIdsSet.has(notifId)) return;
-            globalReadIdsSet.add(notifId);
-            renderNotificationsDropdownUI();
-
-            try {
-                const metaDocRef = doc(db, "beats_notifications_meta", "admin_read_state");
-                await setDoc(metaDocRef, {
-                    readIds: arrayUnion(notifId)
-                }, { merge: true });
-            } catch (err) {
-                console.error("Error marking notification read in Firestore:", err);
-            }
-        }
-
-        async function markAllNotificationsAsRead() {
-            const allIds = notificationsMasterList.map(n => n.id);
-            allIds.forEach(id => globalReadIdsSet.add(id));
-            renderNotificationsDropdownUI();
-
-            try {
-                const metaDocRef = doc(db, "beats_notifications_meta", "admin_read_state");
-                await setDoc(metaDocRef, {
-                    readIds: Array.from(globalReadIdsSet)
-                }, { merge: true });
-            } catch (err) {
-                console.error("Error marking all read in Firestore:", err);
-            }
-        }
-
-        function getRelativeTimeString(timestamp) {
-            if (!timestamp) return 'Just now';
-            const deltaSec = Math.floor((Date.now() - timestamp) / 1000);
-            if (deltaSec < 60) return deltaSec <= 5 ? 'Just now' : `${deltaSec}s ago`;
-            const mins = Math.floor(deltaSec / 60);
-            if (mins < 60) return `${mins}m ago`;
-            const hours = Math.floor(mins / 60);
-            if (hours < 24) return `${hours}h ago`;
-            const days = Math.floor(hours / 24);
-            return `${days}d ago`;
-        }
-
-        function setupCentralNotificationListener() {
-            onSnapshot(collection(db, "beats_notifications"), (snapshot) => {
-                snapshot.forEach(docSnap => {
-                    const data = docSnap.data();
-                    addNotificationEntry({
-                        id: data.id || docSnap.id,
-                        title: data.title || "New System Alert",
-                        message: data.message || "Activity recorded",
-                        sourcePage: data.sourcePage || "Form Submission",
-                        targetUser: data.targetUser || "",
-                        targetDate: data.targetDate || "",
-                        targetReportId: data.targetReportId || "",
-                        timestamp: data.timestamp || Date.now()
-                    });
-                });
-            }, (err) => {
-                console.error("Central notifications listener error:", err);
-            });
-        }
-
-        function setupDirectCollectionListeners() {
-            onSnapshot(collection(db, "beats_bookings"), (snapshot) => {
-                snapshot.docChanges().forEach(change => {
-                    if (change.type === "added" || change.type === "modified") {
-                        const data = change.doc.data();
-                        addNotificationEntry({
-                            id: `booking_${change.doc.id}`,
-                            title: `New Conti Slot Reservation`,
-                            message: `${data.dj || 'User'} booked slot [${data.timeSlot || ''}] for ${data.date || ''}`,
-                            sourcePage: `contiBook.html`,
-                            targetUser: data.dj || data.bookedBy || '',
-                            targetDate: data.date || '',
-                            timestamp: data.createdAt || Date.now()
-                        });
-                    }
-                });
-            });
-
-            onSnapshot(collection(db, "beats_reports"), (snapshot) => {
-                snapshot.docChanges().forEach(change => {
-                    if (change.type === "added" || change.type === "modified") {
-                        const data = change.doc.data();
-                        addNotificationEntry({
-                            id: `ereport_${change.doc.id}`,
-                            title: `E-Report Filed (${data.issueType || 'Issue'})`,
-                            message: `Reporter ${data.reporter || 'Guest'} logged problem on ${data.eqModel || 'Equipment'}`,
-                            sourcePage: `EReport.html`,
-                            targetUser: data.reporter || data.submittedBy || '',
-                            targetDate: data.date || '',
-                            targetReportId: data.id || change.doc.id,
-                            timestamp: data.createdAt || Date.now()
-                        });
-                    }
-                });
-            });
-        }
-
-        notificationBellBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            notificationDropdown.classList.toggle('hidden');
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!notificationDropdown.contains(e.target) && !notificationBellBtn.contains(e.target)) {
-                notificationDropdown.classList.add('hidden');
-            }
-        });
-
-        markAllReadBtn.addEventListener('click', markAllNotificationsAsRead);
 
         function evaluateMetricsAndRenderTable() {
             let onlineCount = 0;
@@ -892,6 +562,54 @@
             userTableBody.innerHTML = rowsHtml;
 
             lucide.createIcons();
+        }
+
+        function initRealtimeDatabaseSync() {
+            // Listen to sign-up accounts directly from beats_users
+            onSnapshot(collection(db, "beats_users"), (snapshot) => {
+                let profiles = [];
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data) {
+                        profiles.push({
+                            id: docSnap.id,
+                            email: data.email || docSnap.id,
+                            name: data.name || '',
+                            username: data.username || '',
+                            photo: data.photo || null,
+                            createdAt: data.createdAt || 0
+                        });
+                    }
+                });
+                allRegisteredProfiles = profiles;
+                evaluateMetricsAndRenderTable();
+            }, (err) => {
+                console.error("Profiles real-time stream disrupted:", err);
+                userTableBody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-red-400 font-mono">Firestore Error: ${err.message}</td></tr>`;
+            });
+
+            // Listen to live presence updates
+            onSnapshot(collection(db, "beats_presence"), (snapshot) => {
+                snapshot.forEach(doc => {
+                    realTimePresenceMap[doc.id] = doc.data();
+                });
+                evaluateMetricsAndRenderTable();
+            }, (err) => {
+                console.error("Live presence telemetry link down:", err);
+            });
+
+            // Listen to booking updates
+            onSnapshot(collection(db, "beats_bookings"), (snapshot) => {
+                let itemsList = [];
+                snapshot.forEach(doc => {
+                    itemsList.push({ id: doc.id, ...doc.data() });
+                });
+                globalBookingsRegistry = itemsList;
+                renderCalendarPreviewWidget();
+                renderManageBookingsDeck();
+            }, (err) => {
+                console.error("Live booking registration stream offline:", err);
+            });
         }
 
         function configureCloudReportStreamingPipeline() {
@@ -1119,203 +837,9 @@
             lucide.createIcons();
         }
 
-        function refreshDailyLogChart(rowsArray = []) {
-            const hourlyFrequencies = new Array(24).fill(0);
-            rowsArray.forEach(row => {
-                const hourInt = parseInt(row.h || 0, 10);
-                if (hourInt >= 0 && hourInt <= 23) {
-                    hourlyFrequencies[hourInt]++;
-                }
-            });
-
-            const maximumValue = Math.max(...hourlyFrequencies, 1);
-            chartMaxVal.textContent = maximumValue;
-            
-            let chartHtml = `
-                <div class="absolute left-0 top-0 h-full flex flex-col justify-between text-[8px] text-slate-500 pointer-events-none z-10">
-                    <span>${maximumValue}</span><span></span><span></span><span></span><span>0</span>
-                </div>
-            `;
-
-            hourlyFrequencies.forEach((count, hour) => {
-                const heightPercentage = count > 0 ? (count / maximumValue) * 85 : 0;
-                chartHtml += `
-                    <div class="w-full bg-blue-500 rounded-t-sm transition-all duration-500" 
-                         style="height: ${Math.max(heightPercentage, 2)}%; opacity: ${count > 0 ? '1' : '0.15'}" 
-                         title="Hour ${hour}:00 - ${count} logs submitted"></div>
-                `;
-            });
-
-            chartHtml += `<span class="absolute -left-6 top-1/2 -rotate-90 text-[8px] tracking-wide text-slate-500">Uploaded logs</span>`;
-            barChartContainer.innerHTML = chartHtml;
-        }
-
-        async function fetchSelectedContiLogs() {
-            const userTarget = searchSelect.value;
-            const dateTarget = filterLogDate.value;
-
-            if (!userTarget || !dateTarget) {
-                searchStatusInfo.textContent = "Select profile and date to run queries.";
-                searchStatusInfo.className = "text-[10px] text-slate-400 italic";
-                viewSelectedLogBtn.classList.add('hidden');
-                refreshDailyLogChart([]); 
-                return;
-            }
-
-            searchStatusInfo.textContent = "Reading database records...";
-            searchStatusInfo.className = "text-[10px] text-blue-400 animate-pulse font-medium";
-
-            try {
-                const logDocRef = doc(db, "beats_conti_logs", userTarget, "dates", dateTarget);
-                const snap = await getDoc(logDocRef);
-
-                if (snap.exists()) {
-                    const data = snap.data();
-                    activeSelectedLogData = data; 
-                    const totalRowsCount = data.rows ? data.rows.length : 0;
-
-                    searchStatusInfo.textContent = `Found ${totalRowsCount} log entry paths for selected parameters.`;
-                    searchStatusInfo.className = "text-[10px] text-green-400 font-semibold";
-                    
-                    viewSelectedLogBtn.classList.remove('hidden');
-                    refreshDailyLogChart(data.rows || []);
-                } else {
-                    activeSelectedLogData = null;
-                    searchStatusInfo.textContent = "No log records found matching this configuration.";
-                    searchStatusInfo.className = "text-[10px] text-amber-500 font-medium";
-                    viewSelectedLogBtn.classList.add('hidden');
-                    refreshDailyLogChart([]); 
-                }
-            } catch (err) {
-                console.error("Failed to query target log array elements:", err);
-                searchStatusInfo.textContent = "System connectivity error tracking records.";
-                searchStatusInfo.className = "text-[10px] text-red-400 font-semibold";
-            }
-        }
-
-        function initRealtimeDatabaseSync() {
-            // Retrieve sign-up accounts directly from the beats_users Firestore collection
-            onSnapshot(collection(db, "beats_users"), (snapshot) => {
-                let profiles = [];
-                snapshot.forEach(docSnap => {
-                    const data = docSnap.data();
-                    if (data) {
-                        profiles.push({
-                            id: docSnap.id,
-                            email: data.email || docSnap.id,
-                            name: data.name || '',
-                            username: data.username || '',
-                            photo: data.photo || null,
-                            createdAt: data.createdAt || 0
-                        });
-                    }
-                });
-                allRegisteredProfiles = profiles;
-                evaluateMetricsAndRenderTable();
-            }, (err) => {
-                console.error("Profiles real-time stream disrupted:", err);
-            });
-
-            // Listen to live presence updates
-            onSnapshot(collection(db, "beats_presence"), (snapshot) => {
-                snapshot.forEach(doc => {
-                    realTimePresenceMap[doc.id] = doc.data();
-                });
-                evaluateMetricsAndRenderTable();
-            }, (err) => {
-                console.error("Live presence telemetry link down:", err);
-            });
-
-            // Listen to booking updates
-            onSnapshot(collection(db, "beats_bookings"), (snapshot) => {
-                let itemsList = [];
-                snapshot.forEach(doc => {
-                    itemsList.push({ id: doc.id, ...doc.data() });
-                });
-                globalBookingsRegistry = itemsList;
-                renderCalendarPreviewWidget();
-                renderManageBookingsDeck();
-            }, (err) => {
-                console.error("Live booking registration stream offline:", err);
-            });
-        }
-
-        viewSelectedLogBtn.addEventListener('click', () => {
-            if (!activeSelectedLogData) {
-                alert("No active Conti Log loaded for current selection.");
-                return;
-            }
-
-            const activeUser = searchSelect.value || 'User';
-            const activeDate = filterLogDate.value || '--/--/----';
-
-            modalJH.textContent = activeSelectedLogData.jhBertugas || activeUser;
-            modalDate.textContent = activeDate;
-            modalWaktu.textContent = activeSelectedLogData.waktu || 'Standard Shift';
-
-            modalTableBody.innerHTML = '';
-
-            if (Array.isArray(activeSelectedLogData.rows) && activeSelectedLogData.rows.length > 0) {
-                let rowsHtml = '';
-                activeSelectedLogData.rows.forEach(row => {
-                    const timeString = `${row.h || '00'}:${row.m || '00'}`;
-                    rowsHtml += `
-                        <tr class="hover:bg-slate-800/30 transition">
-                            <td class="p-2.5 border-r border-slate-800 text-center font-mono text-white font-medium">${timeString}</td>
-                            <td class="p-2.5 border-r border-slate-800 text-slate-200">${row.tajuk || row.segmentDetails || '--'}</td>
-                            <td class="p-2.5 border-r border-slate-800 text-center font-bold text-blue-400">${row.lr || '--'}</td>
-                            <td class="p-2.5 border-r border-slate-800 text-slate-300">${row.penerbit || '--'}</td>
-                            <td class="p-2.5 border-r border-slate-800 text-center text-slate-400 font-mono text-[11px]">${row.cd || '--'}</td>
-                            <td class="p-2.5 text-slate-300">${row.catatan || '--'}</td>
-                        </tr>
-                    `;
-                });
-                modalTableBody.innerHTML = rowsHtml;
-            } else {
-                modalTableBody.innerHTML = `
-                    <tr>
-                        <td colspan="6" class="p-6 text-center text-slate-500 italic">No detailed log entries recorded in this document.</td>
-                    </tr>
-                `;
-            }
-
-            logTableModal.classList.remove('hidden');
-        });
-
-        closeReportModalBtn.addEventListener('click', () => reportPreviewModal.classList.add('hidden'));
-
-        setInterval(() => {
-            evaluateMetricsAndRenderTable();
-        }, 4000);
-
-        closeLogModalBtn.addEventListener('click', () => logTableModal.classList.add('hidden'));
-
-        printModalBtn.addEventListener('click', () => { 
-            document.body.classList.add('printing-log-modal');
-            window.print(); 
-            document.body.classList.remove('printing-log-modal');
-        });
-
-        searchSelect.addEventListener('change', fetchSelectedContiLogs);
-        
-        filterLogDate.addEventListener('change', () => {
-            fetchSelectedContiLogs();
-        });
-
-        prevCalendarMonth.addEventListener('click', () => {
-            currentNavDate.setMonth(currentNavDate.getMonth() - 1);
-            renderCalendarPreviewWidget();
-        });
-        nextCalendarMonth.addEventListener('click', () => {
-            currentNavDate.setMonth(currentNavDate.getMonth() + 1);
-            renderCalendarPreviewWidget();
-        });
-
         document.addEventListener('DOMContentLoaded', () => {
             initRealtimeDatabaseSync();
-            refreshDailyLogChart([]); 
             configureCloudReportStreamingPipeline();
-            initGlobalNotificationSync();
         });
 
         document.getElementById('adminLogoutBtn').addEventListener('click', () => {
