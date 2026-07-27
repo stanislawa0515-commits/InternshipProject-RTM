@@ -446,8 +446,7 @@
 
     <!-- REAL-TIME DATABASE SYNC -->
     <script type="module">
-        import { db } from "./firebase-config.js";
-        import { collection, onSnapshot, doc, getDoc, deleteDoc, setDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+        import { db, collection, onSnapshot, doc, getDoc, deleteDoc, setDoc, updateDoc, arrayUnion } from "./firebase-config.js";
 
         // DOM elements configuration
         const metricTotal = document.getElementById('metricTotalProfiles');
@@ -816,17 +815,14 @@
             }
 
             allRegisteredProfiles.forEach(profile => {
-                // Primary display name is the sign-up username (fallback to name or email)
                 const displayUsername = profile.username || profile.name || profile.email;
                 
-                // Populate Quick Conti Log Search dropdown
                 const option = document.createElement('option');
                 option.value = displayUsername;
                 option.textContent = displayUsername;
                 if (displayUsername === currentSelectedUser) option.selected = true;
                 searchSelect.appendChild(option);
 
-                // Look up presence status by username, name, or email key
                 const presence = realTimePresenceMap[displayUsername] || 
                                  realTimePresenceMap[profile.name] || 
                                  realTimePresenceMap[profile.email];
