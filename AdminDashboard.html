@@ -340,17 +340,6 @@
         </main>
     </div>
 
-    <!-- MODAL BOX WINDOW FOR E-REPORT ATTACHMENT -->
-    <div id="reportPreviewModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-lg p-6 relative flex flex-col items-center">
-            <button id="closeReportModalBtn" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-            <h3 class="text-sm font-bold text-white uppercase tracking-wider self-start mb-4">Attachment Image Preview</h3>
-            <div class="w-full h-80 rounded-lg bg-black/40 overflow-hidden border border-slate-800 flex items-center justify-center">
-                <img id="modalAttachmentImg" src="" class="w-full h-full object-contain" alt="Attachment Image Source">
-            </div>
-        </div>
-    </div>
-
     <!-- MODAL POPUP FOR CONTI LOG VIEWER -->
     <div id="logTableModal" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-4xl max-h-[85vh] flex flex-col p-6 overflow-hidden">
@@ -389,17 +378,16 @@
 
     <!-- REAL-TIME DATABASE SYNC SCRIPT -->
     <script type="module">
-        import { db } from "./firebase-config.js";
         import { 
+            db, 
             collection, 
             onSnapshot, 
             doc, 
             getDoc, 
             deleteDoc, 
             setDoc, 
-            updateDoc, 
-            arrayUnion 
-        } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+            updateDoc 
+        } from "./firebase-config.js";
 
         const metricTotal = document.getElementById('metricTotalProfiles');
         const metricOnline = document.getElementById('metricProfilesOnline');
@@ -413,58 +401,22 @@
         const barChartContainer = document.getElementById('barChartContainer');
         const barChartHoursLabels = document.getElementById('barChartHoursLabels');
         const chartMaxVal = document.getElementById('chartMaxVal');
-        const contiLogsOverviewCard = document.getElementById('contiLogsOverviewCard');
 
         const calendarMonthHeader = document.getElementById('calendarMonthHeader');
         const miniCalendarGrid = document.getElementById('miniCalendarGrid');
-        const prevCalendarMonth = document.getElementById('prevCalendarMonth');
-        const nextCalendarMonth = document.getElementById('nextCalendarMonth');
         const manageBookingsDeck = document.getElementById('manageBookingsDeck');
-        const contiBookCalendarCard = document.getElementById('contiBookCalendarCard');
 
         const metricPendingReports = document.getElementById('metricPendingReports');
         const metricOngoingReports = document.getElementById('metricOngoingReports');
         const metricClosedReports = document.getElementById('metricClosedReports');
         const eReportTableBody = document.getElementById('eReportTableBody');
-        const reportPreviewModal = document.getElementById('reportPreviewModal');
-        const closeReportModalBtn = document.getElementById('closeReportModalBtn');
-        const modalAttachmentImg = document.getElementById('modalAttachmentImg');
-        const eReportStatusCard = document.getElementById('eReportStatusCard');
-
-        const notificationBellBtn = document.getElementById('notificationBellBtn');
-        const notificationBadge = document.getElementById('notificationBadge');
-        const notificationDropdown = document.getElementById('notificationDropdown');
-        const notificationList = document.getElementById('notificationList');
-        const markAllReadBtn = document.getElementById('markAllReadBtn');
-
-        const logTableModal = document.getElementById('logTableModal');
-        const closeLogModalBtn = document.getElementById('closeLogModalBtn');
-        const printModalBtn = document.getElementById('printModalBtn');
-        const modalJH = document.getElementById('modalJH');
-        const modalDate = document.getElementById('modalDate');
-        const modalWaktu = document.getElementById('modalWaktu');
-        const modalTableBody = document.getElementById('modalTableBody');
 
         let allRegisteredProfiles = [];
         let realTimePresenceMap = {};
-        let activeSelectedLogData = null; 
         let globalBookingsRegistry = [];
-
-        let notificationsMasterList = [];
-        let globalReadIdsSet = new Set();
-
         let currentNavDate = new Date();
 
         filterLogDate.value = new Date().toISOString().split('T')[0];
-
-        function init24HourLabelAxis() {
-            let labelsHtml = '';
-            for (let i = 0; i <= 23; i++) {
-                labelsHtml += `<span class="w-full text-center">${i}</span>`;
-            }
-            barChartHoursLabels.innerHTML = labelsHtml;
-        }
-        init24HourLabelAxis();
 
         function evaluateMetricsAndRenderTable() {
             let onlineCount = 0;
@@ -475,7 +427,7 @@
             searchSelect.innerHTML = '<option value="">Select User Profile</option>';
 
             if (!allRegisteredProfiles.length) {
-                userTableBody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-slate-500">No profile cards found in data repository.</td></tr>`;
+                userTableBody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-slate-500">No registered profiles found in database.</td></tr>`;
                 metricTotal.textContent = "0";
                 metricOnline.textContent = "0";
                 metricOffline.textContent = "0";
@@ -552,185 +504,129 @@
             metricOffline.textContent = offlineCount;
             userTableBody.innerHTML = rowsHtml;
 
-            lucide.createIcons();
+            if (window.lucide) lucide.createIcons();
         }
 
         function initRealtimeDatabaseSync() {
-            // Listen to sign-up accounts directly from beats_users
-            onSnapshot(collection(db, "beats_users"), (snapshot) => {
-                let profiles = [];
-                snapshot.forEach(docSnap => {
-                    const data = docSnap.data();
-                    if (data) {
-                        profiles.push({
-                            id: docSnap.id,
-                            email: data.email || docSnap.id,
-                            name: data.name || '',
-                            username: data.username || '',
-                            createdAt: data.createdAt || 0
-                        });
-                    }
+            // Retrieve user accounts directly from beats_users
+            try {
+                onSnapshot(collection(db, "beats_users"), (snapshot) => {
+                    let profiles = [];
+                    snapshot.forEach(docSnap => {
+                        const data = docSnap.data();
+                        if (data) {
+                            profiles.push({
+                                id: docSnap.id,
+                                email: data.email || docSnap.id,
+                                name: data.name || '',
+                                username: data.username || '',
+                                createdAt: data.createdAt || 0
+                            });
+                        }
+                    });
+                    allRegisteredProfiles = profiles;
+                    evaluateMetricsAndRenderTable();
+                }, (err) => {
+                    console.error("Profiles real-time stream disrupted:", err);
+                    userTableBody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-red-400 font-mono">Firestore Error: ${err.message}</td></tr>`;
                 });
-                allRegisteredProfiles = profiles;
-                evaluateMetricsAndRenderTable();
-            }, (err) => {
-                console.error("Profiles real-time stream disrupted:", err);
-                userTableBody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-red-400 font-mono">Firestore Error: ${err.message}</td></tr>`;
-            });
+            } catch (err) {
+                console.error("Initialization Error:", err);
+                userTableBody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-red-400 font-mono">System Error: ${err.message}</td></tr>`;
+            }
 
-            // Listen to live presence updates
-            onSnapshot(collection(db, "beats_presence"), (snapshot) => {
-                snapshot.forEach(doc => {
-                    realTimePresenceMap[doc.id] = doc.data();
-                });
-                evaluateMetricsAndRenderTable();
-            }, (err) => {
-                console.error("Live presence telemetry link down:", err);
-            });
+            // Live presence updates
+            try {
+                onSnapshot(collection(db, "beats_presence"), (snapshot) => {
+                    snapshot.forEach(doc => {
+                        realTimePresenceMap[doc.id] = doc.data();
+                    });
+                    evaluateMetricsAndRenderTable();
+                }, (err) => console.error("Presence telemetry offline:", err));
+            } catch (e) {}
 
-            // Listen to booking updates
-            onSnapshot(collection(db, "beats_bookings"), (snapshot) => {
-                let itemsList = [];
-                snapshot.forEach(doc => {
-                    itemsList.push({ id: doc.id, ...doc.data() });
-                });
-                globalBookingsRegistry = itemsList;
-                renderCalendarPreviewWidget();
-                renderManageBookingsDeck();
-            }, (err) => {
-                console.error("Live booking registration stream offline:", err);
-            });
+            // Booking updates
+            try {
+                onSnapshot(collection(db, "beats_bookings"), (snapshot) => {
+                    let itemsList = [];
+                    snapshot.forEach(doc => {
+                        itemsList.push({ id: doc.id, ...doc.data() });
+                    });
+                    globalBookingsRegistry = itemsList;
+                    renderCalendarPreviewWidget();
+                    renderManageBookingsDeck();
+                }, (err) => console.error("Bookings stream offline:", err));
+            } catch (e) {}
         }
 
         function configureCloudReportStreamingPipeline() {
-            onSnapshot(collection(db, "beats_reports"), (snapshot) => {
-                let pendingCount = 0;
-                let ongoingCount = 0;
-                let closedCount = 0;
-                let rowsHtml = '';
+            try {
+                onSnapshot(collection(db, "beats_reports"), (snapshot) => {
+                    let pendingCount = 0, ongoingCount = 0, closedCount = 0;
+                    let rowsHtml = '';
 
-                if (snapshot.empty) {
-                    eReportTableBody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-500 italic">No submitted equipment failure logs discovered.</td></tr>`;
-                    metricPendingReports.textContent = "0";
-                    metricOngoingReports.textContent = "0";
-                    metricClosedReports.textContent = "0";
-                    return;
-                }
-
-                snapshot.forEach(docSnapshot => {
-                    const report = docSnapshot.data();
-                    const statusStr = (report.issueType || "").trim().toLowerCase();
-                    const resolvedStatus = (report.status || "").trim().toLowerCase();
-
-                    if (resolvedStatus === "fixed" || resolvedStatus === "closed" || resolvedStatus === "feuxled") {
-                        closedCount++;
-                    } else if (resolvedStatus === "ongoing") {
-                        ongoingCount++;
-                    } else {
-                        pendingCount++;
+                    if (snapshot.empty) {
+                        eReportTableBody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-500 italic">No submitted equipment failure logs.</td></tr>`;
+                        metricPendingReports.textContent = "0";
+                        metricOngoingReports.textContent = "0";
+                        metricClosedReports.textContent = "0";
+                        return;
                     }
 
-                    let statusBadgeHTML = '';
-                    if (resolvedStatus === "fixed" || resolvedStatus === "closed" || resolvedStatus === "feuxled") {
-                        statusBadgeHTML = `<span class="flex items-center justify-center space-x-1 text-emerald-400 font-medium"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span><span>Feuxled</span></span>`;
-                    } else if (resolvedStatus === "ongoing") {
-                        statusBadgeHTML = `<span class="flex items-center justify-center space-x-1 text-amber-400 font-medium"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span><span>Ongoing</span></span>`;
-                    } else {
-                        statusBadgeHTML = `<span class="flex items-center justify-center space-x-1 text-red-400 font-medium"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span><span>Pending</span></span>`;
-                    }
+                    snapshot.forEach(docSnapshot => {
+                        const report = docSnapshot.data();
+                        const resolvedStatus = (report.status || "").trim().toLowerCase();
 
-                    rowsHtml += `
-                        <tr class="hover:bg-slate-800/20 transition duration-300">
-                            <td class="py-3 text-blue-400 font-mono tracking-wider font-medium">${report.id || docSnapshot.id}</td>
-                            <td class="py-3 text-white font-medium pl-1">${report.reporter || 'Guest'}</td>
-                            <td class="py-3 max-w-xs truncate text-slate-300" title="${report.description || ''}">${report.eqModel || 'Equipment Item'}</td>
-                            <td class="py-3 text-center">${statusBadgeHTML}</td>
-                            <td class="py-3 text-slate-400 font-mono">${report.date || '--/--/----'}</td>
-                            <td class="py-3 text-center">
-                                <div class="flex items-center justify-center space-x-3 text-blue-400 text-xs font-medium">
-                                    <button class="hover:text-white flex items-center transition action-view-details-btn" data-id="${docSnapshot.id}"><i data-lucide="eye" class="w-3.5 h-3.5 mr-1"></i> View Full Details</button>
-                                    <div class="flex items-center space-x-1.5 border-l border-slate-700 pl-3">
-                                        <button class="hover:text-white relative group transition action-preview-attachment-btn" data-img="${report.imageAttachment || ''}">
-                                            <i data-lucide="image" class="w-3.5 h-3.5"></i>
-                                            <span class="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[9px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-30 pointer-events-none shadow-md">Attachment photo</span>
-                                        </button>
-                                        <button class="hover:text-white transition action-edit-report-btn" data-id="${docSnapshot.id}"><i data-lucide="edit-2" class="w-3.5 h-3.5"></i></button>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                });
-
-                metricPendingReports.textContent = pendingCount;
-                metricOngoingReports.textContent = ongoingCount;
-                metricClosedReports.textContent = closedCount;
-                eReportTableBody.innerHTML = rowsHtml;
-
-                document.querySelectorAll('.action-preview-attachment-btn').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const base64Src = btn.getAttribute('data-img');
-                        if (!base64Src) {
-                            alert("No photo attachment uploaded for this equipment problem log.");
-                            return;
-                        }
-                        modalAttachmentImg.src = base64Src;
-                        reportPreviewModal.classList.remove('hidden');
-                    });
-                });
-
-                document.querySelectorAll('.action-view-details-btn').forEach(btn => {
-                    btn.addEventListener('click', async () => {
-                        const targetId = btn.getAttribute('data-id');
-                        const docSnap = await getDoc(doc(db, "beats_reports", targetId));
-                        if(docSnap.exists()){
-                            const data = docSnap.data();
-                            alert(`REPORT BREAKDOWN INFORMATION:\n\nID: ${data.id}\nReporter: ${data.reporter} (${data.department || ''})\nEquipment Model: ${data.eqModel || ''} (${data.eqType || ''})\nAsset Serial Tag: ${data.serialNo || ''}\nProblem Categorization: ${data.issueType || ''}\n\nDescription details: ${data.description || ''}\n\nAdmin Reply Comment: ${data.adminResponse || "No response added yet."}`);
-                        }
-                    });
-                });
-
-                document.querySelectorAll('.action-edit-report-btn').forEach(btn => {
-                    btn.addEventListener('click', async () => {
-                        const targetId = btn.getAttribute('data-id');
-                        const newStatusChoice = prompt("Modify Report Status Option:\nType 'pending', 'ongoing', or 'feuxled' to save:");
-                        if (newStatusChoice === null) return; 
-                        
-                        const normStatus = newStatusChoice.trim().toLowerCase();
-                        if (normStatus === 'pending' || normStatus === 'ongoing' || normStatus === 'feuxled') {
-                            const adminReplyInput = prompt("Provide your official processing commentary response reply message below:");
-                            const docRef = doc(db, "beats_reports", targetId);
-                            const snap = await getDoc(docRef);
-                            
-                            if (snap.exists()) {
-                                const originalData = snap.data();
-                                await setDoc(docRef, {
-                                    ...originalData,
-                                    status: normStatus,
-                                    adminResponse: adminReplyInput ? adminReplyInput.trim() : (originalData.adminResponse || "")
-                                });
-                                alert("Document status config flags adjusted successfully.");
-                            }
+                        if (resolvedStatus === "fixed" || resolvedStatus === "closed" || resolvedStatus === "feuxled") {
+                            closedCount++;
+                        } else if (resolvedStatus === "ongoing") {
+                            ongoingCount++;
                         } else {
-                            alert("Validation Error: Please select 'pending', 'ongoing', or 'feuxled'.");
+                            pendingCount++;
                         }
-                    });
-                });
 
-                lucide.createIcons();
-            }, (err) => {
-                console.error("Live streaming collection disrupted:", err);
-            });
+                        let statusBadgeHTML = '';
+                        if (resolvedStatus === "fixed" || resolvedStatus === "closed" || resolvedStatus === "feuxled") {
+                            statusBadgeHTML = `<span class="flex items-center justify-center space-x-1 text-emerald-400 font-medium"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span><span>Fixed</span></span>`;
+                        } else if (resolvedStatus === "ongoing") {
+                            statusBadgeHTML = `<span class="flex items-center justify-center space-x-1 text-amber-400 font-medium"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span><span>Ongoing</span></span>`;
+                        } else {
+                            statusBadgeHTML = `<span class="flex items-center justify-center space-x-1 text-red-400 font-medium"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span><span>Pending</span></span>`;
+                        }
+
+                        rowsHtml += `
+                            <tr class="hover:bg-slate-800/20 transition duration-300">
+                                <td class="py-3 text-blue-400 font-mono tracking-wider font-medium">${report.id || docSnapshot.id}</td>
+                                <td class="py-3 text-white font-medium pl-1">${report.reporter || 'Guest'}</td>
+                                <td class="py-3 max-w-xs truncate text-slate-300" title="${report.description || ''}">${report.eqModel || 'Equipment Item'}</td>
+                                <td class="py-3 text-center">${statusBadgeHTML}</td>
+                                <td class="py-3 text-slate-400 font-mono">${report.date || '--/--/----'}</td>
+                                <td class="py-3 text-center">
+                                    <div class="flex items-center justify-center space-x-3 text-blue-400 text-xs font-medium">
+                                        <button class="hover:text-white flex items-center transition action-view-details-btn" data-id="${docSnapshot.id}"><i data-lucide="eye" class="w-3.5 h-3.5 mr-1"></i> View Details</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    metricPendingReports.textContent = pendingCount;
+                    metricOngoingReports.textContent = ongoingCount;
+                    metricClosedReports.textContent = closedCount;
+                    eReportTableBody.innerHTML = rowsHtml;
+
+                    if (window.lucide) lucide.createIcons();
+                }, (err) => console.error("Report pipeline error:", err));
+            } catch (e) {}
         }
 
         function renderCalendarPreviewWidget() {
             const year = currentNavDate.getFullYear();
             const month = currentNavDate.getMonth();
-
             const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
             calendarMonthHeader.textContent = `${monthNames[month]} ${year}`;
 
-            const baselineHeaders = `
+            miniCalendarGrid.innerHTML = `
                 <span class="text-slate-500 font-medium">Sun</span>
                 <span class="text-slate-500 font-medium">Mon</span>
                 <span class="text-slate-500 font-medium">Tue</span>
@@ -739,17 +635,15 @@
                 <span class="text-slate-500 font-medium">Fri</span>
                 <span class="text-slate-500 font-medium">Sat</span>
             `;
-            miniCalendarGrid.innerHTML = baselineHeaders;
 
             const firstDayIndex = new Date(year, month, 1).getDay();
             const totalDaysCount = new Date(year, month + 1, 0).getDate();
             const prevMonthDaysCount = new Date(year, month, 0).getDate();
 
             for (let i = firstDayIndex; i > 0; i--) {
-                const dayNum = prevMonthDaysCount - i + 1;
                 const span = document.createElement('span');
                 span.className = 'text-slate-600 p-1';
-                span.textContent = dayNum;
+                span.textContent = prevMonthDaysCount - i + 1;
                 miniCalendarGrid.appendChild(span);
             }
 
@@ -760,34 +654,14 @@
                 const dayBookings = globalBookingsRegistry.filter(b => b.date === formattedISODateKey);
                 
                 let underlineColor = "";
-                if (dayBookings.length > 0) {
-                    const types = dayBookings.map(b => b.type);
-                    if (types.includes("Recording Session") && types.includes("Guest Interview")) {
-                        underlineColor = "bg-purple-500"; 
-                    } else if (types.includes("Recording Session")) {
-                        underlineColor = "bg-emerald-500";
-                    } else {
-                        underlineColor = "bg-blue-500";
-                    }
-                }
+                if (dayBookings.length > 0) underlineColor = "bg-blue-500";
 
                 const rightNow = new Date();
                 if (day === rightNow.getDate() && month === rightNow.getMonth() && year === rightNow.getFullYear()) {
                     span.classList.add('bg-slate-800/80', 'rounded-md', 'text-white');
                 }
 
-                span.innerHTML = `
-                    ${day}
-                    ${underlineColor ? `<span class="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-3 h-0.5 ${underlineColor}"></span>` : ''}
-                `;
-                miniCalendarGrid.appendChild(span);
-            }
-
-            const remainingGridSlots = 42 - (firstDayIndex + totalDaysCount);
-            for (let day = 1; day <= remainingGridSlots; day++) {
-                const span = document.createElement('span');
-                span.className = 'text-slate-600 p-1';
-                span.textContent = day;
+                span.innerHTML = `${day}${underlineColor ? `<span class="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-3 h-0.5 ${underlineColor}"></span>` : ''}`;
                 miniCalendarGrid.appendChild(span);
             }
         }
@@ -795,7 +669,7 @@
         function renderManageBookingsDeck() {
             manageBookingsDeck.innerHTML = '';
             if (globalBookingsRegistry.length === 0) {
-                manageBookingsDeck.innerHTML = `<p class="text-[10px] text-slate-500 italic text-center py-2">No upcoming reservation metrics detected.</p>`;
+                manageBookingsDeck.innerHTML = `<p class="text-[10px] text-slate-500 italic text-center py-2">No upcoming reservations.</p>`;
                 return;
             }
 
@@ -803,28 +677,25 @@
                 const item = document.createElement('div');
                 item.className = "flex items-center justify-between bg-slate-900/40 p-2 rounded border border-slate-800/80 text-xs";
                 item.innerHTML = `
-                    <div class="truncate max-w-[120px] sm:max-w-[140px]" title="DJ: ${booking.dj || 'User'} (${booking.timeSlot || ''})">
+                    <div class="truncate max-w-[140px]">
                         <span class="text-slate-200 font-semibold block truncate">${booking.dj || 'Unknown'}</span>
                         <span class="text-[9px] text-slate-400 block truncate">${booking.date} | ${booking.timeSlot}</span>
                     </div>
-                    <div class="flex items-center space-x-2 text-[10px] shrink-0 ml-1">
-                        <button class="text-red-400 hover:text-red-300 flex items-center target-delete-btn"><i data-lucide="trash-2" class="w-3 h-3 mr-0.5"></i>Delete</button>
-                    </div>
+                    <button class="text-red-400 hover:text-red-300 text-[10px] target-delete-btn">Delete</button>
                 `;
 
                 item.querySelector('.target-delete-btn').addEventListener('click', async () => {
-                    if (confirm(`Permanently drop booking reservation slot mapped for ${booking.dj || 'this profile'}?`)) {
+                    if (confirm(`Drop booking for ${booking.dj || 'this profile'}?`)) {
                         try {
                             await deleteDoc(doc(db, "beats_bookings", booking.id));
-                            alert("Reservation dropped from ledger.");
                         } catch(e) {
-                            alert("Database deletion fault encountered.");
+                            alert("Deletion error.");
                         }
                     }
                 });
                 manageBookingsDeck.appendChild(item);
             });
-            lucide.createIcons();
+            if (window.lucide) lucide.createIcons();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -834,7 +705,6 @@
 
         document.getElementById('adminLogoutBtn').addEventListener('click', () => {
             localStorage.removeItem('currentUser');
-            localStorage.removeItem('currentUserEmail');
             alert('Admin session cleared.');
             window.location.href = 'SignIn.html';
         });
@@ -856,11 +726,11 @@
             }
         }
 
-        openMobileSidebar.addEventListener('click', () => toggleMobileSidebar(true));
-        closeMobileSidebar.addEventListener('click', () => toggleMobileSidebar(false));
-        sidebarOverlay.addEventListener('click', () => toggleMobileSidebar(false));
+        if (openMobileSidebar) openMobileSidebar.addEventListener('click', () => toggleMobileSidebar(true));
+        if (closeMobileSidebar) closeMobileSidebar.addEventListener('click', () => toggleMobileSidebar(false));
+        if (sidebarOverlay) sidebarOverlay.addEventListener('click', () => toggleMobileSidebar(false));
 
-        lucide.createIcons();
+        if (window.lucide) lucide.createIcons();
     </script>
 </body>
 </html>
