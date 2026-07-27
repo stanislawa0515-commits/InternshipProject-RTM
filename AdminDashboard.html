@@ -207,7 +207,6 @@
                             <table class="w-full text-left border-collapse min-w-[500px]">
                                 <thead>
                                     <tr class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-800">
-                                        <th class="pb-3 w-16">Profile Picture</th>
                                         <th class="pb-3 pl-4">Profile Name</th>
                                         <th class="pb-3">Email</th>
                                         <th class="pb-3">Last Logged In</th>
@@ -216,7 +215,7 @@
                                 </thead>
                                 <tbody id="userStatusTableBody" class="text-xs text-slate-300 divide-y divide-slate-800/50">
                                     <tr>
-                                        <td colspan="5" class="py-8 text-center text-slate-500">Connecting live records database stream...</td>
+                                        <td colspan="4" class="py-8 text-center text-slate-500">Connecting live records database stream...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -455,7 +454,6 @@
         let globalReadIdsSet = new Set();
 
         let currentNavDate = new Date();
-        const svgAvatarFallback = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23535370"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
 
         filterLogDate.value = new Date().toISOString().split('T')[0];
 
@@ -477,7 +475,7 @@
             searchSelect.innerHTML = '<option value="">Select User Profile</option>';
 
             if (!allRegisteredProfiles.length) {
-                userTableBody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-500">No profile cards found in data repository.</td></tr>`;
+                userTableBody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-slate-500">No profile cards found in data repository.</td></tr>`;
                 metricTotal.textContent = "0";
                 metricOnline.textContent = "0";
                 metricOffline.textContent = "0";
@@ -527,19 +525,12 @@
                     offlineCount++;
                 }
 
-                const imgSource = profile.photo ? profile.photo : svgAvatarFallback;
                 const statusBadgeColor = isOnline ? 'bg-green-500' : 'bg-slate-500';
                 const statusTextColor = isOnline ? 'text-green-400' : 'text-slate-400';
                 const statusLabel = isOnline ? 'Online' : 'Offline';
 
                 rowsHtml += `
                     <tr>
-                        <td class="py-3">
-                            <div class="relative w-8 h-8">
-                                <img src="${imgSource}" class="w-8 h-8 rounded-full object-cover" alt="${displayUsername}">
-                                <span class="absolute bottom-0 right-0 w-2 h-2 ${statusBadgeColor} rounded-full border border-card-dark"></span>
-                            </div>
-                        </td>
                         <td class="py-3 font-medium text-white pl-4">
                             <span class="font-semibold text-slate-100">${displayUsername}</span>
                             ${profile.name ? `<span class="text-slate-400 text-[11px] block font-normal">${profile.name}</span>` : ''}
@@ -576,7 +567,6 @@
                             email: data.email || docSnap.id,
                             name: data.name || '',
                             username: data.username || '',
-                            photo: data.photo || null,
                             createdAt: data.createdAt || 0
                         });
                     }
@@ -585,7 +575,7 @@
                 evaluateMetricsAndRenderTable();
             }, (err) => {
                 console.error("Profiles real-time stream disrupted:", err);
-                userTableBody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-red-400 font-mono">Firestore Error: ${err.message}</td></tr>`;
+                userTableBody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-red-400 font-mono">Firestore Error: ${err.message}</td></tr>`;
             });
 
             // Listen to live presence updates
