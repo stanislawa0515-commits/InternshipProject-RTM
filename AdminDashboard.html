@@ -43,7 +43,7 @@
             border-radius: 3px;
         }
 
-        /* PRINT STYLES FOR OVERVIEW SCHEDULE & LOG MODAL ISOLATION */
+        /* PRINT STYLES FOR LOG MODAL ISOLATION */
         @media print {
             body * {
                 visibility: hidden !important;
@@ -73,20 +73,6 @@
                 color: #000000 !important;
             }
 
-            /* Standard Print mode for Schedule Isolation */
-            body:not(.printing-log-modal) #printScheduleIsolationZone, 
-            body:not(.printing-log-modal) #printScheduleIsolationZone * {
-                visibility: visible !important;
-            }
-            body:not(.printing-log-modal) #printScheduleIsolationZone {
-                position: absolute !important;
-                left: 0 !important;
-                top: 0 !important;
-                width: 100% !important;
-                color: #000000 !important;
-                background-color: #ffffff !important;
-                padding: 20px !important;
-            }
             .no-print-element {
                 display: none !important;
             }
@@ -264,63 +250,20 @@
                                     <tr class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-800">
                                         <th class="pb-3 w-16">Profile Picture</th>
                                         <th class="pb-3 pl-4">Profile Name</th>
+                                        <th class="pb-3">Email</th>
                                         <th class="pb-3">Last Logged In</th>
                                         <th class="pb-3">Current Status</th>
                                     </tr>
                                 </thead>
                                 <tbody id="userStatusTableBody" class="text-xs text-slate-300 divide-y divide-slate-800/50">
                                     <tr>
-                                        <td colspan="4" class="py-8 text-center text-slate-500">Connecting live records database stream...</td>
+                                        <td colspan="5" class="py-8 text-center text-slate-500">Connecting live records database stream...</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
 
-                    <!-- Component Block: Schedule Overview Carousel Slider Data Grid -->
-                    <div id="printScheduleIsolationZone" class="bg-card-dark rounded-xl border border-slate-800 p-5 relative scroll-mt-20">
-                        <div class="flex items-center justify-between mb-6">
-                            <h2 id="scheduleMainTitle" class="text-sm font-semibold text-white">Schedule Overview: Segment Melayu / Segment Iban</h2>
-                            <button id="printOverviewScheduleBtn" class="no-print-element px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white rounded-md text-xs font-semibold flex items-center transition">
-                                <i data-lucide="printer" class="w-3.5 h-3.5 mr-1.5"></i> Print Schedule
-                            </button>
-                        </div>
-                        
-                        <div class="text-center mb-4">
-                            <h3 id="scheduleCurrentViewHeader" class="text-sm font-bold text-blue-400 tracking-wide uppercase">Segment Melayu Data</h3>
-                        </div>
-
-                        <!-- Data Grid Slider Panel Interface Structure with arrows -->
-                        <div class="relative px-0 sm:px-8">
-                            <button id="carouselPrevBtn" class="no-print-element absolute left-0 top-1/2 -translate-y-1/2 w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center text-slate-400 hover:text-white transition z-10">
-                                <i data-lucide="chevron-left" class="w-4 h-4"></i>
-                            </button>
-                            
-                            <div class="bg-slate-900/40 rounded-xl overflow-hidden border border-slate-800/60 overflow-x-auto">
-                                <table class="w-full text-left text-xs min-w-[500px]">
-                                    <thead>
-                                        <tr class="text-slate-400 border-b border-slate-800 bg-slate-900/60">
-                                            <th class="p-3 pl-6 w-24 text-center">Time Slot</th>
-                                            <th class="p-3">Hebahan / Rancangan / Segmen</th>
-                                            <th class="p-3 w-28 text-center">Durasi</th>
-                                            <th class="p-3 w-32">Sumber</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="scheduleOverviewTableBody" class="text-slate-300 divide-y divide-slate-800/40">
-                                        <tr>
-                                            <td colspan="4" class="p-8 text-center text-slate-500 italic">Select user profile and date target to populate schedules template loop...</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <button id="carouselNextBtn" class="no-print-element absolute right-0 top-1/2 -translate-y-1/2 w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center text-slate-400 hover:text-white transition z-10">
-                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                        
-                        <p id="scheduleCarouselCaption" class="no-print-element text-[10px] text-center text-slate-400 mt-4 italic">Showing data for "Segment Melayu". Use arrows to slide views.</p>
-                    </div>
                 </div>
 
                 <!-- Right Stack Columns (Dashboard sidebars) -->
@@ -530,16 +473,6 @@
         const manageBookingsDeck = document.getElementById('manageBookingsDeck');
         const contiBookCalendarCard = document.getElementById('contiBookCalendarCard');
 
-        // Schedule Carousel UI Elements Hooks
-        const scheduleMainTitle = document.getElementById('scheduleMainTitle');
-        const scheduleCurrentViewHeader = document.getElementById('scheduleCurrentViewHeader');
-        const scheduleOverviewTableBody = document.getElementById('scheduleOverviewTableBody');
-        const scheduleCarouselCaption = document.getElementById('scheduleCarouselCaption');
-        const carouselPrevBtn = document.getElementById('carouselPrevBtn');
-        const carouselNextBtn = document.getElementById('carouselNextBtn');
-        const printOverviewScheduleBtn = document.getElementById('printOverviewScheduleBtn');
-        const printScheduleIsolationZone = document.getElementById('printScheduleIsolationZone');
-
         // E-Report UI components hooks
         const metricPendingReports = document.getElementById('metricPendingReports');
         const metricOngoingReports = document.getElementById('metricOngoingReports');
@@ -575,14 +508,6 @@
         // Global Notifications Store synced with Firestore
         let notificationsMasterList = [];
         let globalReadIdsSet = new Set();
-
-        const SEGMENT_ARRAY_LEDFER = [
-            { id: "melayu", label: "Segment Melayu", collection: "beats_melayu_logs", sourcePage: "segmenMelayu.html" },
-            { id: "iban_bintulu", label: "WAIfm BINTULU (Segment Iban)", collection: "beats_segmen_WAI_logs", sourcePage: "segmenIban.html" },
-            { id: "iban_sabtu", label: "Inter-Station Sabtu (Segment Iban)", collection: "beats_interstation_sabtu_logs", sourcePage: "segmenIban1.html" },
-            { id: "iban_ahad", label: "Inter-Station Ahad (Segment Iban)", collection: "beats_interstation_ahad_logs", sourcePage: "segmenIban2.html" }
-        ];
-        let currentCarouselSegmentIndex = 0;
 
         let currentNavDate = new Date();
         const svgAvatarFallback = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23535370"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
@@ -721,22 +646,10 @@
 
                         filterLogDate.value = dateVal;
                         fetchSelectedContiLogs();
-                        loadActiveCarouselScheduleData();
                         contiLogsOverviewCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
 
-                    // 2. AUTO-TRIGGER SCHEDULE OVERVIEW CAROUSEL UPON CLICKING SCHEDULE NOTIFICATIONS
-                    const scheduleSegmentIndex = SEGMENT_ARRAY_LEDFER.findIndex(s => s.sourcePage === sourcePage);
-                    if (scheduleSegmentIndex !== -1) {
-                        currentCarouselSegmentIndex = scheduleSegmentIndex;
-                        if (dateVal) {
-                            filterLogDate.value = dateVal;
-                        }
-                        loadActiveCarouselScheduleData();
-                        printScheduleIsolationZone.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-
-                    // 3. AUTO-TRIGGER CONTI BOOK CALENDAR PREVIEW UPON CLICKING CONTI BOOK NOTIFICATION
+                    // 2. AUTO-TRIGGER CONTI BOOK CALENDAR PREVIEW UPON CLICKING CONTI BOOK NOTIFICATION
                     if (sourcePage === 'contiBook.html') {
                         if (dateVal) {
                             const dateParts = dateVal.split('-');
@@ -751,7 +664,7 @@
                         contiBookCalendarCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
 
-                    // 4. AUTO-TRIGGER E-REPORT STATUS OVERVIEW UPON CLICKING E-REPORT NOTIFICATION
+                    // 3. AUTO-TRIGGER E-REPORT STATUS OVERVIEW UPON CLICKING E-REPORT NOTIFICATION
                     if (sourcePage === 'EReport.html') {
                         eReportStatusCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
@@ -871,74 +784,6 @@
                     }
                 });
             });
-
-            onSnapshot(collection(db, "beats_melayu_logs"), (snapshot) => {
-                snapshot.docChanges().forEach(change => {
-                    if (change.type === "added" || change.type === "modified") {
-                        const data = change.doc.data();
-                        addNotificationEntry({
-                            id: `melayu_${change.doc.id}_${data.updatedAt || Date.now()}`,
-                            title: `Segmen Melayu Schedule Updated`,
-                            message: `Schedule for ${data.dateKey || change.doc.id} updated by ${data.presenter || 'Presenter'}`,
-                            sourcePage: `segmenMelayu.html`,
-                            targetUser: data.presenter || '',
-                            targetDate: data.dateKey || change.doc.id,
-                            timestamp: data.updatedAt || Date.now()
-                        });
-                    }
-                });
-            });
-
-            onSnapshot(collection(db, "beats_segmen_WAI_logs"), (snapshot) => {
-                snapshot.docChanges().forEach(change => {
-                    if (change.type === "added" || change.type === "modified") {
-                        const data = change.doc.data();
-                        addNotificationEntry({
-                            id: `iban_wai_${change.doc.id}_${data.updatedAt || Date.now()}`,
-                            title: `Segmen Iban WAIfm Updated`,
-                            message: `WAIfm Bintulu log updated for ${data.dateKey || change.doc.id}`,
-                            sourcePage: `segmenIban.html`,
-                            targetUser: data.presenter || '',
-                            targetDate: data.dateKey || change.doc.id,
-                            timestamp: data.updatedAt || Date.now()
-                        });
-                    }
-                });
-            });
-
-            onSnapshot(collection(db, "beats_interstation_sabtu_logs"), (snapshot) => {
-                snapshot.docChanges().forEach(change => {
-                    if (change.type === "added" || change.type === "modified") {
-                        const data = change.doc.data();
-                        addNotificationEntry({
-                            id: `iban_sabtu_${change.doc.id}_${data.updatedAt || Date.now()}`,
-                            title: `Inter-Station Sabtu Log Updated`,
-                            message: `Sabtu segment log updated for ${data.dateKey || change.doc.id}`,
-                            sourcePage: `segmenIban1.html`,
-                            targetUser: data.presenter || '',
-                            targetDate: data.dateKey || change.doc.id,
-                            timestamp: data.updatedAt || Date.now()
-                        });
-                    }
-                });
-            });
-
-            onSnapshot(collection(db, "beats_interstation_ahad_logs"), (snapshot) => {
-                snapshot.docChanges().forEach(change => {
-                    if (change.type === "added" || change.type === "modified") {
-                        const data = change.doc.data();
-                        addNotificationEntry({
-                            id: `iban_ahad_${change.doc.id}_${data.updatedAt || Date.now()}`,
-                            title: `Inter-Station Ahad Log Updated`,
-                            message: `Ahad segment log updated for ${data.dateKey || change.doc.id}`,
-                            sourcePage: `segmenIban2.html`,
-                            targetUser: data.presenter || '',
-                            targetDate: data.dateKey || change.doc.id,
-                            timestamp: data.updatedAt || Date.now()
-                        });
-                    }
-                });
-            });
         }
 
         notificationBellBtn.addEventListener('click', (e) => {
@@ -963,7 +808,7 @@
             searchSelect.innerHTML = '<option value="">Select User Profile</option>';
 
             if (!allRegisteredProfiles.length) {
-                userTableBody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-slate-500">No profile cards found in data repository.</td></tr>`;
+                userTableBody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-500">No profile cards found in data repository.</td></tr>`;
                 metricTotal.textContent = "0";
                 metricOnline.textContent = "0";
                 metricOffline.textContent = "0";
@@ -971,13 +816,14 @@
             }
 
             allRegisteredProfiles.forEach(profile => {
+                const displayName = profile.username || profile.name || 'User';
                 const option = document.createElement('option');
-                option.value = profile.name;
-                option.textContent = profile.name;
-                if (profile.name === currentSelectedUser) option.selected = true;
+                option.value = displayName;
+                option.textContent = displayName;
+                if (displayName === currentSelectedUser) option.selected = true;
                 searchSelect.appendChild(option);
 
-                const presence = realTimePresenceMap[profile.name];
+                const presence = realTimePresenceMap[displayName] || realTimePresenceMap[profile.email];
                 let isOnline = false;
                 let lastLoggedText = 'Never logged in';
 
@@ -1017,11 +863,12 @@
                     <tr>
                         <td class="py-3">
                             <div class="relative w-8 h-8">
-                                <img src="${imgSource}" class="w-8 h-8 rounded-full object-cover" alt="${profile.name}">
+                                <img src="${imgSource}" class="w-8 h-8 rounded-full object-cover" alt="${displayName}">
                                 <span class="absolute bottom-0 right-0 w-2 h-2 ${statusBadgeColor} rounded-full border border-card-dark"></span>
                             </div>
                         </td>
-                        <td class="py-3 font-medium text-white pl-4">${profile.name}</td>
+                        <td class="py-3 font-medium text-white pl-4">${displayName} ${profile.name ? `<span class="text-slate-500 text-[10px] block">(${profile.name})</span>` : ''}</td>
+                        <td class="py-3 text-slate-400 font-mono">${profile.email || '--'}</td>
                         <td class="py-3 text-slate-400">${lastLoggedText}</td>
                         <td class="py-3">
                             <span class="flex items-center space-x-1.5 ${statusTextColor}">
@@ -1039,52 +886,6 @@
             userTableBody.innerHTML = rowsHtml;
 
             lucide.createIcons();
-        }
-
-        async function loadActiveCarouselScheduleData() {
-            const currentSegment = SEGMENT_ARRAY_LEDFER[currentCarouselSegmentIndex];
-            const dateTarget = filterLogDate.value;
-
-            scheduleMainTitle.textContent = `Schedule Overview: Segment Melayu / Segment Iban`;
-            scheduleCurrentViewHeader.textContent = currentSegment.label;
-            scheduleCarouselCaption.textContent = `Showing data for "${currentSegment.label}". Use arrows to slide views.`;
-
-            if (!dateTarget) {
-                scheduleOverviewTableBody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-500 italic">Please configure filter window to track timeline entries.</td></tr>`;
-                return;
-            }
-
-            scheduleOverviewTableBody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-blue-400 font-medium animate-pulse">Streaming segment matrix parameters...</td></tr>`;
-
-            try {
-                const scheduleDocRef = doc(db, currentSegment.collection, dateTarget);
-                const snap = await getDoc(scheduleDocRef);
-
-                if (snap.exists() && Array.isArray(snap.data().rowsArray) && snap.data().rowsArray.length > 0) {
-                    let rowsHtml = '';
-                    snap.data().rowsArray.forEach(row => {
-                        const strippedDetails = (row.segmentDetails || "").replace(/<\/?[^>]+(>|$)/g, "");
-                        rowsHtml += `
-                            <tr class="hover:bg-slate-800/10 transition">
-                                <td class="p-3 pl-6 font-semibold text-white tracking-wide text-center bg-slate-950/20">${row.hour}:${row.minute}</td>
-                                <td class="p-3 font-medium text-slate-200">${strippedDetails || '--'}</td>
-                                <td class="p-3 text-center text-slate-400 font-mono">${row.duration || row.durasi || '--'}</td>
-                                <td class="p-3 italic text-slate-400">${row.source || '--'}</td>
-                            </tr>
-                        `;
-                    });
-                    scheduleOverviewTableBody.innerHTML = rowsHtml;
-                } else {
-                    scheduleOverviewTableBody.innerHTML = `
-                        <tr class="text-slate-500 italic">
-                            <td colspan="4" class="p-8 text-center">No active contis log entries found matching this date configuration.</td>
-                        </tr>
-                    `;
-                }
-            } catch (err) {
-                console.error("Failed to compile segment schedules payload:", err);
-                scheduleOverviewTableBody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-red-400 font-semibold">Database pipe connection fault.</td></tr>`;
-            }
         }
 
         function configureCloudReportStreamingPipeline() {
@@ -1387,20 +1188,26 @@
         }
 
         function initRealtimeDatabaseSync() {
-            onSnapshot(collection(db, "beats_profiles"), (snapshot) => {
-                let consolidated = [];
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    if (data && Array.isArray(data.profiles)) {
-                        consolidated = consolidated.concat(data.profiles);
-                    }
+            // Retrieve user accounts created in SignUp.html from beats_users
+            onSnapshot(collection(db, "beats_users"), (snapshot) => {
+                let profiles = [];
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    profiles.push({
+                        id: docSnap.id,
+                        email: docSnap.id,
+                        name: data.name || "",
+                        username: data.username || docSnap.id,
+                        createdAt: data.createdAt
+                    });
                 });
-                allRegisteredProfiles = consolidated;
+                allRegisteredProfiles = profiles;
                 evaluateMetricsAndRenderTable();
             }, (err) => {
                 console.error("Profiles real-time stream disrupted:", err);
             });
 
+            // Listen to presence updates
             onSnapshot(collection(db, "beats_presence"), (snapshot) => {
                 snapshot.forEach(doc => {
                     realTimePresenceMap[doc.id] = doc.data();
@@ -1410,6 +1217,7 @@
                 console.error("Live presence telemetry link down:", err);
             });
 
+            // Listen to booking updates
             onSnapshot(collection(db, "beats_bookings"), (snapshot) => {
                 let itemsList = [];
                 snapshot.forEach(doc => {
@@ -1479,25 +1287,10 @@
             document.body.classList.remove('printing-log-modal');
         });
 
-        printOverviewScheduleBtn.addEventListener('click', () => { 
-            document.body.classList.remove('printing-log-modal');
-            window.print(); 
-        });
-
         searchSelect.addEventListener('change', fetchSelectedContiLogs);
         
         filterLogDate.addEventListener('change', () => {
             fetchSelectedContiLogs();
-            loadActiveCarouselScheduleData();
-        });
-
-        carouselPrevBtn.addEventListener('click', () => {
-            currentCarouselSegmentIndex = (currentCarouselSegmentIndex - 1 + SEGMENT_ARRAY_LEDFER.length) % SEGMENT_ARRAY_LEDFER.length;
-            loadActiveCarouselScheduleData();
-        });
-        carouselNextBtn.addEventListener('click', () => {
-            currentCarouselSegmentIndex = (currentCarouselSegmentIndex + 1) % SEGMENT_ARRAY_LEDFER.length;
-            loadActiveCarouselScheduleData();
         });
 
         prevCalendarMonth.addEventListener('click', () => {
@@ -1512,7 +1305,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             initRealtimeDatabaseSync();
             refreshDailyLogChart([]); 
-            loadActiveCarouselScheduleData(); 
             configureCloudReportStreamingPipeline();
             initGlobalNotificationSync();
         });
