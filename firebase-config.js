@@ -1,4 +1,4 @@
-// Import the Firebase SDKs from CDN (Perfect for GitHub Pages)
+// Import the Firebase SDKs from CDN
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
     getFirestore, 
@@ -18,7 +18,7 @@ import {
     arrayUnion
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// Your web app's Firebase configuration
+// Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyBd4X0so1FgU08Ms9RQckceYLr7IiVj16k",
     authDomain: "beats-system.firebaseapp.com",
@@ -33,7 +33,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Export instances and Firestore shorthands so your other files can use them
+// Export instances and Firestore functions
 export { 
     db, 
     collection, 
