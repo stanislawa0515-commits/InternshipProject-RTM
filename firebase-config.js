@@ -13,10 +13,12 @@ import {
     query, 
     where, 
     orderBy, 
-    limit 
+    limit,
+    onSnapshot,
+    arrayUnion
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// Your brand-new web app's Firebase configuration
+// Your web app's Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyBd4X0so1FgU08Ms9RQckceYLr7IiVj16k",
     authDomain: "beats-system.firebaseapp.com",
@@ -33,5 +35,19 @@ const db = getFirestore(app);
 
 // Export instances and Firestore shorthands so your other files can use them
 export { 
-    db, collection, doc, addDoc, setDoc, getDocs, getDoc, updateDoc, deleteDoc, query, where, orderBy, limit 
+    db, 
+    collection, 
+    doc, 
+    addDoc, 
+    setDoc, 
+    getDocs, 
+    getDoc, 
+    updateDoc, 
+    deleteDoc, 
+    query, 
+    where, 
+    orderBy, 
+    limit,
+    onSnapshot,
+    arrayUnion
 };
